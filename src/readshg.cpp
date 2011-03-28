@@ -3,8 +3,7 @@
 // Purpose:     Petr Smilauer's .SHG (Segmented Hypergraphics file) reading
 //              code.
 //              Note: .SHG is undocumented (anywhere!) so this is
-//              reverse-engineering
-//              and guesswork at its best.
+//              reverse-engineering and guesswork at its best.
 // Author:      Petr Smilauer
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
@@ -35,8 +34,9 @@
 // HotSpots *array;
 // int n = ParseSHG("thing.shg", &array);
 
-int   ParseSHG( const wxChar* fileName, HotSpot **hotspots)
-{ FILE*   fSHG = wxFopen( fileName, _T("rb"));
+int ParseSHG(const wxString& FileName, HotSpot **hotspots)
+{
+  FILE*   fSHG = wxFopen(FileName, _T("rb"));
   long    offset;
   int nHotspots = 0;
 
@@ -107,7 +107,7 @@ int   ParseSHG( const wxChar* fileName, HotSpot **hotspots)
 
 // Convert Windows .SHG file to HTML map file
 
-bool SHGToMap(wxChar *filename, wxChar *defaultFile)
+bool SHGToMap(wxString& filename, wxChar *defaultFile)
 {
   // Test the SHG parser
   HotSpot *hotspots = NULL;
@@ -135,11 +135,13 @@ bool SHGToMap(wxChar *filename, wxChar *defaultFile)
   wxFprintf(fd, _T("default %s\n"), defaultFile);
   for (int i = 0; i < n; i++)
   {
-    const wxChar *refFilename = _T("??");
-    
+    wxString refFilename = "??";
+
     TexRef *texRef = FindReference(hotspots[i].szHlpTopic_Macro);
     if (texRef)
+    {
       refFilename = texRef->refFile;
+    }
     else
     {
       wxChar buf[300];

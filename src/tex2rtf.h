@@ -152,7 +152,7 @@ extern FILE *Subsubsections;
 
 extern wxString InputFile;
 extern wxString OutputFile;
-extern wxChar *MacroFile;
+extern wxString MacroFile;
 
 extern wxChar *FileRoot;
 extern wxChar *ContentsName;    // Contents page from last time around
@@ -160,7 +160,7 @@ extern wxChar *TmpContentsName; // Current contents page
 extern wxChar *TmpFrameContentsName; // Current frame contents page
 extern wxChar *WinHelpContentsFileName; // WinHelp .cnt file
 extern wxChar *RefName;         // Reference file name
-extern wxChar *bulletFile;
+extern wxString bulletFile;
 
 #ifndef NO_GUI
 void ChooseOutputFile(bool force = false);

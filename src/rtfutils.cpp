@@ -55,7 +55,7 @@ extern FILE *Contents;
 extern FILE *Chapters;
 extern FILE *Popups;
 extern FILE *WinHelpContentsFile;
-extern wxChar *RTFCharset;
+extern wxString RTFCharset;
 // This is defined in the Tex2Any library and isn't in use after parsing
 extern wxChar *BigBuffer;
 
@@ -541,10 +541,10 @@ bool WriteHPJ(const wxString& filename)
     if (!fd)
         return false;
 
-    const wxChar *helpTitle = winHelpTitle;
-    if (!helpTitle)
+    wxString helpTitle = winHelpTitle;
+    if (helpTitle.empty())
     {
-      helpTitle = _T("Untitled");
+      helpTitle = "Untitled";
     }
 
     wxString thePath = wxPathOnly(InputFile);
@@ -809,7 +809,7 @@ void WriteEnvironmentStyles(void)
   if (!inTabular && (ParIndent > 0) && (forbidParindent == 0))
   {
     wxChar buf[15];
-    wxSnprintf(buf, sizeof(buf), _T("\\fi%d"), ParIndent*20); // Convert points to TWIPS
+    wxSnprintf(buf, sizeof(buf), _T("\\fi%d"), ParIndent * 20); // Convert points to TWIPS
     TexOutput(buf);
   }
   if (environmentStack.GetCount() > 0 || (ParIndent > 0))
@@ -1122,7 +1122,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         OutputCurrentSectionToString(wxTex2RTFBuffer);
         WriteWinHelpContentsFileLine(topicName, wxTex2RTFBuffer, 1);
       }
-      AddTexRef(topicName, NULL, ChapterNameString, chapterNo);
+      AddTexRef(topicName, wxEmptyString, ChapterNameString, chapterNo);
 
       if (winHelp)
       {
@@ -1268,7 +1268,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         OutputCurrentSectionToString(wxTex2RTFBuffer);
         WriteWinHelpContentsFileLine(topicName, wxTex2RTFBuffer, 2);
       }
-      AddTexRef(topicName, NULL, SectionNameString, chapterNo, sectionNo);
+      AddTexRef(topicName, wxEmptyString, SectionNameString, chapterNo, sectionNo);
 
       if (winHelp)
       {
@@ -1458,7 +1458,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         OutputCurrentSectionToString(wxTex2RTFBuffer);
         WriteWinHelpContentsFileLine(topicName, wxTex2RTFBuffer, 3);
       }
-      AddTexRef(topicName, NULL, SectionNameString, chapterNo, sectionNo, subsectionNo);
+      AddTexRef(topicName, wxEmptyString, SectionNameString, chapterNo, sectionNo, subsectionNo);
 
       if (winHelp)
       {
@@ -1618,7 +1618,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         OutputCurrentSectionToString(wxTex2RTFBuffer);
         WriteWinHelpContentsFileLine(topicName, wxTex2RTFBuffer, 4);
       }
-      AddTexRef(topicName, NULL, SectionNameString, chapterNo, sectionNo, subsectionNo, subsubsectionNo);
+      AddTexRef(topicName, wxEmptyString, SectionNameString, chapterNo, sectionNo, subsectionNo, subsubsectionNo);
 
       if (winHelp)
       {
@@ -1794,9 +1794,12 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       }
 
       int n = (inTable ? tableNo : figureNo);
-      AddTexRef(topicName, NULL, NULL,
-           ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
-            ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
+      AddTexRef(
+        topicName,
+        wxEmptyString,
+        wxEmptyString,
+        ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
+        ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
 
       if (winHelp)
         TexOutput(_T("\\qc{\\b "));
@@ -2067,8 +2070,8 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (iNode)
         oldIndent = ((ItemizeStruc *)iNode->GetData())->indentation;
 
-      int indentSize1 = oldIndent + 20*labelIndentTab;
-      int indentSize2 = oldIndent + 20*itemIndentTab;
+      int indentSize1 = oldIndent + 20 * labelIndentTab;
+      int indentSize2 = oldIndent + 20 * itemIndentTab;
 
       ItemizeStruc *struc = new ItemizeStruc(listType, indentSize2, indentSize1);
       itemizeStack.Insert(struc);
@@ -2175,8 +2178,14 @@ void RTFOnMacro(int macroId, int no_args, bool start)
 //          WriteEnvironmentStyles();
         }
 
-        wxSnprintf(buf, sizeof(buf), _T("\\tx%d\\tx%d\\li%d\\fi-%d\n"), indentSize1, indentSize2,
-                  indentSize2, 20*itemIndentTab);
+        wxSnprintf(
+          buf,
+          sizeof(buf),
+          _T("\\tx%d\\tx%d\\li%d\\fi-%d\n"),
+          indentSize1,
+          indentSize2,
+          indentSize2,
+          20 * itemIndentTab);
         TexOutput(buf);
 
         switch (struc->listType)
@@ -2208,7 +2217,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
             }
           else
             {
-              if (bulletFile && winHelp)
+              if (!bulletFile.empty() && winHelp)
               {
                 if (winHelpVersion > 3) // Transparent bitmap
                   wxSnprintf(indentBuf, sizeof(indentBuf), _T("\\tab\\{bmct %s\\}\\tab"), bulletFile);
@@ -3344,7 +3353,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *sec = NULL;
+      wxString sec;
 
       wxChar *refName = GetArgData();
       if (winHelp || !useWord)
@@ -3357,7 +3366,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
             sec = texRef->sectionNumber;
           }
         }
-        if (sec)
+        if (!sec.empty())
         {
           TexOutput(sec);
         }
@@ -3566,7 +3575,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       if(tok.HasMoreTokens())
       {
         wxString token = tok.GetNextToken();
-        imageWidth = (int)(20*ParseUnitArgument((wxChar*)token.c_str()));
+        imageWidth = (int)(20 * ParseUnitArgument(token));
       }
       else
       {
@@ -3577,7 +3586,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       if(tok.HasMoreTokens())
       {
         wxString token = tok.GetNextToken();
-        imageHeight = (int)(20*ParseUnitArgument((wxChar*)token.c_str()));
+        imageHeight = (int)(20 * ParseUnitArgument(token));
       }
       else
       {
@@ -3624,7 +3633,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
             else
               TexOutput(_T("\\{bmc "));
             wxString str = wxFileNameFromPath(f);
-            TexOutput((wxChar*) (const wxChar*) str);
+            TexOutput(str);
             TexOutput(_T("\\}"));
           }
           else
@@ -3637,7 +3646,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
 
             // Full path appears not to be valid!
             wxString str = wxFileNameFromPath(f);
-            TexOutput((wxChar*)(const wxChar*) str);
+            TexOutput(str);
 /*
             int len = wxStrlen(f);
             wxChar smallBuf[2]; smallBuf[1] = 0;
@@ -3861,11 +3870,11 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && arg_no == 1)
     {
-      wxChar *data = GetArgData();
+      wxString data = GetArgData();
       ParIndent = ParseUnitArgument(data);
       if (ParIndent == 0 || forbidParindent == 0)
       {
-        wxSnprintf(buf, sizeof(buf), _T("\\fi%d\n"), ParIndent*20);
+        wxSnprintf(buf, sizeof(buf), _T("\\fi%d\n"), ParIndent * 20);
         TexOutput(buf);
       }
       return false;
@@ -4498,7 +4507,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
+      wxString val = GetArgData();
       currentItemSep = ParseUnitArgument(val);
       return false;
     }
@@ -4512,8 +4521,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       // Add an inch since in LaTeX it's specified minus an inch
       twips += 1440;
       CurrentLeftMarginOdd = twips;
@@ -4528,8 +4537,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       CurrentMarginParWidth = twips;
     }
     return false;
@@ -4538,8 +4547,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       CurrentMarginParSep = twips;
       CurrentMarginParX = CurrentLeftMarginOdd + CurrentTextWidth + CurrentMarginParSep;
     }
@@ -4549,8 +4558,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       CurrentTextWidth = twips;
 
       // Need to set an implicit right margin
@@ -4639,8 +4648,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       TwoColWidthA = twips;
     }
     return false;
@@ -4649,8 +4658,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      int twips = (int)(20*ParseUnitArgument(val));
+      wxString val  = GetArgData();
+      int twips = (int)(20 * ParseUnitArgument(val));
       TwoColWidthB = twips;
     }
     return false;
@@ -4754,7 +4763,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       if (iNode)
         oldIndent = ((ItemizeStruc *)iNode->GetData())->indentation;
 
-      int indentValue = 20*ParseUnitArgument(GetArgData());
+      wxString val = GetArgData();
+      int indentValue = 20 * ParseUnitArgument(val);
       int indentSize = indentValue + oldIndent;
 
       ItemizeStruc *struc = new ItemizeStruc(LATEX_INDENT, indentSize);
@@ -4795,7 +4805,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       if (node)
         oldIndent = ((ItemizeStruc *)node->GetData())->indentation;
 
-      int boxWidth = 20*ParseUnitArgument(GetArgData());
+      int boxWidth = 20 * ParseUnitArgument(GetArgData());
 
       int indentValue = (int)((CurrentTextWidth - oldIndent - boxWidth)/2.0);
       int indentSize = indentValue + oldIndent;
@@ -4892,10 +4902,13 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
-        TexRef *ref = iTexRef->second;
+        TexRef* ref = iTexRef->second;
         if (ref)
         {
-          if (ref->sectionNumber) delete[] ref->sectionNumber;
+          if (!ref->sectionNumber.empty())
+          {
+            ref->sectionNumber = wxEmptyString;
+          }
           wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
           ref->sectionNumber = copystring(buf);
         }

@@ -107,8 +107,7 @@ bool ParseTableArgument(wxChar *value)
     else if (ch == 'p')
     {
       i ++;
-      int j = 0;
-      wxChar numberBuf[50];
+      wxString numberBuf;
       ch = value[i];
       if (ch == '{')
       {
@@ -118,23 +117,21 @@ bool ParseTableArgument(wxChar *value)
 
       while ((i < len) && (isdigit(ch) || ch == '.'))
       {
-        numberBuf[j] = (wxChar)ch;
-        j ++;
+        numberBuf.append(static_cast<char>(ch));
         i ++;
         ch = value[i];
       }
       // Assume we have 2 characters for units
-      numberBuf[j] = value[i];
-      j ++; i++;
-      numberBuf[j] = value[i];
-      j ++; i++;
-      numberBuf[j] = 0;
+      numberBuf.append(value[i]);
+      i++;
+      numberBuf.append(value[i]);
+      i++;
       if (value[i] == '}') i++;
 
       TableData[noColumns].leftBorder = isBorder;
       TableData[noColumns].rightBorder = false;
       TableData[noColumns].justification = 'l';
-      TableData[noColumns].width = 20*ParseUnitArgument(numberBuf);
+      TableData[noColumns].width = 20 * ParseUnitArgument(numberBuf);
       TableData[noColumns].absWidth = true;
 //      TableData[noColumns].spacing = ??
       noColumns ++;

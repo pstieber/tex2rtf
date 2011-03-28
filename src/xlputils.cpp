@@ -533,9 +533,12 @@ void XLPOnMacro(int macroId, int no_args, bool start)
     {
       wxChar *topicName = FindTopicName(GetNextChunk());
 
-      AddTexRef(topicName, NULL, NULL,
-           ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : figureNo),
-            ((DocumentStyle != LATEX_ARTICLE) ? figureNo : 0));
+      AddTexRef(
+        topicName,
+        wxEmptyString,
+        wxEmptyString,
+        ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : figureNo),
+        ((DocumentStyle != LATEX_ARTICLE) ? figureNo : 0));
     }
     break;
   }
@@ -657,7 +660,7 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *sec = NULL;
+      wxString sec;
 
       wxChar *refName = GetArgData();
       if (refName)
@@ -668,7 +671,7 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
           sec = texRef->sectionNumber;
         }
       }
-      if (sec)
+      if (!sec.empty())
       {
         TexOutput(sec);
       }
@@ -806,9 +809,12 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
         TexRef *ref = iTexRef->second;
         if (ref)
         {
-          if (ref->sectionNumber) delete[] ref->sectionNumber;
+          if (!ref->sectionNumber.empty())
+          {
+            ref->sectionNumber = wxEmptyString;
+          }
           wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
-          ref->sectionNumber = copystring(buf);
+          ref->sectionNumber = buf;
         }
       }
 
