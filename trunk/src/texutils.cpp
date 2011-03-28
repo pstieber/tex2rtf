@@ -54,26 +54,34 @@ ColourTableMap ColourTable;
 wxHashTable BibStringTable(wxKEY_STRING);
 MacroMap CustomMacroMap;
 TexChunk *currentSection = NULL;
-wxChar *fakeCurrentSection = NULL;
+wxString fakeCurrentSection;
 
 static long BibLine = 1;
 
 void OutputCurrentSection(void)
 {
-  if (fakeCurrentSection)
+  if (!fakeCurrentSection.empty())
+  {
     TexOutput(fakeCurrentSection);
+  }
   else if (currentSection)
+  {
     TraverseChildrenFromChunk(currentSection);
+  }
 }
 
 // Nasty but the way things are done now, necessary,
 // in order to output a chunk properly to a string (macros and all).
 void OutputCurrentSectionToString(wxChar *buf)
 {
-    if (fakeCurrentSection)
-        wxStrcpy(buf, fakeCurrentSection);
-    else
-        OutputChunkToString(currentSection, buf);
+  if (!fakeCurrentSection.empty())
+  {
+    wxStrcpy(buf, fakeCurrentSection);
+  }
+  else
+  {
+    OutputChunkToString(currentSection, buf);
+  }
 }
 
 void OutputChunkToString(TexChunk *chunk, wxChar *buf)
@@ -119,11 +127,10 @@ void OutputChunkToString(TexChunk *chunk, wxChar *buf)
 }
 
 // Called by Tex2Any to simulate a section
-void FakeCurrentSection(const wxChar *fakeSection, bool addToContents)
+void FakeCurrentSection(const wxString& fakeSection, bool addToContents)
 {
   currentSection = NULL;
-  if (fakeCurrentSection) delete[] fakeCurrentSection;
-  fakeCurrentSection = copystring(fakeSection);
+  fakeCurrentSection = fakeSection;
 
   if (DocumentStyle == LATEX_ARTICLE)
   {
@@ -141,8 +148,6 @@ void FakeCurrentSection(const wxChar *fakeSection, bool addToContents)
     OnMacro(mac, 0, true);
     OnMacro(mac, 0, false);
   }
-  if (fakeCurrentSection) delete[] fakeCurrentSection;
-  fakeCurrentSection = NULL;
 }
 
 // Look for \label macro, use this ref name if found or
@@ -226,18 +231,19 @@ void EndSimulateArgument(void)
  *
  */
 
-int ParseUnitArgument(wxChar *unitArg)
+int ParseUnitArgument(wxString& unitArg)
 {
   float conversionFactor = 1.0;
   float unitValue = 0.0;
-  size_t len = wxStrlen(unitArg);
+  size_t len = unitArg.length();
+
   // Get rid of any accidentally embedded commands
   for (size_t i = 0; i < len; i++)
     if (unitArg[i] == '\\')
       unitArg[i] = 0;
-  len = wxStrlen(unitArg);
+  len = unitArg.length();
 
-  if (unitArg && (len > 0) && (isdigit(unitArg[0]) || unitArg[0] == '-'))
+  if ((len > 0) && (isdigit(unitArg[0]) || unitArg[0] == '-'))
   {
     wxSscanf(unitArg, _T("%f"), &unitValue);
     if (len > 1)
@@ -339,9 +345,9 @@ void SetFontSizes(int pointSize)
  */
 
 void AddTexRef(
-  const wxChar* name,
-  wxChar* file,
-  const wxChar* sectionName,
+  const wxString& name,
+  const wxString& file,
+  const wxString& sectionName,
   int chapter,
   int section,
   int subsection,
@@ -405,11 +411,11 @@ void WriteTexReferences(wxChar *filename)
         TexRef *ref = iTexRef->second;
         wxString converter = ref->refLabel;
         converter << wxT(" ");
-        converter << (ref->refFile ? ref->refFile : _T("??"));
+        converter << (!ref->refFile.empty() ? ref->refFile : _T("??"));
         converter << wxT(" ");
-        converter << (ref->sectionName ? ref->sectionName : _T("??")) ;
+        converter << (!ref->sectionName.empty() ? ref->sectionName : _T("??")) ;
         converter << wxT(" ");
-        converter << (ref->sectionNumber ? ref->sectionNumber : _T("??")) ;
+        converter << (!ref->sectionNumber.empty() ? ref->sectionNumber : _T("??")) ;
         file.AddLine(converter);
 
         if (!ref->sectionNumber || (wxStrcmp(ref->sectionNumber, _T("??")) == 0 && wxStrcmp(ref->sectionName, _T("??")) == 0))
@@ -707,7 +713,7 @@ void BibReadValue(wxSTD istream& istr, wxChar *buffer, bool ignoreBraces = true,
     wxUnusedVar(stopping);
 }
 
-bool ReadBib(wxChar *filename)
+bool ReadBib(const wxString& filename)
 {
   if (!wxFileExists(filename))
       return false;
@@ -734,8 +740,11 @@ bool ReadBib(wxChar *filename)
     istr.get(ch);
     if (ch != '@')
     {
-      wxSnprintf(buf, sizeof(buf), _T("Expected @: malformed bib file at line %ld (%s)"), BibLine, filename);
-      OnError(buf);
+      wxString Message;
+      Message
+        << "Expected @: malformed bib file at line "
+        << BibLine << " (" << filename << ')';
+      OnError(Message);
       return false;
     }
     BibReadWord(istr, recordType);
@@ -1146,7 +1155,10 @@ void ResolveBibReferences(void)
       {
         // Unused Variable
         //BibEntry *entry = (BibEntry *)bibNode->GetData();
-        if (ref->sectionNumber) delete[] ref->sectionNumber;
+        if (!ref->sectionNumber.empty())
+        {
+          ref->sectionNumber = wxEmptyString;
+        }
         wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
         ref->sectionNumber = copystring(buf);
         citeCount ++;
@@ -1172,11 +1184,11 @@ void AddCitation(wxChar *citeKey)
   TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
   if (iTexRef == TexReferences.end())
   {
-    TexReferences[citeKey] = new TexRef(citeKey, _T("??"), NULL);
+    TexReferences[citeKey] = new TexRef(citeKey, _T("??"), wxEmptyString);
   }
 }
 
-TexRef *FindReference(wxChar *key)
+TexRef* FindReference(const wxString& key)
 {
   TexReferenceMap::iterator iTexRef = TexReferences.find(key);
   if (iTexRef != TexReferences.end())
@@ -1217,258 +1229,248 @@ void RegisterIntSetting (const wxString& s, int *number)
 }
 
 // Define a variable value from the .ini file
-wxChar *RegisterSetting(const wxString& settingName, const wxString& settingValue, bool interactive)
+wxChar *RegisterSetting(
+  const wxString& settingName,
+  const wxString& settingValue,
+  bool interactive)
 {
-    wxString settingValueStr( settingValue );
+  wxString settingValueStr( settingValue );
 
-    static wxChar errorCode[100];
-    wxStrcpy(errorCode, _T("OK"));
-    if (StringMatch(settingName, _T("chapterName"), false, true))
+  static wxChar errorCode[100];
+  wxStrcpy(errorCode, _T("OK"));
+  if (StringMatch(settingName, _T("chapterName"), false, true))
+  {
+    ChapterNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("sectionName"), false, true))
+  {
+    SectionNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("subsectionName"), false, true))
+  {
+    SubsectionNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("subsubsectionName"), false, true))
+  {
+    SubsubsectionNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("indexName"), false, true))
+  {
+    IndexNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("contentsName"), false, true))
+  {
+    ContentsNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("glossaryName"), false, true))
+  {
+    GlossaryNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("referencesName"), false, true))
+  {
+    ReferencesNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("tablesName"), false, true))
+  {
+    TablesNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("figuresName"), false, true))
+  {
+    FiguresNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("tableName"), false, true))
+  {
+    TableNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("figureName"), false, true))
+  {
+    FigureNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("abstractName"), false, true))
+  {
+    AbstractNameString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("chapterFontSize"), false, true))
+    RegisterIntSetting(settingValueStr, &chapterFont);
+  else if (StringMatch(settingName, _T("sectionFontSize"), false, true))
+    RegisterIntSetting(settingValueStr, &sectionFont);
+  else if (StringMatch(settingName, _T("subsectionFontSize"), false, true))
+    RegisterIntSetting(settingValueStr, &subsectionFont);
+  else if (StringMatch(settingName, _T("titleFontSize"), false, true))
+    RegisterIntSetting(settingValueStr, &titleFont);
+  else if (StringMatch(settingName, _T("authorFontSize"), false, true))
+    RegisterIntSetting(settingValueStr, &authorFont);
+  else if (StringMatch(settingName, _T("ignoreInput"), false, true))
+    IgnorableInputFiles.push_back(wxFileNameFromPath(settingValue));
+  else if (StringMatch(settingName, _T("mirrorMargins"), false, true))
+    mirrorMargins = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("runTwice"), false, true))
+    runTwice = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("isInteractive"), false, true))
+    isInteractive = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("headerRule"), false, true))
+    headerRule = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("footerRule"), false, true))
+    footerRule = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("combineSubSections"), false, true))
+    combineSubSections = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("listLabelIndent"), false, true))
+    RegisterIntSetting(settingValueStr, &labelIndentTab);
+  else if (StringMatch(settingName, _T("listItemIndent"), false, true))
+    RegisterIntSetting(settingValueStr, &itemIndentTab);
+  else if (StringMatch(settingName, _T("useUpButton"), false, true))
+    useUpButton = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("useHeadingStyles"), false, true))
+    useHeadingStyles = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("useWord"), false, true))
+    useWord = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("contentsDepth"), false, true))
+    RegisterIntSetting(settingValueStr, &contentsDepth);
+  else if (StringMatch(settingName, _T("generateHPJ"), false, true))
+    generateHPJ = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("truncateFilenames"), false, true))
+    truncateFilenames = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("winHelpVersion"), false, true))
+    RegisterIntSetting(settingValueStr, &winHelpVersion);
+  else if (StringMatch(settingName, _T("winHelpContents"), false, true))
+    winHelpContents = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("htmlIndex"), false, true))
+    htmlIndex = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("htmlWorkshopFiles"), false, true))
+    htmlWorkshopFiles = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("htmlFrameContents"), false, true))
+    htmlFrameContents = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("htmlStylesheet"), false, true))
+  {
+    htmlStylesheet = settingValue;
+  }
+  else if (StringMatch(settingName, _T("upperCaseNames"), false, true))
+  {
+    upperCaseNames = StringTobool(settingValue);
+  }
+  else if (StringMatch(settingName, _T("ignoreBadRefs"), false, true))
+  {
+    ignoreBadRefs = StringTobool(settingValue);
+  }
+  else if (StringMatch(settingName, _T("htmlFaceName"), false, true))
+  {
+    htmlFaceName = settingValue;
+  }
+  else if (StringMatch(settingName, _T("winHelpTitle"), false, true))
+  {
+    winHelpTitle = settingValue;
+  }
+  else if (StringMatch(settingName, _T("indexSubsections"), false, true))
+    indexSubsections = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("compatibility"), false, true))
+    compatibilityMode = StringTobool(settingValue);
+  else if (StringMatch(settingName, _T("defaultColumnWidth"), false, true))
+  {
+    RegisterIntSetting(settingValueStr, &defaultTableColumnWidth);
+    defaultTableColumnWidth = 20*defaultTableColumnWidth;
+  }
+  else if (StringMatch(settingName, _T("bitmapMethod"), false, true))
+  {
+    if (
+      (wxStrcmp(settingValue, _T("includepicture")) != 0) &&
+      (wxStrcmp(settingValue, _T("hex")) != 0) &&
+      (wxStrcmp(settingValue, _T("import")) != 0))
     {
-        delete[] ChapterNameString;
-        ChapterNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("sectionName"), false, true))
-    {
-        delete[] SectionNameString;
-        SectionNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("subsectionName"), false, true))
-    {
-        delete[] SubsectionNameString;
-        SubsectionNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("subsubsectionName"), false, true))
-    {
-        delete[] SubsubsectionNameString;
-        SubsubsectionNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("indexName"), false, true))
-    {
-        delete[] IndexNameString;
-        IndexNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("contentsName"), false, true))
-    {
-        delete[] ContentsNameString;
-        ContentsNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("glossaryName"), false, true))
-    {
-        delete[] GlossaryNameString;
-        GlossaryNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("referencesName"), false, true))
-    {
-        delete[] ReferencesNameString;
-        ReferencesNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("tablesName"), false, true))
-    {
-        delete[] TablesNameString;
-        TablesNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("figuresName"), false, true))
-    {
-        delete[] FiguresNameString;
-        FiguresNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("tableName"), false, true))
-    {
-        delete[] TableNameString;
-        TableNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("figureName"), false, true))
-    {
-        delete[] FigureNameString;
-        FigureNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("abstractName"), false, true))
-    {
-        delete[] AbstractNameString;
-        AbstractNameString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("chapterFontSize"), false, true))
-        RegisterIntSetting(settingValueStr, &chapterFont);
-    else if (StringMatch(settingName, _T("sectionFontSize"), false, true))
-        RegisterIntSetting(settingValueStr, &sectionFont);
-    else if (StringMatch(settingName, _T("subsectionFontSize"), false, true))
-        RegisterIntSetting(settingValueStr, &subsectionFont);
-    else if (StringMatch(settingName, _T("titleFontSize"), false, true))
-        RegisterIntSetting(settingValueStr, &titleFont);
-    else if (StringMatch(settingName, _T("authorFontSize"), false, true))
-        RegisterIntSetting(settingValueStr, &authorFont);
-    else if (StringMatch(settingName, _T("ignoreInput"), false, true))
-        IgnorableInputFiles.Add(wxFileNameFromPath(settingValue));
-    else if (StringMatch(settingName, _T("mirrorMargins"), false, true))
-        mirrorMargins = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("runTwice"), false, true))
-        runTwice = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("isInteractive"), false, true))
-        isInteractive = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("headerRule"), false, true))
-        headerRule = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("footerRule"), false, true))
-        footerRule = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("combineSubSections"), false, true))
-        combineSubSections = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("listLabelIndent"), false, true))
-        RegisterIntSetting(settingValueStr, &labelIndentTab);
-    else if (StringMatch(settingName, _T("listItemIndent"), false, true))
-        RegisterIntSetting(settingValueStr, &itemIndentTab);
-    else if (StringMatch(settingName, _T("useUpButton"), false, true))
-        useUpButton = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("useHeadingStyles"), false, true))
-        useHeadingStyles = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("useWord"), false, true))
-        useWord = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("contentsDepth"), false, true))
-        RegisterIntSetting(settingValueStr, &contentsDepth);
-    else if (StringMatch(settingName, _T("generateHPJ"), false, true))
-        generateHPJ = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("truncateFilenames"), false, true))
-        truncateFilenames = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("winHelpVersion"), false, true))
-        RegisterIntSetting(settingValueStr, &winHelpVersion);
-    else if (StringMatch(settingName, _T("winHelpContents"), false, true))
-        winHelpContents = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("htmlIndex"), false, true))
-        htmlIndex = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("htmlWorkshopFiles"), false, true))
-        htmlWorkshopFiles = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("htmlFrameContents"), false, true))
-        htmlFrameContents = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("htmlStylesheet"), false, true))
-    {
-        if (htmlStylesheet)
-            delete[] htmlStylesheet;
-        htmlStylesheet = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("upperCaseNames"), false, true))
-        upperCaseNames = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("ignoreBadRefs"), false, true))
-        ignoreBadRefs = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("htmlFaceName"), false, true))
-    {
-        delete[] htmlFaceName;
-        htmlFaceName = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("winHelpTitle"), false, true))
-    {
-        if (winHelpTitle)
-            delete[] winHelpTitle;
-        winHelpTitle = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("indexSubsections"), false, true))
-        indexSubsections = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("compatibility"), false, true))
-        compatibilityMode = StringTobool(settingValue);
-    else if (StringMatch(settingName, _T("defaultColumnWidth"), false, true))
-    {
-        RegisterIntSetting(settingValueStr, &defaultTableColumnWidth);
-        defaultTableColumnWidth = 20*defaultTableColumnWidth;
-    }
-    else if (StringMatch(settingName, _T("bitmapMethod"), false, true))
-    {
-        if ((wxStrcmp(settingValue, _T("includepicture")) != 0) && (wxStrcmp(settingValue, _T("hex")) != 0) &&
-            (wxStrcmp(settingValue, _T("import")) != 0))
-        {
-            if (interactive)
-                OnError(_T("Unknown bitmapMethod"));
-            wxStrcpy(errorCode, _T("Unknown bitmapMethod"));
-        }
-        else
-        {
-            delete[] bitmapMethod;
-            bitmapMethod = copystring(settingValue);
-        }
-    }
-    else if (StringMatch(settingName, _T("htmlBrowseButtons"), false, true))
-    {
-        if (wxStrcmp(settingValue, _T("none")) == 0)
-            htmlBrowseButtons = HTML_BUTTONS_NONE;
-        else if (wxStrcmp(settingValue, _T("bitmap")) == 0)
-            htmlBrowseButtons = HTML_BUTTONS_BITMAP;
-        else if (wxStrcmp(settingValue, _T("text")) == 0)
-            htmlBrowseButtons = HTML_BUTTONS_TEXT;
-        else
-        {
-            if (interactive)
-                OnInform(_T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
-            wxStrcpy(errorCode, _T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
-        }
-    }
-    else if (StringMatch(settingName, _T("backgroundImage"), false, true))
-    {
-        backgroundImageString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("backgroundColour"), false, true))
-    {
-        delete[] backgroundColourString;
-        backgroundColourString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("textColour"), false, true))
-    {
-        textColourString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("linkColour"), false, true))
-    {
-        linkColourString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("followedLinkColour"), false, true))
-    {
-        followedLinkColourString = copystring(settingValue);
-    }
-    else if (StringMatch(settingName, _T("conversionMode"), false, true))
-    {
-        if (StringMatch(settingValue, _T("RTF"), false, true))
-        {
-            winHelp = false; convertMode = TEX_RTF;
-        }
-        else if (StringMatch(settingValue, _T("WinHelp"), false, true))
-        {
-            winHelp = true; convertMode = TEX_RTF;
-        }
-        else if (StringMatch(settingValue, _T("XLP"), false, true) ||
-                 StringMatch(settingValue, _T("wxHelp"), false, true))
-        {
-            convertMode = TEX_XLP;
-        }
-        else if (StringMatch(settingValue, _T("HTML"), false, true))
-        {
-            convertMode = TEX_HTML;
-        }
-        else
-        {
-            if (interactive)
-                OnInform(_T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
-            wxStrcpy(errorCode, _T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
-        }
-    }
-    else if (StringMatch(settingName, _T("documentFontSize"), false, true))
-    {
-        int n;
-        RegisterIntSetting(settingValueStr, &n);
-        if (n == 10 || n == 11 || n == 12)
-            SetFontSizes(n);
-        else
-        {
-            wxChar buf[200];
-            wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: nonstandard document font size %d."), n);
-            if (interactive)
-                OnInform(buf);
-            wxStrcpy(errorCode, buf);
-        }
+      if (interactive)
+        OnError(_T("Unknown bitmapMethod"));
+      wxStrcpy(errorCode, _T("Unknown bitmapMethod"));
     }
     else
     {
-        wxChar buf[200];
-        wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
-        if (interactive)
-            OnInform(buf);
-        wxStrcpy(errorCode, buf);
+      bitmapMethod = settingValue;
     }
-    return errorCode;
+  }
+  else if (StringMatch(settingName, _T("htmlBrowseButtons"), false, true))
+  {
+    if (wxStrcmp(settingValue, _T("none")) == 0)
+      htmlBrowseButtons = HTML_BUTTONS_NONE;
+    else if (wxStrcmp(settingValue, _T("bitmap")) == 0)
+      htmlBrowseButtons = HTML_BUTTONS_BITMAP;
+    else if (wxStrcmp(settingValue, _T("text")) == 0)
+      htmlBrowseButtons = HTML_BUTTONS_TEXT;
+    else
+    {
+      if (interactive)
+        OnInform(_T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
+      wxStrcpy(errorCode, _T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
+    }
+  }
+  else if (StringMatch(settingName, _T("backgroundImage"), false, true))
+  {
+    backgroundImageString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("backgroundColour"), false, true))
+  {
+    backgroundColourString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("textColour"), false, true))
+  {
+    textColourString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("linkColour"), false, true))
+  {
+    linkColourString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("followedLinkColour"), false, true))
+  {
+    followedLinkColourString = settingValue;
+  }
+  else if (StringMatch(settingName, _T("conversionMode"), false, true))
+  {
+    if (StringMatch(settingValue, _T("RTF"), false, true))
+    {
+      winHelp = false; convertMode = TEX_RTF;
+    }
+    else if (StringMatch(settingValue, _T("WinHelp"), false, true))
+    {
+      winHelp = true; convertMode = TEX_RTF;
+    }
+    else if (
+      StringMatch(settingValue, _T("XLP"), false, true) ||
+      StringMatch(settingValue, _T("wxHelp"), false, true))
+    {
+      convertMode = TEX_XLP;
+    }
+    else if (StringMatch(settingValue, _T("HTML"), false, true))
+    {
+      convertMode = TEX_HTML;
+    }
+    else
+    {
+      if (interactive)
+        OnInform(_T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
+      wxStrcpy(errorCode, _T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
+    }
+  }
+  else if (StringMatch(settingName, _T("documentFontSize"), false, true))
+  {
+      int n;
+      RegisterIntSetting(settingValueStr, &n);
+      if (n == 10 || n == 11 || n == 12)
+          SetFontSizes(n);
+      else
+      {
+          wxChar buf[200];
+          wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: nonstandard document font size %d."), n);
+          if (interactive)
+              OnInform(buf);
+          wxStrcpy(errorCode, buf);
+      }
+  }
+  else
+  {
+      wxChar buf[200];
+      wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
+      if (interactive)
+          OnInform(buf);
+      wxStrcpy(errorCode, buf);
+  }
+  return errorCode;
 }
 
 bool ReadCustomMacros(const wxString& filename)
@@ -1756,12 +1758,12 @@ void Tex2RTFYield(bool force)
 
 // Hash table for lists of keywords for topics (WinHelp).
 wxHashTable TopicTable(wxKEY_STRING);
-void AddKeyWordForTopic(wxChar *topic, wxChar *entry, wxChar *filename)
+void AddKeyWordForTopic(wxChar *topic, wxChar *entry, const wxString& FileName)
 {
   TexTopic *texTopic = (TexTopic *)TopicTable.Get(topic);
   if (!texTopic)
   {
-    texTopic = new TexTopic(filename);
+    texTopic = new TexTopic(FileName);
     texTopic->keywords = new StringSet;
     TopicTable.Put(topic, texTopic);
   }
@@ -1791,12 +1793,9 @@ void ClearKeyWordTable(void)
  * TexTopic structure
  */
 
-TexTopic::TexTopic(wxChar *f)
+TexTopic::TexTopic(const wxString& f)
+  : filename(f)
 {
-  if (f)
-    filename = copystring(f);
-  else
-    filename = NULL;
   hasChildren = false;
   keywords = NULL;
 }
@@ -1805,50 +1804,52 @@ TexTopic::~TexTopic(void)
 {
   if (keywords)
     delete keywords;
-  if (filename)
-    delete[] filename;
 }
 
 // Convert case, according to upperCaseNames setting.
-wxChar* ConvertCase(const wxChar* pString)
+wxString ConvertCase(const wxString& String)
 {
-  static wxChar buf[256];
-  size_t len = wxStrlen(pString);
-  size_t i;
+  wxString buf;
   if (upperCaseNames)
   {
-    for (i = 0; i < len; i ++)
+    for (size_t i = 0; i < String.length(); ++i)
     {
-      buf[i] = (wxChar)wxToupper(pString[i]);
+      buf.append(wxToupper(String[i]));
     }
   }
   else
   {
-    for (i = 0; i < len; i ++)
+    for (size_t i = 0; i < String.length(); ++i)
     {
-      buf[i] = (wxChar)wxTolower(pString[i]);
+      buf.append(wxTolower(String[i]));
     }
   }
-  buf[i] = 0;
   return buf;
 }
 
 // if substring is true, search for str1 in str2
-bool StringMatch(const wxChar *str1, const wxChar *str2, bool subString,
-                 bool exact)
+bool StringMatch(
+  const wxString& str1,
+  const wxString& str2,
+  bool subString,
+  bool exact)
 {
-   if (subString)
-   {
-      wxString Sstr1(str1);
-      wxString Sstr2(str2);
-      if (!exact)
-      {
-          Sstr1.MakeUpper();
-          Sstr2.MakeUpper();
-      }
-      return Sstr2.Index(Sstr1) != (size_t)wxNOT_FOUND;
-   }
-   else
-      return exact ? wxString(str2).Cmp(str1) == 0 :
-                     wxString(str2).CmpNoCase(str1) == 0;
+  if (subString)
+  {
+    wxString Sstr1(str1);
+    wxString Sstr2(str2);
+    if (!exact)
+    {
+      Sstr1.MakeUpper();
+      Sstr2.MakeUpper();
+    }
+    return Sstr2.find(Sstr1) != wxNOT_FOUND;
+  }
+  else
+  {
+    return
+      exact ?
+        wxString(str2).Cmp(str1) == 0 :
+        wxString(str2).CmpNoCase(str1) == 0;
+  }
 }

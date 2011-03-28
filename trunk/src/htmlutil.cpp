@@ -20,7 +20,8 @@
 #ifndef WX_PRECOMP
 #endif
 
-#include "wx/arrstr.h"
+#include <wx/arrstr.h>
+#include <wx/filename.h>
 
 #include "tex2any.h"
 #include "tex2rtf.h"
@@ -42,7 +43,7 @@ extern int passNumber;
 extern void DecToHex(int, wxChar *);
 void GenerateHTMLIndexFile(wxChar *fname);
 
-bool PrimaryAnchorOfTheFile(const wxChar *file, const wxChar *label);
+bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label);
 
 void GenerateHTMLWorkshopFiles(wxChar *fname);
 void HTMLWorkshopAddToContents(int level, wxChar *s, wxChar *file);
@@ -222,31 +223,25 @@ void ReopenFile(FILE **fd, wxChar **fileName, const wxChar *label)
  * in subsectionCombine mode
  */
 
-static wxChar *SectionContentsFilename = NULL;
+static wxFileName SectionContentsFilename;
 static FILE *SectionContentsFD = NULL;
 
 void ReopenSectionContentsFile(void)
 {
-    if ( SectionContentsFD )
-    {
-        fclose(SectionContentsFD);
-    }
-    if ( SectionContentsFilename )
-        delete[] SectionContentsFilename;
-    SectionContentsFD = NULL;
-    SectionContentsFilename = NULL;
+  if (SectionContentsFD)
+  {
+    fclose(SectionContentsFD);
+  }
+  SectionContentsFD = NULL;
 
-    // Create the name from the current section filename
-    if ( CurrentSectionFile )
-    {
-        wxChar buf[256];
-        wxStrcpy(buf, CurrentSectionFile);
-        wxStripExtension(buf);
-        wxStrcat(buf, _T(".con"));
-        SectionContentsFilename = copystring(buf);
+  // Create the name from the current section filename
+  if (CurrentSectionFile)
+  {
+    SectionContentsFilename = CurrentSectionFile;
+    SectionContentsFilename.SetExt(".con");
 
-        SectionContentsFD = wxFopen(SectionContentsFilename, _T("w"));
-    }
+    SectionContentsFD = wxFopen(SectionContentsFilename.GetFullName(), _T("w"));
+  }
 }
 
 
@@ -379,11 +374,7 @@ void Text2HTML(TexChunk *chunk)
   }
 }
 
-/*
- * Add appropriate browse buttons to this page.
- *
- */
-
+// Add the appropriate browse buttons to this page.
 void AddBrowseButtons(
   const wxChar *upLabel,
   wxChar *upFilename,
@@ -392,70 +383,61 @@ void AddBrowseButtons(
   const wxChar *thisLabel,
   wxChar *thisFilename)
 {
-  wxChar contentsReferenceBuf[80];
-  wxChar upReferenceBuf[80];
-  wxChar backReferenceBuf[80];
-  wxChar forwardReferenceBuf[80];
   if (htmlBrowseButtons == HTML_BUTTONS_NONE)
+  {
     return;
+  }
 
-  // no need to initialize because always assigned below
-  wxChar *contentsReference;
+  wxString contentsReference;
   if (htmlBrowseButtons == HTML_BUTTONS_TEXT)
   {
     contentsReference = ContentsNameString;
   }
   else
   {
-    contentsReference = contentsReferenceBuf;
-    wxSnprintf(
-      contentsReference,
-      sizeof(contentsReferenceBuf),
-      _T("<img align=center src=\"%s\" BORDER=0 ALT=\"Contents\">"),
-      ConvertCase(_T("contents.gif")));
+    contentsReference
+      << "<img align=center src=\""
+      << ConvertCase("contents.gif")
+      << "\" BORDER=0 ALT=\"Contents\">";
   }
 
-  wxChar *upReference; // no need to initialize because always assigned below
+  wxString upReference;
   if (htmlBrowseButtons == HTML_BUTTONS_TEXT)
   {
     upReference = UpNameString;
   }
   else
   {
-    upReference = upReferenceBuf;
-    wxSnprintf(upReference, sizeof(upReferenceBuf),
-               _T("<img align=center src=\"%s\" BORDER=0 ALT=\"Up\">"),
-               ConvertCase(_T("up.gif")));
+    upReference
+      << "<img align=center src=\""
+      << ConvertCase("up.gif")
+      << "\" BORDER=0 ALT=\"Up\">";
   }
 
-  // no need to initialize because always assigned below
-  const wxChar *backReference;
-  if (htmlBrowseButtons == HTML_BUTTONS_TEXT)
-    backReference = _T("&lt;&lt;");
-  else
-  {
-    wxSnprintf(
-      backReferenceBuf,
-      sizeof(backReferenceBuf),
-      _T("<img align=center src=\"%s\" BORDER=0 ALT=\"Previous\">"),
-      ConvertCase(_T("back.gif")));
-    backReference = backReferenceBuf;
-  }
-
-  // no need to initialize because always assigned below
-  const wxChar* forwardReference;
+  wxString backReference;
   if (htmlBrowseButtons == HTML_BUTTONS_TEXT)
   {
-    forwardReference = _T("&gt;&gt;");
+    backReference = "&lt;&lt;";
   }
   else
   {
-    wxSnprintf(
-      forwardReferenceBuf,
-      sizeof(forwardReferenceBuf),
-      _T("<img align=center src=\"%s\" BORDER=0 ALT=\"Next\">"),
-      ConvertCase(_T("forward.gif")));
-    forwardReference = forwardReferenceBuf;
+    backReference
+      << "<img align=center src=\""
+      << ConvertCase("back.gif")
+      << "\" BORDER=0 ALT=\"Previous\">";
+  }
+
+  wxString forwardReference;
+  if (htmlBrowseButtons == HTML_BUTTONS_TEXT)
+  {
+    forwardReference = "&gt;&gt;";
+  }
+  else
+  {
+    forwardReference
+      << "<img align=center src=\""
+      << ConvertCase("forward.gif")
+      << "\" BORDER=0 ALT=\"Next\">";
   }
 
   TexOutput(_T("<CENTER>"));
@@ -523,13 +505,17 @@ void AddBrowseButtons(
   if (previousLabel && previousFilename)
   {
     if (PrimaryAnchorOfTheFile(previousFilename, previousLabel))
+    {
       wxSnprintf(buf, sizeof(buf),
                  _T("<A HREF=\"%s\">%s</A> "),
                  ConvertCase(previousFilename), backReference);
+    }
     else
+    {
       wxSnprintf(buf, sizeof(buf),
                  _T("<A HREF=\"%s#%s\">%s</A> "),
                  ConvertCase(previousFilename), previousLabel, backReference);
+    }
     if (wxStrcmp(previousLabel, _T("contents")) == 0)
     {
 //      TexOutput(_T("<NOFRAMES>"));
@@ -611,10 +597,10 @@ void AddBrowseButtons(
 
 // A colour string is either 3 numbers separated by semicolons (RGB),
 // or a reference to a GIF. Return the filename or a hex string like #934CE8
-wxChar *ParseColourString(wxChar *bkStr, bool *isPicture)
+wxString ParseColourString(const wxString& bkStr, bool *isPicture)
 {
-  static wxChar resStr[300];
-  wxStrcpy(resStr, bkStr);
+  static wxString resStr;
+  resStr = bkStr;
   wxStringTokenizer tok(resStr, _T(";"), wxTOKEN_STRTOK);
   if (tok.HasMoreTokens())
   {
@@ -637,21 +623,27 @@ wxChar *ParseColourString(wxChar *bkStr, bool *isPicture)
         int green = wxAtoi(token2.c_str());
         int blue = wxAtoi(token3.c_str());
 
-        wxStrcpy(resStr, _T("#"));
+        resStr = "#";
 
         wxChar buf[3];
         DecToHex(red, buf);
-        wxStrcat(resStr, buf);
+        resStr.append(buf);
         DecToHex(green, buf);
-        wxStrcat(resStr, buf);
+        resStr.append(buf);
         DecToHex(blue, buf);
-        wxStrcat(resStr, buf);
+        resStr.append(buf);
         return resStr;
       }
-      else return NULL;
+      else
+      {
+        return wxEmptyString;
+      }
     }
   }
-  else return NULL;
+  else
+  {
+    return wxEmptyString;
+  }
 }
 
 void OutputFont(void)
@@ -659,7 +651,7 @@ void OutputFont(void)
   // Only output <font face> if explicitly requested by htmlFaceName= directive in
   // tex2rtf.ini. Otherwise do NOT set the font because we want to use browser's
   // default font:
-  if (htmlFaceName)
+  if (!htmlFaceName.empty())
   {
     // Output <FONT FACE=...>
     TexOutput(_T("<FONT FACE=\""));
@@ -672,22 +664,22 @@ void OutputFont(void)
 void OutputBodyStart(void)
 {
   TexOutput(_T("\n<BODY"));
-  if (backgroundImageString)
+  if (!backgroundImageString.empty())
   {
     bool isPicture = false;
-    wxChar *s = ParseColourString(backgroundImageString, &isPicture);
-    if (s)
+    wxString s = ParseColourString(backgroundImageString, &isPicture);
+    if (!s.empty())
     {
       TexOutput(_T(" BACKGROUND=\""));
       TexOutput(s);
       TexOutput(_T("\""));
     }
   }
-  if (backgroundColourString)
+  if (!backgroundColourString.empty())
   {
     bool isPicture = false;
-    wxChar *s = ParseColourString(backgroundColourString, &isPicture);
-    if (s)
+    wxString s = ParseColourString(backgroundColourString, &isPicture);
+    if (!s.empty())
     {
       TexOutput(_T(" BGCOLOR="));
       TexOutput(s);
@@ -695,33 +687,36 @@ void OutputBodyStart(void)
   }
 
   // Set foreground text colour, if one is specified
-  if (textColourString)
+  if (!textColourString.empty())
   {
     bool isPicture = false;
-    wxChar *s = ParseColourString(textColourString, &isPicture);
-    if (s)
+    wxString s = ParseColourString(textColourString, &isPicture);
+    if (!s.empty())
     {
-      TexOutput(_T(" TEXT=")); TexOutput(s);
+      TexOutput(_T(" TEXT="));
+      TexOutput(s);
     }
   }
   // Set link text colour, if one is specified
-  if (linkColourString)
+  if (!linkColourString.empty())
   {
     bool isPicture = false;
-    wxChar *s = ParseColourString(linkColourString, &isPicture);
-    if (s)
+    wxString s = ParseColourString(linkColourString, &isPicture);
+    if (!s.empty())
     {
-      TexOutput(_T(" LINK=")); TexOutput(s);
+      TexOutput(_T(" LINK="));
+      TexOutput(s);
     }
   }
   // Set followed link text colour, if one is specified
-  if (followedLinkColourString)
+  if (!followedLinkColourString.empty())
   {
     bool isPicture = false;
-    wxChar *s = ParseColourString(followedLinkColourString, &isPicture);
-    if (s)
+    wxString s = ParseColourString(followedLinkColourString, &isPicture);
+    if (s.empty())
     {
-      TexOutput(_T(" VLINK=")); TexOutput(s);
+      TexOutput(_T(" VLINK="));
+      TexOutput(s);
     }
   }
   TexOutput(_T(">\n"));
@@ -732,7 +727,8 @@ void OutputBodyStart(void)
 void HTMLHead()
 {
   TexOutput(_T("<head>"));
-  if (htmlStylesheet) {
+  if (!htmlStylesheet.empty())
+  {
     TexOutput(_T("<link rel=stylesheet type=\"text/css\" href=\""));
     TexOutput(htmlStylesheet);
     TexOutput(_T("\">"));
@@ -741,10 +737,17 @@ void HTMLHead()
 
 void HTMLHeadTo(FILE* f)
 {
-  if (htmlStylesheet)
-    wxFprintf(f,_T("<head><link rel=stylesheet type=\"text/css\" href=\"%s\">"),htmlStylesheet);
+  if (!htmlStylesheet.empty())
+  {
+    wxFprintf(
+      f,
+      _T("<head><link rel=stylesheet type=\"text/css\" href=\"%s\">"),
+      htmlStylesheet);
+  }
   else
+  {
     wxFprintf(f,_T("<head>"));
+  }
 }
 
 // Called on start/end of macro examination
@@ -827,7 +830,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       if (htmlIndex)
       {
         OutputCurrentSectionToString(wxTex2RTFBuffer);
-        AddKeyWordForTopic(topicName, wxTex2RTFBuffer, ConvertCase(currentFileName));
+        AddKeyWordForTopic(
+          topicName,
+          wxTex2RTFBuffer,
+          ConvertCase(currentFileName));
       }
     }
     break;
@@ -932,11 +938,9 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             fflush(Sections);
 
             // Read old .con file in at this point
-            wxChar buf[256];
-            wxStrcpy(buf, CurrentSectionFile);
-            wxStripExtension(buf);
-            wxStrcat(buf, _T(".con"));
-            FILE *fd = wxFopen(buf, _T("r"));
+            wxFileName FileName = CurrentSectionFile;
+            FileName.SetExt(".con");
+            FILE* fd = wxFopen(FileName.GetFullName(), _T("r"));
             if ( fd )
             {
                 int ch = getc(fd);
@@ -1761,7 +1765,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       else
       {
         TexOutput(_T("RUN TEX2RTF AGAIN FOR CONTENTS PAGE\n"));
-        OnInform(_T("Run Tex2RTF again to include contents page."));
+        OnInform("Run Tex2RTF again to include contents page.");
       }
     }
     break;
@@ -1827,9 +1831,12 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
 
       int n = inFigure ? figureNo : tableNo;
 
-      AddTexRef(topicName, NULL, NULL,
-           ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
-            ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
+      AddTexRef(
+        topicName,
+        wxEmptyString,
+        wxEmptyString,
+        ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
+        ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
     }
     break;
   }
@@ -1855,31 +1862,32 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
     break;
   }
 }
-/*     CheckTypeRef()
 
-       should be called at of argument which usually is
-       type declaration which propably contains name of
-       documented class
-
-       examples:
-               HTMLOnArgument
-                       - ltFUNC,
-                       - ltPARAM
-                       - ltCPARAM
-
-       checks: GetArgData() if contains Type Declaration
-                               and can be referenced to some file
-       prints:
-               before<a href="xxx&yyy">type</a>after
-
-       returns:
-               false   - if no reference was found
-               true    - if reference was found and HREF printed
-*/
+// Description:
+//   Should be called at of argument which usually is type declaration which
+// propably contains name of documented class.
+//
+//   examples:
+//     HTMLOnArgument
+//       - ltFUNC,
+//       - ltPARAM
+//       - ltCPARAM
+//
+//   checks:
+//     GetArgData() if contains Type Declaration and can be referenced to some
+//     file.
+//
+//   prints:
+//     before<a href="xxx&yyy">type</a>after
+//
+//   returns:
+//     false   - if no reference was found
+//     true    - if reference was found and HREF printed
 static bool CheckTypeRef()
 {
   wxString typeDecl = GetArgData();
-  if( !typeDecl.empty() ) {
+  if (!typeDecl.empty())
+  {
     typeDecl.Replace(wxT("\\"),wxT(""));
     wxString label = typeDecl;
     label.Replace(wxT("const"),wxT(""));
@@ -1892,9 +1900,10 @@ static bool CheckTypeRef()
     label.Trim(true); label.Trim(false);
     wxString typeName = label;
     label.MakeLower();
-    TexRef *texRef = FindReference((wxChar*)label.c_str());
+    TexRef *texRef = FindReference(label);
 
-    if (texRef && texRef->refFile && wxStrcmp(texRef->refFile, _T("??")) != 0) {
+    if (texRef && !texRef->refFile.empty() && texRef->refFile != "??")
+    {
       int a = typeDecl.Find(typeName);
       wxString before = typeDecl.Mid( 0, a );
       wxString after = typeDecl.Mid( a+typeName.Length() );
@@ -2053,7 +2062,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *sec = NULL;
+      wxString sec;
 
       wxChar *refName = GetArgData();
       if (refName)
@@ -2064,7 +2073,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
           sec = texRef->sectionNumber;
         }
       }
-      if (sec)
+      if (!sec.empty())
       {
         TexOutput(sec);
       }
@@ -2122,15 +2131,17 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       if (start)
       {
         wxChar *refName = GetArgData();
-        wxChar *refFilename = NULL;
+        wxString refFilename;
 
         if (refName)
         {
-          TexRef *texRef = FindReference(refName);
+          TexRef* texRef = FindReference(refName);
           if (texRef)
           {
-            if (texRef->refFile && wxStrcmp(texRef->refFile, _T("??")) != 0)
+            if (!texRef->refFile.empty() && texRef->refFile != "??")
+            {
               refFilename = texRef->refFile;
+            }
 
             TexOutput(_T("<A HREF=\""));
             // If a filename is supplied, use it, otherwise try to
@@ -2141,7 +2152,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
               TexOutput(_T("#"));
               TexOutput(refName);
             }
-            else if (refFilename)
+            else if (!refFilename.empty())
             {
               TexOutput(ConvertCase(refFilename));
               if(!PrimaryAnchorOfTheFile(texRef->refFile, refName))
@@ -2168,7 +2179,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
             {
               wxString errBuf;
               errBuf.Printf(_T("Warning: unresolved reference '%s'"), refName);
-              OnInform((wxChar *)errBuf.c_str());
+              OnInform(errBuf);
             }
           }
         }
@@ -2232,12 +2243,12 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
 
         if (f != _T(""))
         {
-          wxChar *inlineFilename = copystring(f);
+          wxString inlineFilename = f;
 #if 0
-          wxChar *originalFilename = TexPathList.FindValidPath(filename);
+          wxString originalFilename = TexPathList.FindValidPath(filename);
           // If we have found the existing filename, make the inline
           // image point to the original file (could be PS, for example)
-          if (originalFilename && (wxStrcmp(inlineFilename, originalFilename) != 0))
+          if (inlineFilename == originalFilename)
           {
             TexOutput(_T("<A HREF=\""));
             TexOutput(ConvertCase(originalFilename));
@@ -2256,7 +2267,6 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
             TexOutput(_T("\""));
             TexOutput(alignment);
             TexOutput(_T(">"));
-            delete[] inlineFilename;
           }
         }
         else
@@ -2275,7 +2285,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   // First arg is PSBOX spec (ignored), second is image file, third is map name.
   case ltIMAGEMAP:
   {
-    static wxChar *imageFile = NULL;
+    static wxString imageFile;
     if (start && (arg_no == 2))
     {
       // Try to find an XBM or GIF image first.
@@ -2301,30 +2311,26 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         OnInform(buf);
       }
       delete[] filename;
-      if (imageFile)
-        delete[] imageFile;
-      imageFile = NULL;
+      imageFile = wxEmptyString;
       if (!f.empty())
       {
-        imageFile = copystring(f);
+        imageFile = f;
       }
     }
     else if (start && (arg_no == 3))
     {
-      if (imageFile)
+      if (!imageFile.empty())
       {
         // First, try to find a .shg (segmented hypergraphics file)
         // that we can convert to a map file
-        wxChar buf[256];
-        wxStrcpy(buf, imageFile);
-        StripExtension(buf);
-        wxStrcat(buf, _T(".shg"));
-        wxString f = TexPathList.FindValidPath(buf);
+        wxFileName buf = imageFile;
+        buf.SetExt(".shg");
+        wxString f = TexPathList.FindValidPath(buf.GetFullName());
 
         if (f != _T(""))
         {
           // The default HTML file to go to is THIS file (so a no-op)
-          SHGToMap((wxChar *)f.c_str(), currentFileName);
+          SHGToMap(f, currentFileName);
         }
 
         wxChar *mapName = GetArgData();
@@ -2337,8 +2343,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         TexOutput(_T("<img src=\""));
         TexOutput(ConvertCase(wxFileNameFromPath(imageFile)));
         TexOutput(_T("\" ISMAP></A><P>"));
-        delete[] imageFile;
-        imageFile = NULL;
+        imageFile = wxEmptyString;
       }
     }
     return false;
@@ -2431,9 +2436,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         TexRef *ref = iTexRef->second;
         if (ref)
         {
-          if (ref->sectionNumber) delete[] ref->sectionNumber;
           wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
-          ref->sectionNumber = copystring(buf);
+          ref->sectionNumber = buf;
         }
       }
 
@@ -2466,7 +2470,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
+      wxString val = GetArgData();
       float points = ParseUnitArgument(val);
       TwoColWidthA = (int)((points * 100.0) / 72.0);
     }
@@ -2477,7 +2481,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
+      wxString val = GetArgData();
       float points = ParseUnitArgument(val);
       TwoColWidthB = (int)((points * 100.0) / 72.0);
     }
@@ -2746,22 +2750,18 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
         bool isPicture = false;
         ParseColourString(val, &isPicture);
         if (isPicture)
         {
-          if (backgroundImageString)
-            delete[] backgroundImageString;
-          backgroundImageString = copystring(val);
+          backgroundImageString = val;
         }
         else
         {
-          if (backgroundColourString)
-            delete[] backgroundColourString;
-          backgroundColourString = copystring(val);
+          backgroundColourString = val;
         }
       }
     }
@@ -2771,12 +2771,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        if (backgroundImageString)
-          delete[] backgroundImageString;
-        backgroundImageString = copystring(val);
+        backgroundImageString = val;
       }
     }
     return false;
@@ -2785,12 +2783,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        if (backgroundColourString)
-          delete[] backgroundColourString;
-        backgroundColourString = copystring(val);
+        backgroundColourString = val;
       }
     }
     return false;
@@ -2799,12 +2795,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        if (textColourString)
-          delete[] textColourString;
-        textColourString = copystring(val);
+        textColourString = val;
       }
     }
     return false;
@@ -2813,12 +2807,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        if (linkColourString)
-          delete[] linkColourString;
-        linkColourString = copystring(val);
+        linkColourString = val;
       }
     }
     return false;
@@ -2827,12 +2819,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        if (followedLinkColourString)
-          delete[] followedLinkColourString;
-        followedLinkColourString = copystring(val);
+        followedLinkColourString = val;
       }
     }
     return false;
@@ -3141,7 +3131,10 @@ bool HTMLGo(void)
             OnError(_T("Cannot open output file!"));
             return false;
         }
-        AddTexRef(_T("contents"), wxFileNameFromPath(TitlepageName), ContentsNameString);
+        AddTexRef(
+          _T("contents"),
+          wxFileNameFromPath(TitlepageName),
+          ContentsNameString);
 
         wxFprintf(Contents, _T("<P><P><H2>%s</H2><P><P>\n"), ContentsNameString);
 
@@ -3149,7 +3142,7 @@ bool HTMLGo(void)
 
         SetCurrentOutput(Titlepage);
         if (htmlWorkshopFiles) HTMLWorkshopStartContents();
-        OnInform(_T("Converting..."));
+        OnInform("Converting...");
 
         TraverseDocument();
         wxFprintf(Contents, _T("</UL>\n\n"));
@@ -3326,13 +3319,16 @@ void GenerateHTMLIndexFile(wxChar *fname)
   while (node)
   {
     TexTopic *texTopic = (TexTopic *)node->GetData();
-    const wxChar *topicName = node->GetKeyString();
-    if (texTopic->filename && texTopic->keywords)
+    const wxString& topicName = node->GetKeyString();
+    if (!texTopic->filename.empty() && texTopic->keywords)
     {
       StringSet *set = texTopic->keywords;
       if (set)
       {
-        for (StringSet::iterator iString = set->begin(); iString != set->begin(); ++iString)
+        for (
+          StringSet::iterator iString = set->begin();
+          iString != set->begin();
+          ++iString)
         {
           const wxChar *s = iString->c_str();
           wxFprintf(fd, _T("%s|%s|%s\n"), topicName, texTopic->filename, s);
@@ -3428,8 +3424,8 @@ void GenerateHTMLWorkshopFiles(wxChar *fname)
   while (node)
   {
     TexTopic *texTopic = (TexTopic *)node->GetData();
-    const wxChar *topicName = node->GetKeyString();
-    if (texTopic->filename && texTopic->keywords)
+    const wxString& topicName = node->GetKeyString();
+    if (!texTopic->filename.empty() && texTopic->keywords)
     {
       StringSet *set = texTopic->keywords;
       if (set)
@@ -3437,12 +3433,15 @@ void GenerateHTMLWorkshopFiles(wxChar *fname)
         for (StringSet::iterator iString = set->begin(); iString != set->begin(); ++iString)
         {
           const wxChar *s = iString->c_str();
-          wxFprintf(f,
-              _T(" <LI> <OBJECT type=\"text/sitemap\">\n")
-              _T("  <param name=\"Local\" value=\"%s#%s\">\n")
-              _T("  <param name=\"Name\" value=\"%s\">\n")
-              _T("  </OBJECT>\n"),
-          texTopic->filename, topicName, s);
+          wxFprintf(
+            f,
+            " <LI> <OBJECT type=\"text/sitemap\">\n"
+            "  <param name=\"Local\" value=\"%s#%s\">\n"
+            "  <param name=\"Name\" value=\"%s\">\n"
+            "  </OBJECT>\n",
+            texTopic->filename,
+            topicName,
+            s);
         }
       }
     }
@@ -3520,9 +3519,9 @@ void HTMLWorkshopEndContents()
 }
 
 
-bool PrimaryAnchorOfTheFile(const wxChar *file, const wxChar *label)
+bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label)
 {
-    wxString file_label;
-    file_label.Printf(HTML_FILENAME_PATTERN, FileRoot, label);
-    return file_label.IsSameAs(file , false);
+  wxString file_label;
+  file_label.Printf(HTML_FILENAME_PATTERN, FileRoot, label);
+  return file_label.IsSameAs(file , false);
 }
