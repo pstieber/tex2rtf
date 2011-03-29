@@ -238,7 +238,7 @@ void ReopenSectionContentsFile(void)
   if (CurrentSectionFile)
   {
     SectionContentsFilename = CurrentSectionFile;
-    SectionContentsFilename.SetExt(".con");
+    SectionContentsFilename.SetExt("con");
 
     SectionContentsFD = wxFopen(SectionContentsFilename.GetFullName(), _T("w"));
   }
@@ -939,7 +939,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
 
             // Read old .con file in at this point
             wxFileName FileName = CurrentSectionFile;
-            FileName.SetExt(".con");
+            FileName.SetExt("con");
             FILE* fd = wxFopen(FileName.GetFullName(), _T("r"));
             if ( fd )
             {
@@ -2324,7 +2324,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         // First, try to find a .shg (segmented hypergraphics file)
         // that we can convert to a map file
         wxFileName buf = imageFile;
-        buf.SetExt(".shg");
+        buf.SetExt("shg");
         wxString f = TexPathList.FindValidPath(buf.GetFullName());
 
         if (f != _T(""))
