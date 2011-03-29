@@ -81,11 +81,11 @@ usage()
 shift 4
 for i in "$@"; do
     case "$i" in
-	--upx) UPX=1 ;;
-	*)
-	    usage
-	    exit
-	    ;;
+    --upx) UPX=1 ;;
+    *)
+        usage
+        exit
+        ;;
     esac
 done
 
@@ -116,4 +116,3 @@ echo Creating Version $VERSION distribution in $DEST, using source directory $SR
 dotar
 
 echo Tex2RTF archived.
-
