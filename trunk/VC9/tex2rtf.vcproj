@@ -424,7 +424,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHsc "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;_DEBUG;__WXMSW__;__WXDEBUG__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -456,7 +456,7 @@
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
@@ -486,6 +486,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
+				CommandLine=""
 			/>
 		</Configuration>
 		<Configuration
@@ -2478,7 +2479,7 @@
 				AdditionalOptions="/EHsc "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;__WXMSW__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -2509,7 +2510,7 @@
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib&quot;"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
