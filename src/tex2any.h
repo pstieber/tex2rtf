@@ -153,7 +153,7 @@ void ClearKeyWordTable(void);
 extern wxChar wxTex2RTFBuffer[];
 extern TexChunk     *TopLevel;
 extern wxHashTable  MacroDefs;
-extern wxStringList IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
+extern wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 
 bool read_a_line(wxChar *buf);
 bool TexLoadFile(const wxString& filename);
