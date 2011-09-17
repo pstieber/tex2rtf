@@ -69,7 +69,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,__WXMSW__,__WXDEBUG__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -165,7 +165,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,__WXMSW__,__WXDEBUG__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib_x64\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib_x64\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -259,7 +259,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="__WXMSW__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib\mswu;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib\mswu;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
@@ -353,7 +353,7 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="__WXMSW__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-VC9\lib\vc_lib_x64\mswu;&quot;$(EXT_PKGS)\wxWidgets-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\lib\vc_lib_x64\mswu;&quot;$(EXT_PKGS)\wxMSW-2.9.2-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
