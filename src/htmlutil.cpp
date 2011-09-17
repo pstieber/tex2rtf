@@ -240,7 +240,7 @@ void ReopenSectionContentsFile(void)
     SectionContentsFilename = CurrentSectionFile;
     SectionContentsFilename.SetExt("con");
 
-    SectionContentsFD = wxFopen(SectionContentsFilename.GetFullName(), _T("w"));
+    SectionContentsFD = wxFopen(SectionContentsFilename.GetFullName(), "w");
   }
 }
 
