@@ -214,7 +214,7 @@ int noArgs = 0;
 TexChunk *TopLevel = NULL;
 // wxList MacroDefs(wxKEY_STRING);
 wxHashTable MacroDefs(wxKEY_STRING);
-wxStringList IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
+wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 wxChar *BigBuffer = NULL;  // For reading in large chunks of text
 TexMacroDef *SoloBlockDef = NULL;
 TexMacroDef *VerbatimMacroDef = NULL;
@@ -454,8 +454,10 @@ bool read_a_line(wxChar *buf)
     if (bufIndex >= MAX_LINE_BUFFER_SIZE)
     {
        wxString errBuf;
-       errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-           LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(), MAX_LINE_BUFFER_SIZE);
+       errBuf
+         << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+         << currentFileName << " is too long.  Lines can be no longer than "
+         << MAX_LINE_BUFFER_SIZE << " characters.  Truncated.";
        OnError(errBuf);
        return false;
     }
@@ -477,7 +479,10 @@ bool read_a_line(wxChar *buf)
            if (rightCurly > leftCurly)
            {
                wxString errBuf;
-               errBuf.Printf(_T("An extra right Curly brace ('}') was detected at line %lu inside file %s"), LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str());
+               errBuf
+                 << "An extra right Curly brace ('}') was detected at line "
+                 << LineNumbers[CurrentInputIndex] << " inside file "
+                 << currentFileName;
                OnError(errBuf);
 
                // Reduce the count of right Curly braces, so the mismatched count
@@ -502,11 +507,14 @@ bool read_a_line(wxChar *buf)
           IncrementLineNumber();
 //          wxStrcat(buf, "\\par\n");
 //          i += 6;
-          if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
+          if (bufIndex + 5 >= MAX_LINE_BUFFER_SIZE)
           {
              wxString errBuf;
-             errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-                 LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(),MAX_LINE_BUFFER_SIZE);
+             errBuf
+               << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+               << currentFileName
+               << " is too long.  Lines can be no longer than "
+               << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
              OnError(errBuf);
              return false;
           }
@@ -520,8 +528,11 @@ bool read_a_line(wxChar *buf)
           if (bufIndex >= MAX_LINE_BUFFER_SIZE)
           {
              wxString errBuf;
-             errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-                 LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(),MAX_LINE_BUFFER_SIZE);
+             errBuf
+               << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+               << currentFileName
+               << " is too long.  Lines can be no longer than "
+               << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
              OnError(errBuf);
              return false;
           }
@@ -545,8 +556,11 @@ bool read_a_line(wxChar *buf)
                 if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
                 {
                    wxString errBuf;
-                   errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-                       LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(),MAX_LINE_BUFFER_SIZE);
+                   errBuf
+                     << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+                     << currentFileName
+                     << " is too long.  Lines can be no longer than "
+                     << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
                    OnError(errBuf);
                    return false;
                 }
@@ -568,8 +582,11 @@ bool read_a_line(wxChar *buf)
             if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
             {
               wxString errBuf;
-              errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-                  LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(),MAX_LINE_BUFFER_SIZE);
+              errBuf
+                << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+                << currentFileName
+                << " is too long.  Lines can be no longer than "
+                << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
               OnError(errBuf);
               return false;
             }
@@ -583,8 +600,11 @@ bool read_a_line(wxChar *buf)
             if (bufIndex >= MAX_LINE_BUFFER_SIZE)
             {
               wxString errBuf;
-              errBuf.Printf(_T("Line %lu of file %s is too long.  Lines can be no longer than %lu characters.  Truncated."),
-                  LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str(),MAX_LINE_BUFFER_SIZE);
+              errBuf
+                << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+                << currentFileName
+                << " is too long.  Lines can be no longer than "
+                << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
               OnError(errBuf);
               return false;
             }
@@ -615,16 +635,22 @@ bool read_a_line(wxChar *buf)
                     if (bufIndex == 0)
                     {
                         wxString errBuf;
-                        errBuf.Printf(_T("An underscore ('_') was detected at line %lu inside file %s that may need a '\\' before it."),
-                            LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str());
+                        errBuf
+                          << "An underscore ('_') was detected at line "
+                          << LineNumbers[CurrentInputIndex]
+                          << " inside file " << currentFileName
+                          << " that may need a '\\' before it.";
                         OnError(errBuf);
                     }
                     else if ((buf[bufIndex-1] != '\\') && (buf[0] != '%') &&  // If it is a comment line, then no warnings
                         (wxStrncmp(buf, _T("\\input"), 6))) // do not report filenames that have underscores in them
                     {
                         wxString errBuf;
-                        errBuf.Printf(_T("An underscore ('_') was detected at line %lu inside file %s that may need a '\\' before it."),
-                            LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str());
+                        errBuf
+                          << "An underscore ('_') was detected at line "
+                          << LineNumbers[CurrentInputIndex]
+                          << " inside file " << currentFileName
+                          << " that may need a '\\' before it.";
                         OnError(errBuf);
                     }
                 }
@@ -648,8 +674,10 @@ bool read_a_line(wxChar *buf)
           if (leftCurly != rightCurly)
           {
             wxString errBuf;
-            errBuf.Printf(_T("Curly braces do not match inside file %s\n%lu opens, %lu closes"),
-                          (const wxChar*) currentFileName.c_str(),leftCurly,rightCurly);
+            errBuf
+              << "Curly braces do not match inside file "
+              << currentFileName << '\n'
+              << leftCurly << " opens, " << rightCurly << " closes";
             OnError(errBuf);
           }
           leftCurly = 0;
@@ -769,7 +797,7 @@ bool read_a_line(wxChar *buf)
     // Ignore some types of input files (e.g. macro definition files)
     wxString fileOnly = wxFileNameFromPath(fileNameStr);
     currentFileName = fileOnly;
-    if (IgnorableInputFiles.Member(fileOnly))
+    if (IgnorableInputFiles.Index(fileOnly) != wxNOT_FOUND)
       return read_a_line(buf);
 
     wxString actualFile = TexPathList.FindValidPath(fileNameStr);
@@ -794,9 +822,9 @@ bool read_a_line(wxChar *buf)
       TexPathList.EnsureFileAccessible(actualFile);
 
       wxString informStr;
-      informStr.Printf(_T("Processing: %s"),actualFile.c_str());
+      informStr << "Processing: " << actualFile;
       OnInform(informStr);
-      CurrentInputIndex ++;
+      CurrentInputIndex++;
 
       Inputs[CurrentInputIndex] = wxFopen(actualFile, _T("r"));
       LineNumbers[CurrentInputIndex] = 1;
@@ -820,34 +848,38 @@ bool read_a_line(wxChar *buf)
 
   if (checkSyntax)
   {
-      wxString bufStr = buf;
-      for (int index=0; !syntaxTokens[index].empty(); index++)
+    wxString bufStr = buf;
+    for (int index=0; !syntaxTokens[index].empty(); index++)
+    {
+      size_t pos = bufStr.find(syntaxTokens[index]);
+      if (pos != wxString::npos && pos != 0)
       {
-          size_t pos = bufStr.find(syntaxTokens[index]);
-          if (pos != wxString::npos && pos != 0)
+        size_t commentStart = bufStr.find(_T("%"));
+        if (commentStart == wxString::npos || commentStart > pos)
+        {
+          wxString errBuf;
+          if (syntaxTokens[index] == _T("\\verb"))
           {
-              size_t commentStart = bufStr.find(_T("%"));
-              if (commentStart == wxString::npos || commentStart > pos)
-              {
-                  wxString errBuf;
-                  if (syntaxTokens[index] == _T("\\verb"))
-                  {
-                      errBuf.Printf(_T("'%s$....$' was detected at line %lu inside file %s.  Please replace this form with \\tt{....}"),
-                                    syntaxTokens[index].c_str(),
-                                    LineNumbers[CurrentInputIndex],
-                                    currentFileName.c_str());
-                  }
-                  else
-                  {
-                      errBuf.Printf(_T("'%s' was detected at line %lu inside file %s that is not the only text on the line, starting at column one."),
-                                    syntaxTokens[index].c_str(),
-                                    LineNumbers[CurrentInputIndex],
-                                    currentFileName.c_str());
-                  }
-                  OnError(errBuf);
-              }
+            errBuf
+              << "'" << syntaxTokens[index]
+              << "$....$' was detected at line "
+              << LineNumbers[CurrentInputIndex] << " inside file "
+              << currentFileName
+              << ".  Please replace this form with \\tt{....}";
           }
+          else
+          {
+            errBuf
+              << "'" << syntaxTokens[index]
+              << "' was detected at line "
+              << LineNumbers[CurrentInputIndex] << " inside file "
+              << currentFileName
+              << " that is not the only text on the line, starting at column one.";
+          }
+          OnError(errBuf);
+        }
       }
+    }
   }  // checkSyntax
 
   if (wxStrncmp(buf, _T("\\begin{verbatim}"), 16) == 0 ||
@@ -862,8 +894,10 @@ bool read_a_line(wxChar *buf)
       if (ch == EOF && leftCurly != rightCurly)
       {
         wxString errBuf;
-        errBuf.Printf(_T("Curly braces do not match inside file %s\n%lu opens, %lu closes"),
-            (const wxChar*) currentFileName.c_str(),leftCurly,rightCurly);
+        errBuf
+          << "Curly braces do not match inside file " << currentFileName
+          << '\n'
+          << leftCurly << " opens, " << rightCurly << " closes";
         OnError(errBuf);
       }
   }
@@ -1942,8 +1976,8 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
         iNode = iNode->GetNext();
       }
 
-      if (thisNode && thisNode->GetNext())
-          nextChunk = (TexChunk *)thisNode->GetNext()->GetData();
+      if (thisNode && (*thisNode)->GetNext())
+          nextChunk = (TexChunk *)(*thisNode)->GetNext()->GetData();
 
       if (!childrenOnly)
         OnMacro(chunk->macroId, chunk->no_args, false);
@@ -1971,8 +2005,8 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
 
       currentArgument = chunk;
 
-      if (thisNode && thisNode->GetNext())
-          nextChunk = (TexChunk *)thisNode->GetNext()->GetData();
+      if (thisNode && (*thisNode)->GetNext())
+          nextChunk = (TexChunk *)(*thisNode)->GetNext()->GetData();
 
       isArgOptional = chunk->optional;
       noArgs = chunk->no_args;
