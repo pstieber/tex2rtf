@@ -146,7 +146,7 @@ class TexTopic: public wxObject
 extern wxHashTable TopicTable;
 
 void AddKeyWordForTopic(
-  wxChar* topic,
+  const wxString& topic,
   wxChar* entry,
   const wxString& filename = wxEmptyString);
 

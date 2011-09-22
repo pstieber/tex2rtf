@@ -1763,9 +1763,12 @@ void Tex2RTFYield(bool force)
 
 // Hash table for lists of keywords for topics (WinHelp).
 wxHashTable TopicTable(wxKEY_STRING);
-void AddKeyWordForTopic(wxChar *topic, wxChar *entry, const wxString& FileName)
+void AddKeyWordForTopic(
+  const wxString& topic,
+  wxChar* entry,
+  const wxString& FileName)
 {
-  TexTopic *texTopic = (TexTopic *)TopicTable.Get(topic);
+  TexTopic* texTopic = (TexTopic *)TopicTable.Get(topic);
   if (!texTopic)
   {
     texTopic = new TexTopic(FileName);
