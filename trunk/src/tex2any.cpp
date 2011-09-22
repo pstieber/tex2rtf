@@ -187,9 +187,10 @@ int             tableNo = 0;
 
 FILE *CurrentOutput1 = NULL;
 FILE *CurrentOutput2 = NULL;
-FILE *Inputs[15];
-unsigned long LineNumbers[15];
-wxString FileNames[15];
+const int NestingLimit = 15;
+FILE *Inputs[NestingLimit];
+unsigned long LineNumbers[NestingLimit];
+wxString FileNames[NestingLimit];
 int CurrentInputIndex = 0;
 
 wxString TexFileRoot;
@@ -738,9 +739,13 @@ bool read_a_line(wxChar *buf)
       informStr.Printf(_T("Processing: %s"),actualFile.c_str());
       OnInform(informStr);
       ++CurrentInputIndex;
-      if (CurrentInputIndex > 14)
+      if (CurrentInputIndex >= NestingLimit)
       {
-        cout << "********************ERROR*********************" << endl;
+        wxString ErrorMessage;
+        ErrorMessage
+          << "ERROR: read_a_line" << '\n'
+          << "  File nesting too deep!  The limit is " << NestingLimit << '!';
+        OnError(ErrorMessage);
       }
 
       Inputs[CurrentInputIndex] = wxFopen(actualFile, _T("r"));
@@ -830,9 +835,13 @@ bool read_a_line(wxChar *buf)
       informStr << "Processing: " << actualFile;
       OnInform(informStr);
       ++CurrentInputIndex;
-      if (CurrentInputIndex > 14)
+      if (CurrentInputIndex >= NestingLimit)
       {
-        cout << "********************ERROR*********************" << endl;
+        wxString ErrorMessage;
+        ErrorMessage
+          << "ERROR: read_a_line" << '\n'
+          << "  File nesting too deep!  The limit is " << NestingLimit << '!';
+        OnError(ErrorMessage);
       }
 
       Inputs[CurrentInputIndex] = wxFopen(actualFile, _T("r"));
@@ -2140,8 +2149,8 @@ void TexInitialize(int bufSize)
 #ifdef __UNIX__
   TexPathList.AddEnvList(_T("TEXINPUTS"));
 #endif
-  int i;
-  for (i = 0; i < 15; i++)
+
+  for (int i = 0; i < NestingLimit; ++i)
   {
     Inputs[i] = NULL;
     LineNumbers[i] = 1;
@@ -2160,9 +2169,10 @@ void TexInitialize(int bufSize)
 
 void TexCleanUp(void)
 {
-  int i;
-  for (i = 0; i < 15; i++)
+  for (int i = 0; i < NestingLimit; ++i)
+  {
     Inputs[i] = NULL;
+  }
 
   chapterNo = 0;
   sectionNo = 0;
