@@ -36,11 +36,11 @@ int currentRowNumber = 0;
  *
  */
 
-bool ParseTableArgument(wxChar *value)
+bool ParseTableArgument(const wxString& value)
 {
   noColumns = 0;
   size_t i = 0;
-  size_t len = wxStrlen(value);
+  size_t len = value.length();
   bool isBorder = false;
   while (i < len)
   {

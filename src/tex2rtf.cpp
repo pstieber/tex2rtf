@@ -75,9 +75,6 @@ unsigned long errorCount = 0;
 #ifndef NO_GUI
 
 extern wxChar *BigBuffer;
-extern wxChar *TexFileRoot;
-extern wxChar *TexBibName;         // Bibliography output file name
-extern wxChar *TexTmpBibName;      // Temporary bibliography output file name
 extern ColourTableMap ColourTable;
 extern TexChunk *TopLevel;
 
@@ -550,26 +547,6 @@ int MyApp::OnExit()
     {
       delete BigBuffer;
       BigBuffer = NULL;
-    }
-    if (currentArgData)
-    {
-      delete currentArgData;
-      currentArgData = NULL;
-    }
-    if (TexFileRoot)
-    {
-      delete TexFileRoot;
-      TexFileRoot = NULL;
-    }
-    if (TexBibName)
-    {
-      delete TexBibName;
-      TexBibName = NULL;
-    }
-    if (TexTmpBibName)
-    {
-      delete TexTmpBibName;
-      TexTmpBibName = NULL;
     }
     if (FileRoot)
     {
