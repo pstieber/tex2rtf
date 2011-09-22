@@ -141,25 +141,24 @@ void ResetTopicCounter(void)
   topicCounter = 0;
 }
 
-static wxChar *forceTopicName = NULL;
+static wxString forceTopicName;
 
 void ForceTopicName(const wxChar *name)
 {
-  if (forceTopicName)
-    delete[] forceTopicName;
   if (name)
-    forceTopicName = copystring(name);
+    forceTopicName = name;
   else
-    forceTopicName = NULL;
+    forceTopicName.clear();
 }
 
-wxChar *FindTopicName(TexChunk *chunk)
+wxString FindTopicName(TexChunk *chunk)
 {
-  if (forceTopicName)
+  if (!forceTopicName.empty())
+  {
     return forceTopicName;
+  }
 
-  wxChar *topicName = NULL;
-  static wxChar topicBuf[100];
+  wxString topicName;
 
   if (chunk && (chunk->type == CHUNK_TYPE_MACRO) &&
       (chunk->macroId == ltLABEL))
@@ -182,12 +181,15 @@ wxChar *FindTopicName(TexChunk *chunk)
       }
     }
   }
-  if (topicName)
+  if (!topicName.empty())
+  {
     return topicName;
+  }
   else
   {
-    wxSnprintf(topicBuf, sizeof(topicBuf), _T("topic%ld"), topicCounter);
-    topicCounter ++;
+    wxString topicBuf;
+    topicBuf << "topic" << topicCounter;
+    ++topicCounter;
     return topicBuf;
   }
 }

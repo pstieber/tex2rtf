@@ -38,7 +38,10 @@ void GenerateHTMLIndexFile(const wxString& FileName);
 bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label);
 
 void GenerateHTMLWorkshopFiles(wxChar *fname);
-void HTMLWorkshopAddToContents(int level, wxChar *s, wxChar *file);
+void HTMLWorkshopAddToContents(
+  int level,
+  const wxString& s,
+  const wxString& FileName);
 void HTMLWorkshopStartContents();
 void HTMLWorkshopEndContents();
 
@@ -102,17 +105,16 @@ class HyperReference: public wxObject
 class TexNextPage: public wxObject
 {
  public:
-  const wxChar *label;
-  const wxChar *filename;
-  TexNextPage(const wxChar *theLabel, const wxChar *theFile)
+  const wxString mLabel;
+  const wxString mFileName;
+
+  TexNextPage(const wxString Label, const wxString& FileName)
+    : mLabel(Label),
+      mFileName(FileName)
   {
-    label = copystring(theLabel);
-    filename = copystring(theFile);
   }
-  virtual ~TexNextPage(void)
+  virtual ~TexNextPage()
   {
-    delete[] label;
-    delete[] filename;
   }
 };
 
@@ -128,45 +130,45 @@ static wxString CurrentSubsubsectionName;
 static wxString CurrentSubsubsectionFile;
 static wxString CurrentTopic;
 
-static void SetCurrentTopic(const wxChar *s)
+static void SetCurrentTopic(const wxString& s)
 {
   CurrentTopic = s;
 }
 
-void SetCurrentChapterName(wxChar *s, wxChar *file)
+void SetCurrentChapterName(const wxString& s, const wxString& File)
 {
   CurrentChapterName = s;
-  CurrentChapterFile = file;
+  CurrentChapterFile = File;
 
   currentFileName = CurrentChapterFile;
 
   SetCurrentTopic(s);
 }
 
-void SetCurrentSectionName(wxChar *s, wxChar *file)
+void SetCurrentSectionName(const wxString& s, const wxString& File)
 {
   CurrentSectionName = s;
-  CurrentSectionFile = file;
+  CurrentSectionFile = File;
 
   currentFileName = CurrentSectionFile;
 
   SetCurrentTopic(s);
 }
 
-void SetCurrentSubsectionName(const wxChar *s, wxChar *file)
+void SetCurrentSubsectionName(const wxString& s, const wxString& File)
 {
   CurrentSubsectionName = s;
-  CurrentSubsectionFile = file;
+  CurrentSubsectionFile = File;
 
   currentFileName = CurrentSubsectionFile;
 
   SetCurrentTopic(s);
 }
 
-void SetCurrentSubsubsectionName(wxChar *s, wxChar *file)
+void SetCurrentSubsubsectionName(const wxString& s, const wxString& File)
 {
   CurrentSubsubsectionName = s;
-  CurrentSubsubsectionFile = file;
+  CurrentSubsubsectionFile = File;
 
   currentFileName = CurrentSubsubsectionFile;
 
@@ -183,7 +185,7 @@ static wxArrayString gs_filenames;
  *
  */
 
-void ReopenFile(FILE **fd, wxChar **fileName, const wxChar *label)
+void ReopenFile(FILE **fd, wxChar **fileName, const wxString& label)
 {
   if (*fd)
   {
@@ -373,7 +375,7 @@ void AddBrowseButtons(
   const wxString& upFilename,
   const wxString& previousLabel,
   const wxString& previousFilename,
-  const wxChar *thisLabel,
+  const wxString& thisLabel,
   wxChar *thisFilename)
 {
   if (htmlBrowseButtons == HTML_BUTTONS_NONE)
@@ -552,16 +554,16 @@ void AddBrowseButtons(
     TexOutput(buf);
   }
 
-  const wxChar *nextLabel = NULL;
-  const wxChar *nextFilename = NULL;
+  wxString nextLabel;
+  wxString nextFilename;
 
   // Get the next page, and record the previous page's 'next' page
   // (i.e. this page)
   TexNextPage *nextPage = (TexNextPage *)TexNextPages.Get(thisLabel);
   if (nextPage)
   {
-    nextLabel = nextPage->label;
-    nextFilename = nextPage->filename;
+    nextLabel = nextPage->mLabel;
+    nextFilename = nextPage->mFileName;
   }
   if (!previousLabel.empty() && !previousFilename.empty())
   {
@@ -580,7 +582,7 @@ void AddBrowseButtons(
    *
    */
 
-  if (nextLabel && nextFilename)
+  if (!nextLabel.empty() && !nextFilename.empty())
   {
     if (PrimaryAnchorOfTheFile(nextFilename, nextLabel))
     {
@@ -798,12 +800,15 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       SetCurrentOutput(NULL);
       startedSections = true;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       ReopenFile(&Chapters, &ChaptersName, topicName);
       AddTexRef(topicName, ChaptersName, ChapterNameString);
 
       SetCurrentChapterName(topicName, ChaptersName);
-      if (htmlWorkshopFiles) HTMLWorkshopAddToContents(0, topicName, ChaptersName);
+      if (htmlWorkshopFiles)
+      {
+        HTMLWorkshopAddToContents(0, topicName, ChaptersName);
+      }
 
       SetCurrentOutput(Chapters);
 
@@ -833,18 +838,33 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
         topicName,
         ChaptersName); // This topic
 
-      if(PrimaryAnchorOfTheFile(ChaptersName, topicName))
-        wxFprintf(Contents, _T("\n<LI><A HREF=\"%s\">"), ConvertCase(ChaptersName));
+      if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
+      {
+        wxFprintf(
+          Contents,
+          _T("\n<LI><A HREF=\"%s\">"),
+          ConvertCase(ChaptersName));
+      }
       else
-        wxFprintf(Contents, _T("\n<LI><A HREF=\"%s#%s\">"), ConvertCase(ChaptersName), topicName);
+      {
+        wxFprintf(
+          Contents,
+          _T("\n<LI><A HREF=\"%s#%s\">"),
+          ConvertCase(ChaptersName),
+          topicName);
+      }
 
       if (htmlFrameContents && FrameContents)
       {
         SetCurrentOutput(FrameContents);
-        if(PrimaryAnchorOfTheFile(ChaptersName, topicName))
+        if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
+        {
           wxFprintf(FrameContents, _T("\n<LI><A HREF=\"%s\" TARGET=\"mainwindow\">"), ConvertCase(ChaptersName));
+        }
         else
+        {
           wxFprintf(FrameContents, _T("\n<LI><A HREF=\"%s#%s\" TARGET=\"mainwindow\">"), ConvertCase(ChaptersName), topicName);
+        }
         OutputCurrentSection();
         wxFprintf(FrameContents, _T("</A>\n"));
       }
@@ -886,12 +906,15 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       SetCurrentOutput(NULL);
       startedSections = true;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       ReopenFile(&Sections, &SectionsName, topicName);
       AddTexRef(topicName, SectionsName, SectionNameString);
 
       SetCurrentSectionName(topicName, SectionsName);
-      if (htmlWorkshopFiles) HTMLWorkshopAddToContents(1, topicName, SectionsName);
+      if (htmlWorkshopFiles)
+      {
+        HTMLWorkshopAddToContents(1, topicName, SectionsName);
+      }
 
       SetCurrentOutput(Sections);
       HTMLHead();
@@ -914,17 +937,25 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       SetCurrentOutputs(jumpFrom, Sections);
       if (DocumentStyle == LATEX_ARTICLE)
       {
-        if(PrimaryAnchorOfTheFile(SectionsName, topicName))
+        if (PrimaryAnchorOfTheFile(SectionsName, topicName))
+        {
           wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s\">"), ConvertCase(SectionsName));
+        }
         else
+        {
           wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s#%s\">"), ConvertCase(SectionsName), topicName);
+        }
       }
       else
       {
         if(PrimaryAnchorOfTheFile(SectionsName, topicName))
+        {
           wxFprintf(jumpFrom, _T("\n<A HREF=\"%s\"><B>"), ConvertCase(SectionsName));
+        }
         else
+        {
           wxFprintf(jumpFrom, _T("\n<A HREF=\"%s#%s\"><B>"), ConvertCase(SectionsName), topicName);
+        }
       }
 
       wxFprintf(Sections, _T("\n<H2>"));
@@ -991,7 +1022,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
           startedSections = true;
           subsectionStarted = true;
 
-          wxChar *topicName = FindTopicName(GetNextChunk());
+          wxString topicName = FindTopicName(GetNextChunk());
 
           if ( !combineSubSections )
           {
@@ -999,7 +1030,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             ReopenFile(&Subsections, &SubsectionsName, topicName);
             AddTexRef(topicName, SubsectionsName, SubsectionNameString);
             SetCurrentSubsectionName(topicName, SubsectionsName);
-            if (htmlWorkshopFiles) HTMLWorkshopAddToContents(2, topicName, SubsectionsName);
+            if (htmlWorkshopFiles)
+            {
+              HTMLWorkshopAddToContents(2, topicName, SubsectionsName);
+            }
             SetCurrentOutput(Subsections);
 
             HTMLHead();
@@ -1018,10 +1052,14 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
               SubsectionsName);   // This topic
 
             SetCurrentOutputs(Sections, Subsections);
-            if(PrimaryAnchorOfTheFile(SubsectionsName, topicName))
+            if (PrimaryAnchorOfTheFile(SubsectionsName, topicName))
+            {
               wxFprintf(Sections, _T("\n<A HREF=\"%s\"><B>"), ConvertCase(SubsectionsName));
+            }
             else
+            {
               wxFprintf(Sections, _T("\n<A HREF=\"%s#%s\"><B>"), ConvertCase(SubsectionsName), topicName);
+            }
 
             wxFprintf(Subsections, _T("\n<H3>"));
             OutputCurrentSection();
@@ -1049,7 +1087,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             OutputCurrentSection();
             TexOutput(_T("</A><BR>\n"));
 
-            if (htmlWorkshopFiles) HTMLWorkshopAddToContents(2, topicName, SectionsName);
+            if (htmlWorkshopFiles)
+            {
+              HTMLWorkshopAddToContents(2, topicName, SectionsName);
+            }
             SetCurrentOutput(Sections);
           }
           // Add this section title to the list of keywords
@@ -1079,7 +1120,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
 
         startedSections = true;
 
-        wxChar *topicName = FindTopicName(GetNextChunk());
+        wxString topicName = FindTopicName(GetNextChunk());
 
         if ( !combineSubSections )
         {
@@ -1858,7 +1899,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       if (inTabular)
         TexOutput(_T("\n</CAPTION>\n"));
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
 
       int n = inFigure ? figureNo : tableNo;
 
@@ -3538,7 +3579,10 @@ void GenerateHTMLWorkshopFiles(wxChar *fname)
 static FILE *HTMLWorkshopContents = NULL;
 static int HTMLWorkshopLastLevel = 0;
 
-void HTMLWorkshopAddToContents(int level, wxChar *s, wxChar *file)
+void HTMLWorkshopAddToContents(
+  int level,
+  const wxString& s,
+  const wxString& FileName)
 {
   int i;
 
@@ -3550,15 +3594,18 @@ void HTMLWorkshopAddToContents(int level, wxChar *s, wxChar *file)
       wxFprintf(HTMLWorkshopContents, _T("</UL>"));
 
   SetCurrentOutput(HTMLWorkshopContents);
-  wxFprintf(HTMLWorkshopContents,
-            _T(" <LI> <OBJECT type=\"text/sitemap\">\n")
-            _T("  <param name=\"Local\" value=\"%s#%s\">\n")
-            _T("  <param name=\"Name\" value=\""),
-            file, s);
+  wxFprintf(
+    HTMLWorkshopContents,
+    _T(" <LI> <OBJECT type=\"text/sitemap\">\n")
+    _T("  <param name=\"Local\" value=\"%s#%s\">\n")
+    _T("  <param name=\"Name\" value=\""),
+    FileName,
+    s);
   OutputCurrentSection();
-  wxFprintf(HTMLWorkshopContents,
-            _T("\">\n")
-            _T("  </OBJECT>\n"));
+  wxFprintf(
+    HTMLWorkshopContents,
+    _T("\">\n")
+    _T("  </OBJECT>\n"));
   HTMLWorkshopLastLevel = level;
 }
 

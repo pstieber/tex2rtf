@@ -80,7 +80,7 @@ void XLPOnMacro(int macroId, int no_args, bool start)
       wxFprintf(Contents, _T("}\n\n"));
       wxFprintf(Chapters, _T("}\n\n"));
       SetCurrentOutput(Chapters);
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       hyperLabels[topicName] = currentBlockId;
     }
     break;
@@ -119,7 +119,7 @@ void XLPOnMacro(int macroId, int no_args, bool start)
         wxFprintf(Chapters, _T("}\n\n"));
       wxFprintf(Sections, _T("}\n\n"));
       SetCurrentOutput(Sections);
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       hyperLabels[topicName] = currentBlockId;
     }
     break;
@@ -148,7 +148,7 @@ void XLPOnMacro(int macroId, int no_args, bool start)
       wxFprintf(Sections, _T("}\n\n"));
       wxFprintf(Subsections, _T("}\n\n"));
       SetCurrentOutput(Subsections);
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       hyperLabels[topicName] = currentBlockId;
     }
     break;
@@ -173,7 +173,7 @@ void XLPOnMacro(int macroId, int no_args, bool start)
       wxFprintf(Subsections, _T("}\n\n"));
       wxFprintf(Subsubsections, _T("}\n\n"));
       SetCurrentOutput(Subsubsections);
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       hyperLabels[topicName] = currentBlockId;
     }
     break;
@@ -517,7 +517,7 @@ void XLPOnMacro(int macroId, int no_args, bool start)
     }
     else
     {
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
 
       AddTexRef(
         topicName,
