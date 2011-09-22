@@ -10,21 +10,12 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-#endif
-
 #include "tex2any.h"
 #include "tex2rtf.h"
+
 #include <ctype.h>
-#include <stdlib.h>
-#include <stdio.h>
+#include <cstdlib>
+#include <cstdio>
 
 #ifdef __WIN32__
 #include <windows.h>
@@ -32,6 +23,8 @@
 
 #include "bmputils.h"
 #include "table.h"
+
+using namespace std;
 
 #if !WXWIN_COMPATIBILITY_2_4
 static inline wxChar* copystring(const wxChar* s)
@@ -726,12 +719,13 @@ void Text2RTF(TexChunk *chunk)
       if (def && (def->macroId == ltVERBATIM || def->macroId == ltVERB))
         inVerbatim = true;
 
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         Text2RTF(child_chunk);
-        iNode = iNode->GetNext();
       }
 
       if (def && (def->macroId == ltVERBATIM || def->macroId == ltVERB))
@@ -741,12 +735,13 @@ void Text2RTF(TexChunk *chunk)
     }
     case CHUNK_TYPE_ARG:
     {
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         Text2RTF(child_chunk);
-        iNode = iNode->GetNext();
       }
 
       break;
@@ -825,15 +820,15 @@ void WriteEnvironmentStyles(void)
 void OutputRTFHeaderCommands(void)
 {
   wxChar buf[300];
-  if (PageStyle && wxStrcmp(PageStyle, _T("plain")) == 0)
+  if (PageStyle == "plain")
   {
     TexOutput(_T("{\\headerl }{\\headerr }"));
   }
-  else if (PageStyle && wxStrcmp(PageStyle, _T("empty")) == 0)
+  else if (PageStyle == "empty")
   {
     TexOutput(_T("{\\headerl }{\\headerr }"));
   }
-  else if (PageStyle && wxStrcmp(PageStyle, _T("headings")) == 0)
+  else if (PageStyle == "headings")
   {
     // Left header
     TexOutput(_T("{\\headerl\\fi0 "));
@@ -953,7 +948,7 @@ void OutputRTFHeaderCommands(void)
 
 void OutputRTFFooterCommands(void)
 {
-  if (PageStyle && wxStrcmp(PageStyle, _T("plain")) == 0)
+  if (PageStyle == "plain")
   {
     TexOutput(_T("{\\footerl\\fi0 "));
     if (footerRule)
@@ -969,11 +964,11 @@ void OutputRTFFooterCommands(void)
     TexOutput(_T("{\\field{\\*\\fldinst PAGE \\\\* MERGEFORMAT }{\\fldrslt 1}}"));
     TexOutput(_T("}\\par\\pard}"));
   }
-  else if (PageStyle && wxStrcmp(PageStyle, _T("empty")) == 0)
+  else if (PageStyle == "empty")
   {
     TexOutput(_T("{\\footerl }{\\footerr }"));
   }
-  else if (PageStyle && wxStrcmp(PageStyle, _T("headings")) == 0)
+  else if (PageStyle == "headings")
   {
     TexOutput(_T("{\\footerl }{\\footerr }"));
   }
@@ -1140,9 +1135,10 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         wxFprintf(Chapters, _T("\\sect\\pgncont\\titlepg\n"));
 
         // If a non-custom page style, we generate the header now.
-        if (PageStyle && (wxStrcmp(PageStyle, _T("plain")) == 0 ||
-                          wxStrcmp(PageStyle, _T("empty")) == 0 ||
-                          wxStrcmp(PageStyle, _T("headings")) == 0))
+        if (
+          PageStyle == "plain" ||
+          PageStyle == "empty" ||
+          PageStyle == "headings")
         {
           OutputRTFHeaderCommands();
           OutputRTFFooterCommands();
@@ -1287,9 +1283,10 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         {
           TexOutput(_T("\\sect\\pgncont\n"));
           // If a non-custom page style, we generate the header now.
-          if (PageStyle && (wxStrcmp(PageStyle, _T("plain")) == 0 ||
-                            wxStrcmp(PageStyle, _T("empty")) == 0 ||
-                            wxStrcmp(PageStyle, _T("headings")) == 0))
+          if (
+            PageStyle == "plain" ||
+            PageStyle == "empty" ||
+            PageStyle == "headings")
           {
             OutputRTFHeaderCommands();
             OutputRTFFooterCommands();
@@ -4845,13 +4842,17 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     DefaultOnArgument(macroId, arg_no, start);
     if (!start && !IsArgOptional())
     {
-      if (MinorDocumentStyleString)
+      if (!MinorDocumentStyleString.empty())
       {
-        if (StringMatch(_T("twoside"), MinorDocumentStyleString))
+        if (MinorDocumentStyleString == "twoside")
+        {
           // Mirror margins, switch on odd/even headers & footers, and break sections at odd pages
           TexOutput(_T("\\margmirror\\facingp\\sbkodd"));
-        if (StringMatch(_T("twocolumn"), MinorDocumentStyleString))
+        }
+        if (MinorDocumentStyleString == "twocolumn")
+        {
           TexOutput(_T("\\cols2"));
+        }
       }
       TexOutput(_T("\n"));
     }
@@ -4937,9 +4938,10 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         wxFprintf(Chapters, _T("\\sect\\pgncont\\titlepg\n"));
 
         // If a non-custom page style, we generate the header now.
-        if (PageStyle && (wxStrcmp(PageStyle, _T("plain")) == 0 ||
-                          wxStrcmp(PageStyle, _T("empty")) == 0 ||
-                          wxStrcmp(PageStyle, _T("headings")) == 0))
+        if (
+          PageStyle == "plain" ||
+          PageStyle == "empty" ||
+          PageStyle == "headings")
         {
           OutputRTFHeaderCommands();
           OutputRTFFooterCommands();

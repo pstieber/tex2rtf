@@ -10,20 +10,13 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-#endif
+#include "tex2any.h"
 
 #include <ctype.h>
-#include "tex2any.h"
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
 
 #if !WXWIN_COMPATIBILITY_2_4
 static inline wxChar* copystring(const wxChar* s)
@@ -52,14 +45,14 @@ TexChunk *      CentreHeaderOdd = NULL;
 TexChunk *      CentreFooterOdd = NULL;
 TexChunk *      RightHeaderOdd = NULL;
 TexChunk *      RightFooterOdd = NULL;
-wxChar *        PageStyle = copystring(_T("plain"));
+wxString        PageStyle("plain");
 
 int             DocumentStyle = LATEX_REPORT;
 int             MinorDocumentStyle = 0;
 wxPathList      TexPathList;
-wxChar *        BibliographyStyleString = copystring(_T("plain"));
-wxChar *        DocumentStyleString = copystring(_T("report"));
-wxChar *        MinorDocumentStyleString = NULL;
+wxString        BibliographyStyleString("plain");
+wxString        DocumentStyleString("report");
+wxString        MinorDocumentStyleString;
 int             ParSkip = 0;
 int             ParIndent = 0;
 
@@ -77,7 +70,8 @@ int             HUGEFont3 = 28;
 // text) and must start at the first character of the line, or tex2rtf
 // will fail to process them correctly (a limitation of tex2rtf, not TeX)
 static const wxString syntaxTokens[] =
-{ _T("\\begin{verbatim}"),
+{
+  _T("\\begin{verbatim}"),
   _T("\\begin{toocomplex}"),
   _T("\\end{verbatim}"),
   _T("\\end{toocomplex}"),
@@ -212,7 +206,6 @@ bool isArgOptional = false;
 int noArgs = 0;
 
 TexChunk *TopLevel = NULL;
-// wxList MacroDefs(wxKEY_STRING);
 wxHashTable MacroDefs(wxKEY_STRING);
 wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 wxChar *BigBuffer = NULL;  // For reading in large chunks of text
@@ -279,13 +272,17 @@ void ForbidWarning(TexMacroDef *def)
   {
     case FORBID_WARN:
     {
-      informBuf.Printf(_T("Warning: it is recommended that command %s is not used."), def->name);
+      informBuf
+        << "Warning: it is recommended that command "
+        << def->mName << " is not used.";
       OnInform(informBuf);
       break;
     }
     case FORBID_ABSOLUTELY:
     {
-      informBuf.Printf(_T("Error: command %s cannot be used and will lead to errors."), def->name);
+      informBuf
+        << "Error: command " << def->mName
+        << " cannot be used and will lead to errors.";
       OnInform(informBuf);
       break;
     }
@@ -322,7 +319,7 @@ TexMacroDef *MatchMacro(
     if (def)
     {
       *pos = j + 1;  // BUGBUG Should this be + 1???
-      *env = def->name;
+      *env = def->mName;
       ForbidWarning(def);
       return def;
     }
@@ -455,7 +452,7 @@ bool read_a_line(wxChar *buf)
     {
        wxString errBuf;
        errBuf
-         << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+//         << "Line " << LineNumbers[CurrentInputIndex] << " of file "
          << currentFileName << " is too long.  Lines can be no longer than "
          << MAX_LINE_BUFFER_SIZE << " characters.  Truncated.";
        OnError(errBuf);
@@ -471,25 +468,27 @@ bool read_a_line(wxChar *buf)
 
     if (checkCurlyBraces)
     {
-        if (ch == '{' && !readInVerbatim && lastChar != _T('\\'))
-           leftCurly++;
-        if (ch == '}' && !readInVerbatim && lastChar != _T('\\'))
+      if (ch == '{' && !readInVerbatim && lastChar != _T('\\'))
+      {
+        leftCurly++;
+      }
+      if (ch == '}' && !readInVerbatim && lastChar != _T('\\'))
+      {
+        rightCurly++;
+        if (rightCurly > leftCurly)
         {
-           rightCurly++;
-           if (rightCurly > leftCurly)
-           {
-               wxString errBuf;
-               errBuf
-                 << "An extra right Curly brace ('}') was detected at line "
-                 << LineNumbers[CurrentInputIndex] << " inside file "
-                 << currentFileName;
-               OnError(errBuf);
+          wxString errBuf;
+          errBuf
+            << "An extra right Curly brace ('}') was detected at line "
+//            << LineNumbers[CurrentInputIndex] << " inside file "
+            << currentFileName;
+          OnError(errBuf);
 
-               // Reduce the count of right Curly braces, so the mismatched count
-               // isn't reported on every line that has a '}' after the first mismatch
-               rightCurly--;
-           }
+          // Reduce the count of right Curly braces, so the mismatched count
+          // isn't reported on every line that has a '}' after the first mismatch
+          rightCurly--;
         }
+      }
     }
 
     if (ch != EOF)
@@ -509,14 +508,14 @@ bool read_a_line(wxChar *buf)
 //          i += 6;
           if (bufIndex + 5 >= MAX_LINE_BUFFER_SIZE)
           {
-             wxString errBuf;
-             errBuf
-               << "Line " << LineNumbers[CurrentInputIndex] << " of file "
-               << currentFileName
-               << " is too long.  Lines can be no longer than "
-               << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
-             OnError(errBuf);
-             return false;
+            wxString errBuf;
+            errBuf
+//              << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+              << currentFileName
+              << " is too long.  Lines can be no longer than "
+              << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
+            OnError(errBuf);
+            return false;
           }
           wxStrcat(buf, _T("\\par"));
           bufIndex += 5;
@@ -527,14 +526,14 @@ bool read_a_line(wxChar *buf)
           ungetc(ch1, Inputs[CurrentInputIndex]);
           if (bufIndex >= MAX_LINE_BUFFER_SIZE)
           {
-             wxString errBuf;
-             errBuf
-               << "Line " << LineNumbers[CurrentInputIndex] << " of file "
-               << currentFileName
-               << " is too long.  Lines can be no longer than "
-               << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
-             OnError(errBuf);
-             return false;
+            wxString errBuf;
+            errBuf
+//              << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+              << currentFileName
+              << " is too long.  Lines can be no longer than "
+              << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
+            OnError(errBuf);
+            return false;
           }
 
           buf[bufIndex] = (wxChar)ch;
@@ -543,47 +542,20 @@ bool read_a_line(wxChar *buf)
       }
       else
       {
-
         // Convert embedded characters to RTF equivalents
         switch(ch)
         {
-        case 0xf6: // ö
-        case 0xe4: // ü
-        case 0xfc: // ü
-        case 0xd6: // Ö
-        case 0xc4: // Ä
-        case 0xdc: // Ü
-                if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
-                {
-                   wxString errBuf;
-                   errBuf
-                     << "Line " << LineNumbers[CurrentInputIndex] << " of file "
-                     << currentFileName
-                     << " is too long.  Lines can be no longer than "
-                     << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
-                   OnError(errBuf);
-                   return false;
-                }
-                buf[bufIndex++]='\\';
-                buf[bufIndex++]='"';
-                buf[bufIndex++]='{';
-                switch(ch)
-                {
-                    case 0xf6:buf[bufIndex++]='o';break; // ö
-                    case 0xe4:buf[bufIndex++]='a';break; // ä
-                    case 0xfc:buf[bufIndex++]='u';break; // ü
-                    case 0xd6:buf[bufIndex++]='O';break; // Ö
-                    case 0xc4:buf[bufIndex++]='A';break; // Ä
-                    case 0xdc:buf[bufIndex++]='U';break; // Ü
-                }
-                buf[bufIndex++]='}';
-                break;
-        case 0xdf: // ß
+          case 0xf6: // ö
+          case 0xe4: // ü
+          case 0xfc: // ü
+          case 0xd6: // Ö
+          case 0xc4: // Ä
+          case 0xdc: // Ü
             if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
             {
               wxString errBuf;
               errBuf
-                << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+//                     << "Line " << LineNumbers[CurrentInputIndex] << " of file "
                 << currentFileName
                 << " is too long.  Lines can be no longer than "
                 << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
@@ -591,69 +563,96 @@ bool read_a_line(wxChar *buf)
               return false;
             }
             buf[bufIndex++]='\\';
-            buf[bufIndex++]='s';
-            buf[bufIndex++]='s';
-            buf[bufIndex++]='\\';
-            buf[bufIndex++]='/';
+            buf[bufIndex++]='"';
+            buf[bufIndex++]='{';
+            switch(ch)
+            {
+              case 0xf6:buf[bufIndex++]='o';break; // ö
+              case 0xe4:buf[bufIndex++]='a';break; // ä
+              case 0xfc:buf[bufIndex++]='u';break; // ü
+              case 0xd6:buf[bufIndex++]='O';break; // Ö
+              case 0xc4:buf[bufIndex++]='A';break; // Ä
+              case 0xdc:buf[bufIndex++]='U';break; // Ü
+            }
+            buf[bufIndex++]='}';
             break;
+        case 0xdf: // ß
+          if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
+          {
+            wxString errBuf;
+            errBuf
+//                << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+              << currentFileName
+              << " is too long.  Lines can be no longer than "
+              << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
+            OnError(errBuf);
+            return false;
+          }
+          buf[bufIndex++]='\\';
+          buf[bufIndex++]='s';
+          buf[bufIndex++]='s';
+          buf[bufIndex++]='\\';
+          buf[bufIndex++]='/';
+          break;
         default:
-            if (bufIndex >= MAX_LINE_BUFFER_SIZE)
-            {
-              wxString errBuf;
-              errBuf
-                << "Line " << LineNumbers[CurrentInputIndex] << " of file "
-                << currentFileName
-                << " is too long.  Lines can be no longer than "
-                << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
-              OnError(errBuf);
-              return false;
-            }
-            // If the current character read in is a '_', we need to check
-            // whether there should be a '\' before it or not
-            if (ch != '_')
-            {
-                buf[bufIndex++] = (wxChar)ch;
-                break;
-            }
+          if (bufIndex >= MAX_LINE_BUFFER_SIZE)
+          {
+//            wxString errBuf;
+//            errBuf
+//              << "Line " << LineNumbers[CurrentInputIndex] << " of file "
+//              << currentFileName
+//              << " is too long.  Lines can be no longer than "
+//              << MAX_LINE_BUFFER_SIZE<< " characters.  Truncated.";
+//            OnError(errBuf);
+            return false;
+          }
+          // If the current character read in is a '_', we need to check
+          // whether there should be a '\' before it or not
+          if (ch != '_')
+          {
+            buf[bufIndex++] = (wxChar)ch;
+            break;
+          }
 
-            if (checkSyntax)
+          if (checkSyntax)
+          {
+            if (readInVerbatim)
             {
-                if (readInVerbatim)
-                {
-                    // There should NOT be a '\' before the '_'
-                    if ((bufIndex > 0 && (buf[bufIndex-1] == '\\')) && (buf[0] != '%'))
-                    {
-//                        wxString errBuf;
-//                        errBuf.Printf(_T("An underscore ('_') was detected at line %lu inside file %s that should NOT have a '\\' before it."),
-//                            LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str());
-//                        OnError(errBuf);
-                    }
+              // There should NOT be a '\' before the '_'
+              if ((bufIndex > 0 && (buf[bufIndex-1] == '\\')) && (buf[0] != '%'))
+              {
+////              wxString errBuf;
+////              errBuf.Printf(_T("An underscore ('_') was detected at line %lu inside file %s that should NOT have a '\\' before it."),
+////                LineNumbers[CurrentInputIndex], (const wxChar*) currentFileName.c_str());
+////              OnError(errBuf);
+              }
+            }
+            else
+            {
+              // There should be a '\' before the '_'
+              if (bufIndex == 0)
+              {
+                wxString errBuf;
+                errBuf
+                  << "An underscore ('_') was detected at line "
+                  << LineNumbers[CurrentInputIndex]
+                  << " inside file " << currentFileName
+                  << " that may need a '\\' before it.";
+                OnError(errBuf);
+              }
+              else if (
+                (buf[bufIndex-1] != '\\') && (buf[0] != '%') &&  // If it is a comment line, then no warnings
+                (wxStrncmp(buf, _T("\\input"), 6))) // do not report filenames that have underscores in them
+              {
+                wxString errBuf;
+                errBuf
+                  << "An underscore ('_') was detected at line "
+                  << LineNumbers[CurrentInputIndex]
+                  << " inside file " << currentFileName
+                  << " that may need a '\\' before it.";
+                  OnError(errBuf);
                 }
-                else
-                {
-                    // There should be a '\' before the '_'
-                    if (bufIndex == 0)
-                    {
-                        wxString errBuf;
-                        errBuf
-                          << "An underscore ('_') was detected at line "
-                          << LineNumbers[CurrentInputIndex]
-                          << " inside file " << currentFileName
-                          << " that may need a '\\' before it.";
-                        OnError(errBuf);
-                    }
-                    else if ((buf[bufIndex-1] != '\\') && (buf[0] != '%') &&  // If it is a comment line, then no warnings
-                        (wxStrncmp(buf, _T("\\input"), 6))) // do not report filenames that have underscores in them
-                    {
-                        wxString errBuf;
-                        errBuf
-                          << "An underscore ('_') was detected at line "
-                          << LineNumbers[CurrentInputIndex]
-                          << " inside file " << currentFileName
-                          << " that may need a '\\' before it.";
-                        OnError(errBuf);
-                    }
-                }
+              }
             }
             buf[bufIndex++] = (wxChar)ch;
             break;
@@ -666,22 +665,24 @@ bool read_a_line(wxChar *buf)
       fclose(Inputs[CurrentInputIndex]);
       Inputs[CurrentInputIndex] = NULL;
       if (CurrentInputIndex > 0)
+      {
          ch = ' '; // No real end of file
+      }
       CurrentInputIndex --;
 
       if (checkCurlyBraces)
       {
-          if (leftCurly != rightCurly)
-          {
-            wxString errBuf;
-            errBuf
-              << "Curly braces do not match inside file "
-              << currentFileName << '\n'
-              << leftCurly << " opens, " << rightCurly << " closes";
-            OnError(errBuf);
-          }
-          leftCurly = 0;
-          rightCurly = 0;
+        if (leftCurly != rightCurly)
+        {
+          wxString errBuf;
+          errBuf
+            << "Curly braces do not match inside file "
+            << currentFileName << '\n'
+            << leftCurly << " opens, " << rightCurly << " closes";
+          OnError(errBuf);
+        }
+        leftCurly = 0;
+        rightCurly = 0;
       }
 
       if (readingVerbatim)
@@ -693,7 +694,9 @@ bool read_a_line(wxChar *buf)
       }
     }
     if (ch == 10)
+    {
       IncrementLineNumber();
+    }
   }
   buf[bufIndex] = 0;
 
@@ -836,10 +839,10 @@ bool read_a_line(wxChar *buf)
 
       if (!Inputs[CurrentInputIndex])
       {
-        wxString errBuf;
-        errBuf << "Could not open include file " << actualFile;
+//        wxString errBuf;
+//        errBuf << "Could not open include file " << actualFile;
         --CurrentInputIndex;
-        OnError(errBuf);
+//        OnError(errBuf);
       }
     }
     bool succ = read_a_line(buf);
@@ -893,12 +896,12 @@ bool read_a_line(wxChar *buf)
   {
       if (ch == EOF && leftCurly != rightCurly)
       {
-        wxString errBuf;
-        errBuf
-          << "Curly braces do not match inside file " << currentFileName
-          << '\n'
-          << leftCurly << " opens, " << rightCurly << " closes";
-        OnError(errBuf);
+//        wxString errBuf;
+//        errBuf
+//          << "Curly braces do not match inside file " << currentFileName
+//          << '\n'
+//          << leftCurly << " opens, " << rightCurly << " closes";
+//        OnError(errBuf);
       }
   }
 
@@ -1016,7 +1019,7 @@ void MacroError(wxChar *buffer)
  */
 size_t ParseArg(
   TexChunk *thisArg,
-  wxList& children,
+  list<TexChunk*>& children,
   wxChar *buffer,
   size_t pos,
   wxChar *environment,
@@ -1075,7 +1078,7 @@ size_t ParseArg(
       TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
       BigBuffer[buf_ptr] = 0;
       chunk->value = copystring(BigBuffer);
-      children.Append((wxObject *)chunk);
+      children.push_back(chunk);
     }
     return pos;
   }
@@ -1101,7 +1104,7 @@ size_t ParseArg(
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         BigBuffer[0] = 0;
         buf_ptr = 0;
@@ -1127,9 +1130,9 @@ size_t ParseArg(
         TexChunk *str = new TexChunk(CHUNK_TYPE_STRING);
         str->value = copystring(BigBuffer);
 
-        children.Append((wxObject *)chunk);
-        chunk->children.Append((wxObject *)arg);
-        arg->children.Append((wxObject *)str);
+        children.push_back(chunk);
+        chunk->mChildren.push_back(arg);
+        arg->mChildren.push_back(str);
 
         // Also want to include the following newline (is always a newline
         // after a verbatim): EXCEPT in HTML
@@ -1139,7 +1142,7 @@ size_t ParseArg(
           TexChunk *parChunk = new TexChunk(CHUNK_TYPE_MACRO, parDef);
           parChunk->no_args = 0;
           parChunk->macroId = ltBACKSLASHCHAR;
-          children.Append((wxObject *)parChunk);
+          children.push_back(parChunk);
         }
       }
     }
@@ -1159,7 +1162,7 @@ size_t ParseArg(
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         if (wxCh == _T('}')) pos ++;
         return pos;
@@ -1172,7 +1175,7 @@ size_t ParseArg(
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         pos ++;
 
@@ -1254,17 +1257,17 @@ size_t ParseArg(
           TexMacroDef *specialDef = (TexMacroDef *)MacroDefs.Get(_T("special"));
           chunk->def = specialDef;
           TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, specialDef);
-          chunk->children.Append((wxObject *)arg);
+          chunk->mChildren.push_back(arg);
           arg->argn = 1;
           arg->macroId = chunk->macroId;
 
           // The value in the first argument.
           TexChunk *argValue = new TexChunk(CHUNK_TYPE_STRING);
-          arg->children.Append((wxObject *)argValue);
+          arg->mChildren.push_back(argValue);
           argValue->argn = 1;
           argValue->value = copystring(wxTex2RTFBuffer);
 
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         else if (wxStrncmp(buffer+pos, _T("verb"), 4) == 0)
         {
@@ -1295,17 +1298,17 @@ size_t ParseArg(
           TexMacroDef *verbDef = (TexMacroDef *)MacroDefs.Get(_T("verb"));
           chunk->def = verbDef;
           TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, verbDef);
-          chunk->children.Append((wxObject *)arg);
+          chunk->mChildren.push_back(arg);
           arg->argn = 1;
           arg->macroId = chunk->macroId;
 
           // The value in the first argument.
           TexChunk *argValue = new TexChunk(CHUNK_TYPE_STRING);
-          arg->children.Append((wxObject *)argValue);
+          arg->mChildren.push_back(argValue);
           argValue->argn = 1;
           argValue->value = val;
 
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         else
         {
@@ -1314,7 +1317,7 @@ size_t ParseArg(
           TexMacroDef *def = MatchMacro(buffer, &pos, &env, &tmpParseToBrace);
           if (def)
           {
-          CustomMacro *customMacro = FindCustomMacro(def->name);
+          CustomMacro *customMacro = FindCustomMacro(def->mName);
 
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
 
@@ -1323,10 +1326,10 @@ size_t ParseArg(
           chunk->macroId = def->macroId;
 
           if  (!customMacro)
-            children.Append((wxObject *)chunk);
+            children.push_back(chunk);
 
           // Eliminate newline after a \begin{} or a \\ if possible
-          if ((env || wxStrcmp(def->name, _T("\\")) == 0) && (buffer[pos] == 13))
+          if ((env || wxStrcmp(def->mName, _T("\\")) == 0) && (buffer[pos] == 13))
           {
               pos ++;
               if (buffer[pos] == 10)
@@ -1334,7 +1337,7 @@ size_t ParseArg(
           }
 
           pos = ParseMacroBody(
-            def->name,
+            def->mName,
             chunk,
             chunk->no_args,
             buffer,
@@ -1378,7 +1381,7 @@ size_t ParseArg(
             BigBuffer[buf_ptr] = 0;
             buf_ptr = 0;
             chunk->value = copystring(BigBuffer);
-            children.Append((wxObject *)chunk);
+            children.push_back(chunk);
           }
           pos ++;
 
@@ -1387,17 +1390,17 @@ size_t ParseArg(
           TexMacroDef *def = MatchMacro(buffer, &pos, &env, &tmpParseToBrace);
           if (def)
           {
-            CustomMacro *customMacro = FindCustomMacro(def->name);
+            CustomMacro *customMacro = FindCustomMacro(def->mName);
 
             TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
             chunk->no_args = def->no_args;
 //            chunk->name = copystring(def->name);
             chunk->macroId = def->macroId;
             if (!customMacro)
-              children.Append((wxObject *)chunk);
+              children.push_back(chunk);
 
             pos = ParseMacroBody(
-              def->name,
+              def->mName,
               chunk,
               chunk->no_args,
               buffer,
@@ -1444,24 +1447,24 @@ size_t ParseArg(
             BigBuffer[buf_ptr] = 0;
             buf_ptr = 0;
             chunk1->value = copystring(BigBuffer);
-            children.Append((wxObject *)chunk1);
+            children.push_back(chunk1);
           }
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, SoloBlockDef);
           chunk->no_args = SoloBlockDef->no_args;
 //          chunk->name = copystring(SoloBlockDef->name);
           chunk->macroId = SoloBlockDef->macroId;
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
 
           TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, SoloBlockDef);
 
-          chunk->children.Append((wxObject *)arg);
+          chunk->mChildren.push_back(arg);
 //          arg->name = copystring(SoloBlockDef->name);
           arg->argn = 1;
           arg->macroId = chunk->macroId;
 
           pos = ParseArg(
             arg,
-            arg->children,
+            arg->mChildren,
             buffer,
             pos,
             NULL,
@@ -1478,7 +1481,7 @@ size_t ParseArg(
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
 
         pos ++;
@@ -1489,7 +1492,7 @@ size_t ParseArg(
           chunk->no_args = 0;
 //          chunk->name = copystring(_T("$$"));
           chunk->macroId = ltSPECIALDOUBLEDOLLAR;
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
           pos ++;
         }
         else
@@ -1498,7 +1501,7 @@ size_t ParseArg(
           chunk->no_args = 0;
 //          chunk->name = copystring(_T("_$"));
           chunk->macroId = ltSPECIALDOLLAR;
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         break;
       }
@@ -1510,7 +1513,7 @@ size_t ParseArg(
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
 
         pos ++;
@@ -1518,7 +1521,7 @@ size_t ParseArg(
         chunk->no_args = 0;
 //        chunk->name = copystring(_T("_~"));
         chunk->macroId = ltSPECIALTILDE;
-        children.Append((wxObject *)chunk);
+        children.push_back(chunk);
         break;
       }
       case _T('#'): // Either treat as a special TeX character or as a macro arg
@@ -1529,7 +1532,7 @@ size_t ParseArg(
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
 
         pos ++;
@@ -1539,7 +1542,7 @@ size_t ParseArg(
           chunk->no_args = 0;
 //          chunk->name = copystring(_T("_#"));
           chunk->macroId = ltSPECIALHASH;
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
         else
         {
@@ -1547,11 +1550,24 @@ size_t ParseArg(
           {
             int n = buffer[pos] - 48;
             pos ++;
-            wxList::compatibility_iterator iNode = customMacroArgs->children.Item(n-1);
-            if (iNode)
+
+            int Index = 0;
+            list<TexChunk*>::iterator iNode =
+              customMacroArgs->mChildren.begin();
+            for (
+              ;
+              iNode != customMacroArgs->mChildren.end();
+              ++iNode, ++Index)
             {
-              TexChunk *argChunk = (TexChunk *)iNode->GetData();
-              children.Append((wxObject *)new TexChunk(*argChunk));
+              if (Index == n - 1)
+              {
+                break;
+              }
+            }
+            if (iNode != customMacroArgs->mChildren.end())
+            {
+              TexChunk* argChunk = *iNode;
+              children.push_back(new TexChunk(*argChunk));
             }
           }
         }
@@ -1571,7 +1587,7 @@ size_t ParseArg(
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->value = copystring(BigBuffer);
-          children.Append((wxObject *)chunk);
+          children.push_back(chunk);
         }
 
         pos ++;
@@ -1583,7 +1599,7 @@ size_t ParseArg(
         chunk->no_args = 0;
 //        chunk->name = copystring(_T("_&"));
         chunk->macroId = ltSPECIALAMPERSAND;
-        children.Append((wxObject *)chunk);
+        children.push_back(chunk);
         break;
       }
       // Eliminate end-of-line comment
@@ -1666,7 +1682,7 @@ size_t ParseMacroBody(
     maxArgs ++;
     TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, parent->def);
 
-    parent->children.Append((wxObject *)arg);
+    parent->mChildren.push_back(arg);
 //    arg->name = copystring(macro_name);
     arg->argn = maxArgs;
     arg->macroId = parent->macroId;
@@ -1719,7 +1735,7 @@ size_t ParseMacroBody(
 
     pos = ParseArg(
       arg,
-      arg->children,
+      arg->mChildren,
       buffer,
       pos,
       actualEnv,
@@ -1738,12 +1754,13 @@ size_t ParseMacroBody(
   parent->no_args = maxArgs;
 
   // Tell each argument how many args there are (useful when processing an arg)
-  wxList::compatibility_iterator iNode = parent->children.GetFirst();
-  while (iNode)
+  for (
+    list<TexChunk*>::iterator iNode = parent->mChildren.begin();
+    iNode != parent->mChildren.end();
+    ++iNode)
   {
-    TexChunk *chunk = (TexChunk *)iNode->GetData();
+    TexChunk* chunk = *iNode;
     chunk->no_args = maxArgs;
-    iNode = iNode->GetNext();
   }
   return pos;
 }
@@ -1778,9 +1795,14 @@ bool TexLoadFile(const wxString& filename)
     return false;
 }
 
-TexMacroDef::TexMacroDef(int the_id, const wxChar *the_name, int n, bool ig, bool forbidLevel)
+TexMacroDef::TexMacroDef(
+  int the_id,
+  const wxChar* the_name,
+  int n,
+  bool ig,
+  bool forbidLevel)
 {
-  name = copystring(the_name);
+  mName = copystring(the_name);
   no_args = n;
   ignore = ig;
   macroId = the_id;
@@ -1789,7 +1811,10 @@ TexMacroDef::TexMacroDef(int the_id, const wxChar *the_name, int n, bool ig, boo
 
 TexMacroDef::~TexMacroDef(void)
 {
-  if (name) delete[] name;
+  if (mName)
+  {
+    delete[] mName;
+  }
 }
 
 TexChunk::TexChunk(int the_type, TexMacroDef *the_def)
@@ -1823,27 +1848,31 @@ TexChunk::TexChunk(TexChunk& toCopy)
     value = NULL;
 
   optional = toCopy.optional;
-  wxList::compatibility_iterator iNode = toCopy.children.GetFirst();
-  while (iNode)
+  for (
+    list<TexChunk*>::iterator iNode = toCopy.mChildren.begin();
+    iNode != toCopy.mChildren.end();
+    ++iNode)
   {
-    TexChunk *child = (TexChunk *)iNode->GetData();
-    children.Append((wxObject *)new TexChunk(*child));
-    iNode = iNode->GetNext();
+    TexChunk* child = *iNode;
+    mChildren.push_back(new TexChunk(*child));
   }
 }
 
 TexChunk::~TexChunk(void)
 {
 //  if (name) delete[] name;
-  if (value) delete[] value;
-  wxList::compatibility_iterator iNode = children.GetFirst();
-  while (iNode)
+  if (value)
   {
-    TexChunk *child = (TexChunk *)iNode->GetData();
-    delete child;
-    iNode = iNode->GetNext();
+    delete [] value;
   }
-  children.Clear();
+  for (
+    list<TexChunk*>::iterator iNode = mChildren.begin();
+    iNode != mChildren.end();
+    ++iNode)
+  {
+    TexChunk* pChild = *iNode;
+    delete pChild;
+  }
 }
 
 bool IsArgOptional(void)  // Is this argument an optional argument?
@@ -1871,38 +1900,42 @@ void GetArgData1(TexChunk *chunk)
       if (def && def->ignore)
         return;
 
-      if (def && (wxStrcmp(def->name, _T("solo block")) != 0))
+      if (def && (wxStrcmp(def->mName, _T("solo block")) != 0))
       {
         wxStrcat(currentArgData, _T("\\"));
-        wxStrcat(currentArgData, def->name);
+        wxStrcat(currentArgData, def->mName);
       }
 
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         wxStrcat(currentArgData, _T("{"));
         GetArgData1(child_chunk);
         wxStrcat(currentArgData, _T("}"));
-        iNode = iNode->GetNext();
       }
       break;
     }
     case CHUNK_TYPE_ARG:
     {
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         GetArgData1(child_chunk);
-        iNode = iNode->GetNext();
       }
       break;
     }
     case CHUNK_TYPE_STRING:
     {
       if (chunk->value)
+      {
         wxStrcat(currentArgData, chunk->value);
+      }
       break;
     }
   }
@@ -1946,13 +1979,13 @@ int GetCurrentColumn(void)
   return currentColumn;
 }
 
-/*
- * Traverses document calling functions to allow the client to
- * write out the appropriate stuff
- */
-
-
-void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode, bool childrenOnly)
+// Traverses document calling functions to allow the client to
+// write out the appropriate stuff
+void TraverseFromChunk(
+  TexChunk* chunk,
+  list<TexChunk*>::iterator iThisNode,
+  list<TexChunk*>::iterator iEnd,
+  bool childrenOnly)
 {
   Tex2RTFYield();
   if (stopRunning) return;
@@ -1963,24 +1996,37 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
     {
       TexMacroDef *def = chunk->def;
       if (def && def->ignore)
-        return;
-
-      if (!childrenOnly)
-        OnMacro(chunk->macroId, chunk->no_args, true);
-
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
-        TraverseFromChunk(child_chunk, &iNode);
-        iNode = iNode->GetNext();
+        return;
       }
 
-      if (thisNode && (*thisNode)->GetNext())
-          nextChunk = (TexChunk *)(*thisNode)->GetNext()->GetData();
+      if (!childrenOnly)
+      {
+        OnMacro(chunk->macroId, chunk->no_args, true);
+      }
+
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
+      {
+        TexChunk* child_chunk = *iNode;
+        TraverseFromChunk(child_chunk, iNode, chunk->mChildren.end());
+      }
+
+      if (iThisNode != iEnd)
+      {
+        ++iThisNode;
+        if (iThisNode != iEnd)
+        {
+          nextChunk = *iThisNode;
+        }
+      }
 
       if (!childrenOnly)
+      {
         OnMacro(chunk->macroId, chunk->no_args, false);
+      }
       break;
     }
     case CHUNK_TYPE_ARG:
@@ -1994,25 +2040,34 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
 
       if (childrenOnly || OnArgument(chunk->macroId, chunk->argn, true))
       {
-        wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-        while (iNode)
+        for (
+          list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+          iNode != chunk->mChildren.end();
+          ++iNode)
         {
-          TexChunk *child_chunk = (TexChunk *)iNode->GetData();
-          TraverseFromChunk(child_chunk, &iNode);
-          iNode = iNode->GetNext();
+          TexChunk* child_chunk = *iNode;
+          TraverseFromChunk(child_chunk, iNode, chunk->mChildren.end());
         }
       }
 
       currentArgument = chunk;
 
-      if (thisNode && (*thisNode)->GetNext())
-          nextChunk = (TexChunk *)(*thisNode)->GetNext()->GetData();
+      if (iThisNode != iEnd)
+      {
+        ++iThisNode;
+        if (iThisNode != iEnd)
+        {
+          nextChunk = *iThisNode;
+        }
+      }
 
       isArgOptional = chunk->optional;
       noArgs = chunk->no_args;
 
       if (!childrenOnly)
+      {
         (void)OnArgument(chunk->macroId, chunk->argn, false);
+      }
       break;
     }
     case CHUNK_TYPE_STRING:
@@ -2022,8 +2077,11 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
       if (chunk->value && (forbidResetPar == 0))
       {
         // If non-whitespace text, we no longer have a new paragraph.
-        if (issuedNewParagraph && !((chunk->value[0] == 10 || chunk->value[0] == 13 || chunk->value[0] == 32)
-                                    && chunk->value[1] == 0))
+        if (
+          issuedNewParagraph &&
+          !((chunk->value[0] == 10 ||
+             chunk->value[0] == 13 ||
+             chunk->value[0] == 32) && chunk->value[1] == 0))
         {
           issuedNewParagraph = false;
         }
@@ -2034,9 +2092,10 @@ void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode
   }
 }
 
-void TraverseDocument(void)
+void TraverseDocument()
 {
-  TraverseFromChunk(TopLevel, NULL);
+  list<TexChunk*>::iterator iEnd = TopLevel->mChildren.end();
+  TraverseFromChunk(TopLevel, iEnd, iEnd);
 }
 
 void SetCurrentOutput(FILE *fd)
@@ -2117,9 +2176,9 @@ void TexCleanUp(void)
   DocumentDate = NULL;
   DocumentStyle = LATEX_REPORT;
   MinorDocumentStyle = 0;
-  BibliographyStyleString = copystring(_T("plain"));
-  DocumentStyleString = copystring(_T("report"));
-  MinorDocumentStyleString = NULL;
+  BibliographyStyleString = "plain";
+  DocumentStyleString = "report";
+  MinorDocumentStyleString.clear();
 
   // gt - Changed this so if this is the final pass
   // then we DO want to remove these macros, so that
@@ -3362,25 +3421,41 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && !IsArgOptional())
     {
-      DocumentStyleString = copystring(GetArgData());
-      if (wxStrncmp(DocumentStyleString, _T("art"), 3) == 0)
+      DocumentStyleString = GetArgData();
+      if (DocumentStyleString == "art")
+      {
         DocumentStyle = LATEX_ARTICLE;
-      else if (wxStrncmp(DocumentStyleString, _T("rep"), 3) == 0)
+      }
+      else if (DocumentStyleString == "rep")
+      {
         DocumentStyle = LATEX_REPORT;
-      else if (wxStrncmp(DocumentStyleString, _T("book"), 4) == 0 ||
-               wxStrncmp(DocumentStyleString, _T("thesis"), 6) == 0)
+      }
+      else if (
+        DocumentStyleString == "book" || DocumentStyleString == "thesis")
+      {
         DocumentStyle = LATEX_BOOK;
-      else if (wxStrncmp(DocumentStyleString, _T("letter"), 6) == 0)
+      }
+      else if (DocumentStyleString == "letter")
+      {
         DocumentStyle = LATEX_LETTER;
-      else if (wxStrncmp(DocumentStyleString, _T("slides"), 6) == 0)
+      }
+      else if (DocumentStyleString == "slides")
+      {
         DocumentStyle = LATEX_SLIDES;
+      }
 
-      if (StringMatch(_T("10"), DocumentStyleString))
+      if (DocumentStyleString == "10")
+      {
         SetFontSizes(10);
-      else if (StringMatch(_T("11"), DocumentStyleString))
+      }
+      else if (DocumentStyleString == "11")
+      {
         SetFontSizes(11);
-      else if (StringMatch(_T("12"), DocumentStyleString))
+      }
+      else if (DocumentStyleString == "12")
+      {
         SetFontSizes(12);
+      }
 
       OnMacro(ltHELPFONTSIZE, 1, true);
       wxSnprintf(currentArgData, 2000, _T("%d"), normalFont);
@@ -3392,29 +3467,36 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     }
     else if (start && IsArgOptional())
     {
-      MinorDocumentStyleString = copystring(GetArgData());
+      MinorDocumentStyleString = GetArgData();
 
-      if (StringMatch(_T("10"), MinorDocumentStyleString))
+      if (MinorDocumentStyleString == "10")
+      {
         SetFontSizes(10);
-      else if (StringMatch(_T("11"), MinorDocumentStyleString))
+      }
+      else if (MinorDocumentStyleString == "11")
+      {
         SetFontSizes(11);
-      else if (StringMatch(_T("12"), MinorDocumentStyleString))
+      }
+      else if (MinorDocumentStyleString == "12")
+      {
         SetFontSizes(12);
+      }
     }
     return false;
   }
   case ltBIBLIOGRAPHYSTYLE:
   {
     if (start && !IsArgOptional())
-      BibliographyStyleString = copystring(GetArgData());
+    {
+      BibliographyStyleString = GetArgData();
+    }
     return false;
   }
   case ltPAGESTYLE:
   {
     if (start && !IsArgOptional())
     {
-      if (PageStyle) delete[] PageStyle;
-      PageStyle = copystring(GetArgData());
+      PageStyle = GetArgData();
     }
     return false;
   }

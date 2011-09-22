@@ -9,14 +9,9 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#ifndef _TEX2RTF_SYMBOLS_H_
-#define _TEX2RTF_SYMBOLS_H_
+#ifndef TEX2RTF_SYMBOLS_H
+#define TEX2RTF_SYMBOLS_H
 
-//// Build settings
-
-// ScriptTracks version
 #define TEX2RTF_VERSION_NUMBER            wxVERSION_FLOAT
 
-#endif
-    // _TEX2RTF_SYMBOLS_H_
-
+#endif // !defined(TEX2RTF_SYMBOLS_H)

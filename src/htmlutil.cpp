@@ -10,24 +10,16 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-#endif
-
-#include <wx/arrstr.h>
-#include <wx/filename.h>
-
 #include "tex2any.h"
 #include "tex2rtf.h"
 #include "table.h"
 
+#include <wx/arrstr.h>
+#include <wx/filename.h>
+
 #include <cstdio>
+
+using namespace std;
 
 #define HTML_FILENAME_PATTERN _T("%s_%s.html")
 
@@ -340,12 +332,13 @@ void Text2HTML(TexChunk *chunk)
       if (def && (def->macroId == ltVERBATIM || def->macroId == ltVERB || def->macroId == ltSPECIAL))
         inVerbatim = true;
 
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         Text2HTML(child_chunk);
-        iNode = iNode->GetNext();
       }
 
       if (def && (def->macroId == ltVERBATIM || def->macroId == ltVERB || def->macroId == ltSPECIAL))
@@ -355,12 +348,13 @@ void Text2HTML(TexChunk *chunk)
     }
     case CHUNK_TYPE_ARG:
     {
-      wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-      while (iNode)
+      for (
+        list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+        iNode != chunk->mChildren.end();
+        ++iNode)
       {
-        TexChunk *child_chunk = (TexChunk *)iNode->GetData();
+        TexChunk* child_chunk = *iNode;
         Text2HTML(child_chunk);
-        iNode = iNode->GetNext();
       }
 
       break;
@@ -3510,14 +3504,12 @@ void HTMLWorkshopStartContents()
 
 }
 
-
 void HTMLWorkshopEndContents()
 {
     for (int i = HTMLWorkshopLastLevel; i >= 0; i--)
         wxFprintf(HTMLWorkshopContents, _T("</UL>\n"));
     fclose(HTMLWorkshopContents);
 }
-
 
 bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label)
 {

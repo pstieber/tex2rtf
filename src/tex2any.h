@@ -9,52 +9,54 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-#include <stdio.h>
-#include "wx/utils.h"
-#include "wx/list.h"
-#include "wx/hash.h"
-#include "wx/hashset.h"
-#include "wx/tokenzr.h"
-#include "wx/wfstream.h"
-#include "wx/txtstrm.h"
+#include <wx/utils.h>
+#include <wx/hash.h>
+#include <wx/hashset.h>
+#include <wx/tokenzr.h>
+#include <wx/wfstream.h>
+#include <wx/txtstrm.h>
 #include "wxhlpblk.h"
 
-/*
- * Conversion modes
- *
- */
+#include <cstdio>
+#include <list>
 
+// Conversion modes
 #define TEX_RTF  1
 #define TEX_XLP  2
 #define TEX_HTML 3
 
-/*
- * We have a list of macro definitions which we must define
- * in advance to enable the parsing to recognize macros.
- */
-
+// We have a list of macro definitions which we must define
+// in advance to enable the parsing to recognize macros.
 #define FORBID_OK         0
 #define FORBID_WARN       1
 #define FORBID_ABSOLUTELY 2
 
 
 #ifdef __WXMSW__
-  const unsigned long MAX_LINE_BUFFER_SIZE = 600;
+const unsigned long MAX_LINE_BUFFER_SIZE = 600;
 #else
-  const unsigned long MAX_LINE_BUFFER_SIZE = 11000;
+const unsigned long MAX_LINE_BUFFER_SIZE = 11000;
 #endif
 
 class TexMacroDef: public wxObject
 {
- public:
-  int no_args;
-  wxChar *name;
-  bool ignore;
-  int forbidden;
-  int macroId;
+  public:
 
-  TexMacroDef(int the_id, const wxChar *the_name, int n, bool ig, bool forbidLevel = FORBID_OK);
-  virtual ~TexMacroDef(void);
+    TexMacroDef(
+      int the_id,
+      const wxChar *the_name,
+      int n,
+      bool ig,
+      bool forbidLevel = FORBID_OK);
+
+    virtual ~TexMacroDef(void);
+
+    int no_args;
+    wxChar* mName;
+    bool ignore;
+    int forbidden;
+    int macroId;
+
 };
 
 #define CHUNK_TYPE_MACRO    1
@@ -115,7 +117,7 @@ class TexChunk
   int argn;
   bool optional;      // Is an optional argument
 
-  wxList children;
+  std::list<TexChunk*> mChildren;
   TexChunk(int the_type, TexMacroDef *the_def = NULL);
   TexChunk(TexChunk& toCopy);
   virtual ~TexChunk(void);
@@ -159,7 +161,7 @@ bool read_a_line(wxChar *buf);
 bool TexLoadFile(const wxString& filename);
 size_t ParseArg(
   TexChunk *thisArg,
-  wxList& children,
+  std::list<TexChunk*>& children,
   wxChar *buffer,
   size_t pos,
   wxChar *environment = NULL,
@@ -175,18 +177,35 @@ size_t ParseMacroBody(
   bool parseArgToBrace = true,
   TexChunk *customMacroArgs = NULL);
 void TraverseDocument(void);
-void TraverseFromChunk(TexChunk *chunk, wxList::compatibility_iterator* thisNode = NULL, bool childrenOnly = false);
-#define TraverseChildrenFromChunk(arg) TraverseFromChunk(arg, NULL, true)
+
+void TraverseFromChunk(
+  TexChunk *chunk,
+  std::list<TexChunk*>::iterator thisNode,
+  std::list<TexChunk*>::iterator iEnd,
+  bool childrenOnly = false);
+
+#define TraverseChildrenFromChunk(pTexChunk) \
+  TraverseFromChunk( \
+    pTexChunk, \
+    pTexChunk->mChildren.end(), \
+    pTexChunk->mChildren.end(), \
+    true)
+
 void SetCurrentOutput(FILE *fd);
 void SetCurrentOutputs(FILE *fd1, FILE *fd2);
 extern FILE *CurrentOutput1;
 extern FILE *CurrentOutput2;
-void AddMacroDef(int the_id, const wxChar *name, int n, bool ignore = false, bool forbidden = false);
+void AddMacroDef(
+  int the_id,
+  const wxChar *name,
+  int n,
+  bool ignore = false,
+  bool forbidden = false);
 void TexInitialize(int bufSize);
 void TexCleanUp(void);
 void TexOutput(const wxString& s, bool ordinaryText = false);
 wxChar *GetArgData(TexChunk *chunk);
-wxChar *GetArgData(void);             // Get the string for the current argument
+wxChar *GetArgData(void);           // Get the string for the current argument
 int GetNoArgs(void);                // Get the number of arguments for the current macro
 TexChunk *GetArgChunk(void);        // Get the chunk for the current argument
 TexChunk *GetTopLevelChunk(void);   // Get the chunk for the top level
@@ -198,7 +217,8 @@ int GetCurrentColumn(void);         // number of characters on current line
 // Convert case, according to upperCaseNames setting.
 wxString ConvertCase(const wxString& String);
 
-extern wxPathList TexPathList;      // Path list, can be used for file searching.
+// Path list, can be used for file searching.
+extern wxPathList TexPathList;
 
 extern bool StringMatch(
   const wxString& str1,
@@ -207,7 +227,10 @@ extern bool StringMatch(
   bool exact = false);
 
 // Define a variable value from the .ini file
-wxChar *RegisterSetting(const wxString& settingName, const wxString& settingValue, bool interactive = true);
+wxChar *RegisterSetting(
+  const wxString& settingName,
+  const wxString& settingValue,
+  bool interactive = true);
 
 // Major document styles
 #define LATEX_REPORT    1
@@ -221,9 +244,9 @@ extern TexChunk *DocumentAuthor;
 extern TexChunk *DocumentDate;
 extern int DocumentStyle;
 extern int MinorDocumentStyle;
-extern wxChar *BibliographyStyleString;
-extern wxChar *DocumentStyleString;
-extern wxChar *MinorDocumentStyleString;
+extern wxString BibliographyStyleString;
+extern wxString DocumentStyleString;
+extern wxString MinorDocumentStyleString;
 
 extern int normalFont;
 extern int smallFont;
@@ -345,7 +368,7 @@ extern TexChunk *      CentreHeaderEven;
 extern TexChunk *      CentreFooterEven;
 extern TexChunk *      RightHeaderEven;
 extern TexChunk *      RightFooterEven;
-extern wxChar *        PageStyle;
+extern wxString        PageStyle;
 
 // Repeat the currentSection, either real (Chapter) or simulated (References)
 extern void OutputCurrentSection(void);
@@ -576,19 +599,27 @@ wxChar *ParseMultifieldString(wxChar *s, size_t *pos);
 
 class ColourTableEntry: public wxObject
 {
- public:
-  wxChar *name;
-  unsigned int red;
-  unsigned int green;
-  unsigned int blue;
+  public:
+    wxChar *name;
+    unsigned int red;
+    unsigned int green;
+    unsigned int blue;
 
-  ColourTableEntry(const wxChar *theName, unsigned int r,  unsigned int g,  unsigned int b);
-  virtual ~ColourTableEntry(void);
+    ColourTableEntry(
+      const wxChar *theName,
+      unsigned int r,
+      unsigned int g,
+      unsigned int b);
+    virtual ~ColourTableEntry(void);
 };
 
 WX_DECLARE_STRING_HASH_MAP(ColourTableEntry*, ColourTableMap);
 extern ColourTableMap ColourTable;
-extern void AddColour(const wxChar *theName, unsigned int r,  unsigned int g,  unsigned int b);
+extern void AddColour(
+  const wxChar *theName,
+  unsigned int r,
+  unsigned int g,
+  unsigned int b);
 extern int FindColourPosition(wxChar *theName);
 // Converts e.g. "red" -> "#FF0000"
 extern bool FindColourHTMLString(wxChar *theName, wxChar *buf);

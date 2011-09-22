@@ -10,53 +10,38 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
 #if defined(__WXMSW__)
-    #include "wx/msw/wrapwin.h"
+#include "wx/msw/wrapwin.h"
 #endif
 
 #ifndef WX_PRECOMP
-    #ifndef NO_GUI
-        #include "wx/menu.h"
-        #include "wx/textctrl.h"
-        #include "wx/filedlg.h"
-        #include "wx/msgdlg.h"
-        #include "wx/icon.h"
-    #endif
+#ifndef NO_GUI
+#include "wx/menu.h"
+#include "wx/textctrl.h"
+#include "wx/filedlg.h"
+#include "wx/msgdlg.h"
+#include "wx/icon.h"
+#endif
 #endif
 
-#include "wx/log.h"
+#include <wx/log.h>
 
 #ifndef NO_GUI
-    #include "wx/timer.h"
-    #include "wx/help.h"
-    #include "wx/cshelp.h"
-    #include "wx/helphtml.h"
-    #ifdef __WXMSW__
-        #include "wx/msw/helpchm.h"
-    #else
-        #include "wx/html/helpctrl.h"
-    #endif
+#include "wx/timer.h"
+#include "wx/help.h"
+#include "wx/cshelp.h"
+#include "wx/helphtml.h"
+#ifdef __WXMSW__
+#include "wx/msw/helpchm.h"
+#else
+#include "wx/html/helpctrl.h"
+#endif
 #endif // !NO_GUI
 
-#include "wx/utils.h"
+#include <wx/utils.h>
 
-#if wxUSE_IOSTREAMH
-#include <iostream.h>
-#include <fstream.h>
-#else
-#include <iostream>
-#include <fstream>
-#endif
 
 #include <ctype.h>
-#include <stdlib.h>
 #include "tex2any.h"
 #include "tex2rtf.h"
 #include "rtfutils.h"
@@ -65,6 +50,12 @@
 #if (defined(__WXGTK__) || defined(__WXMOTIF__) || defined(__WXMAC__) || defined(__WXX11__) || defined(__WXMGL__)) && !defined(NO_GUI)
 #include "tex2rtf.xpm"
 #endif
+
+#include <cstdlib>
+#include <fstream>
+#include <iostream>
+
+using namespace std;
 
 #if !WXWIN_COMPATIBILITY_2_4
 static inline wxChar* copystring(const wxChar* s)
@@ -138,12 +129,12 @@ void ShowVersion(void);
 wxChar wxTex2RTFBuffer[1500];
 
 #ifdef NO_GUI
-    IMPLEMENT_APP_CONSOLE(MyApp)
+  IMPLEMENT_APP_CONSOLE(MyApp)
 #else
-    wxMenuBar *menuBar = NULL;
-    MyFrame *frame = NULL;
-    // DECLARE_APP(MyApp)
-    IMPLEMENT_APP(MyApp)
+  wxMenuBar *menuBar = NULL;
+  MyFrame *frame = NULL;
+  // DECLARE_APP(MyApp)
+  IMPLEMENT_APP(MyApp)
 #endif
 
 // `Main program' equivalent, creating windows and returning main app frame
@@ -257,7 +248,7 @@ bool MyApp::OnInit()
       {
         wxString s = argv[i];
         i ++;
-        if (s == "ansi" || s == "pc" == 0 || s == "mac" || s == "pca")
+        if (s == "ansi" || s == "pc" || s == "mac" || s == "pca")
         {
           RTFCharset = s;
         }
@@ -312,7 +303,7 @@ bool MyApp::OnInit()
 #ifdef NO_GUI
   if (InputFile.empty() || OutputFile.empty())
   {
-      wxSTD cout << "Tex2RTF: input or output file is missing.\n";
+      cout << "Tex2RTF: input or output file is missing.\n";
       ShowOptions();
       exit(1);
   }
@@ -616,41 +607,37 @@ int MyApp::OnExit()
       TopLevel = NULL;
     }
 
-    delete [] PageStyle;
-    delete [] BibliographyStyleString;
-    delete [] DocumentStyleString;
-
   return 0;
 }
 #endif
 
 void ShowVersion(void)
 {
-    wxChar buf[100];
-    wxSnprintf(buf, sizeof(buf), _T("Tex2RTF version %.2f"), versionNo);
-    OnInform(buf);
+  wxString Version;
+  Version << "Tex2RTF version " << versionNo;
+  OnInform(Version);
 }
 
 void ShowOptions(void)
 {
-    ShowVersion();
-    OnInform(_T("Usage: tex2rtf [input] [output] [switches]\n"));
-    OnInform(_T("where valid switches are"));
+  ShowVersion();
+  OnInform(_T("Usage: tex2rtf [input] [output] [switches]\n"));
+  OnInform(_T("where valid switches are"));
 #ifndef NO_GUI
-    OnInform(_T("    -interactive"));
+  OnInform(_T("    -interactive"));
 #endif
-    OnInform(_T("    -bufsize <size in K>"));
-    OnInform(_T("    -charset <pc | pca | ansi | mac> (default ansi)"));
-    OnInform(_T("    -twice"));
-    OnInform(_T("    -sync"));
-    OnInform(_T("    -checkcurlybraces"));
-    OnInform(_T("    -checksyntax"));
-    OnInform(_T("    -version"));
-    OnInform(_T("    -macros <filename>"));
-    OnInform(_T("    -winhelp"));
-    OnInform(_T("    -rtf"));
-    OnInform(_T("    -html"));
-    OnInform(_T("    -xlp\n"));
+  OnInform(_T("    -bufsize <size in K>"));
+  OnInform(_T("    -charset <pc | pca | ansi | mac> (default ansi)"));
+  OnInform(_T("    -twice"));
+  OnInform(_T("    -sync"));
+  OnInform(_T("    -checkcurlybraces"));
+  OnInform(_T("    -checksyntax"));
+  OnInform(_T("    -version"));
+  OnInform(_T("    -macros <filename>"));
+  OnInform(_T("    -winhelp"));
+  OnInform(_T("    -rtf"));
+  OnInform(_T("    -html"));
+  OnInform(_T("    -xlp\n"));
 }
 
 #ifndef NO_GUI
@@ -898,10 +885,10 @@ void MyFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-      wxChar buf[300];
-      wxString platform = wxGetOsDescription();
-      wxSnprintf(buf, sizeof(buf), _T("Tex2RTF Version %.2f %s\nLaTeX to RTF, WinHelp, and HTML Conversion\n\n(c) Julian Smart, George Tasker and others, 1999-2005"), versionNo, platform.c_str());
-      wxMessageBox(buf, _T("About Tex2RTF"));
+  wxChar buf[300];
+  wxString platform = wxGetOsDescription();
+  wxSnprintf(buf, sizeof(buf), _T("Tex2RTF Version %.2f %s\nLaTeX to RTF, WinHelp, and HTML Conversion\n\n(c) Julian Smart, George Tasker and others, 1999-2005"), versionNo, platform.c_str());
+  wxMessageBox(buf, _T("About Tex2RTF"));
 }
 
 void ChooseInputFile(bool force)
@@ -1021,7 +1008,7 @@ bool Go(void)
   wxSnprintf(RefFileName, 300, _T("%s.ref"), FileRoot);
 
   TexPathList.EnsureFileAccessible(InputFile);
-  if (!bulletFile)
+  if (!bulletFile.empty())
   {
     wxString s = TexPathList.FindValidPath(_T("bullet.bmp"));
     if (!s.empty())
@@ -1057,8 +1044,8 @@ bool Go(void)
 
     if (stopRunning)
     {
-        OkToClose = true;
-        return false;
+      OkToClose = true;
+      return false;
     }
 
     switch (convertMode)
@@ -1114,12 +1101,18 @@ bool Go(void)
     }
 #endif // wxUSE_STATUSBAR
 #else
-    buf.Printf(_T("Done, %d %s."), passNumber, (passNumber > 1) ? _T("passes") : _T("pass"));
+    buf << "Done, " << passNumber << " pass";
+    if (passNumber > 1)
+    {
+      buf << "es";
+    }
+
     OnInform(buf);
     if (errorCount)
     {
-        buf.Printf(_T("Errors encountered during this pass: %lu\n"), errorCount);
-        OnInform(buf);
+      buf.clear();
+      buf << "Errors encountered during this pass: " << errorCount << '\n';
+      OnInform(buf);
     }
 #endif
     passNumber ++;
@@ -1146,18 +1139,18 @@ void OnError(const wxString& msg)
   errorCount++;
 
 #ifdef NO_GUI
-  wxSTD cerr << "Error: " << msg_string.mb_str() << "\n";
-  wxSTD cerr.flush();
+  cerr << "Error: " << msg_string.mb_str() << '\n';
+  cerr.flush();
 #else
   if (isInteractive && frame)
   {
-    (*frame->textWindow) << _T("Error: ") << msg << _T("\n");
+    (*frame->textWindow) << _T("Error: ") << msg << '\n';
   }
   else
   {
 #if defined(__UNIX__)
-    wxSTD cerr << "Error: " << msg_string.mb_str() << "\n";
-    wxSTD cerr.flush();
+    cerr << "Error: " << msg_string.mb_str() << '\n';
+    cerr.flush();
 #elif defined(__WXMSW__)
     wxLogError(msg);
 #endif
@@ -1167,26 +1160,25 @@ void OnError(const wxString& msg)
 #endif // NO_GUI
 }
 
-void OnInform(const wxString& msg)
+void OnInform(const wxString& Message)
 {
-    wxString msg_string = msg;
 #ifdef NO_GUI
-    wxSTD cout << msg_string.mb_str() << "\n";
-    wxSTD cout.flush();
+  cout << Message << '\n';
+  cout.flush();
 #else
-    if (isInteractive && frame)
-    {
-       (*frame->textWindow) << msg << _T("\n");
-    }
-    else
-    {
+  if (isInteractive && frame)
+  {
+     (*frame->textWindow) << Message << '\n';
+  }
+  else
+  {
 #if defined(__UNIX__)
-        wxSTD cout << msg_string.mb_str() << "\n";
-        wxSTD cout.flush();
+    cout << Message << '\n';
+    cout.flush();
 #elif defined(__WXMSW__)
-        wxLogInfo(msg);
+    wxLogInfo(msg);
 #endif
-    }
+  }
 
     if (isInteractive)
     {
@@ -1387,7 +1379,7 @@ wxChar *Tex2RTFConnection::OnRequest(const wxString& WXUNUSED(topic), const wxSt
 
 #ifndef NO_GUI
 #ifndef __WXGTK__
-//void wxObject::Dump(wxSTD ostream& str)
+//void wxObject::Dump(ostream& str)
 //{
 //  if (GetClassInfo() && GetClassInfo()->GetClassName())
 //    str << GetClassInfo()->GetClassName();
