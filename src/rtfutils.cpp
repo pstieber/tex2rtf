@@ -5278,7 +5278,7 @@ bool RTFGo(void)
         if (stopRunning)
             return false;
 
-        OnInform(_T("Converting..."));
+        OnInform("Converting...");
 
         TraverseDocument();
 
