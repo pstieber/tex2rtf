@@ -168,12 +168,12 @@ extern wxString InputFile;
 extern wxString OutputFile;
 extern wxString MacroFile;
 
-extern wxChar *FileRoot;
-extern wxChar *ContentsName;    // Contents page from last time around
-extern wxChar *TmpContentsName; // Current contents page
-extern wxChar *TmpFrameContentsName; // Current frame contents page
-extern wxChar *WinHelpContentsFileName; // WinHelp .cnt file
-extern wxChar *RefName;         // Reference file name
+extern wxString FileRoot;
+extern wxString ContentsName;    // Contents page from last time around
+extern wxString TmpContentsName; // Current contents page
+extern wxString TmpFrameContentsName; // Current frame contents page
+extern wxString WinHelpContentsFileName; // WinHelp .cnt file
+extern wxString RefName;         // Reference file name
 extern wxString bulletFile;
 
 #ifndef NO_GUI

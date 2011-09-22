@@ -37,7 +37,7 @@ void GenerateHTMLIndexFile(const wxString& FileName);
 
 bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label);
 
-void GenerateHTMLWorkshopFiles(wxChar *fname);
+void GenerateHTMLWorkshopFiles(const wxString& FileName);
 void HTMLWorkshopAddToContents(
   int level,
   const wxString& s,
@@ -176,7 +176,7 @@ void SetCurrentSubsubsectionName(const wxString& s, const wxString& File)
 }
 
 
-// mapping between fileId and filenames if truncateFilenames=false:
+// Mapping between fileId and file names.
 static wxArrayString gs_filenames;
 
 
@@ -194,17 +194,12 @@ void ReopenFile(FILE **fd, wxChar **fileName, const wxString& label)
   }
   fileId ++;
   wxChar buf[400];
-  if (truncateFilenames)
+  if (fileId == 1)
   {
-    wxSnprintf(buf, sizeof(buf), _T("%s%d.htm"), FileRoot, fileId);
+    gs_filenames.Add(wxEmptyString);
   }
-  else
-  {
-    if (fileId == 1)
-      gs_filenames.Add(wxEmptyString);
-    wxSnprintf(buf, sizeof(buf), HTML_FILENAME_PATTERN, FileRoot, label);
-    gs_filenames.Add(buf);
-  }
+  wxSnprintf(buf, sizeof(buf), HTML_FILENAME_PATTERN, FileRoot, label);
+  gs_filenames.Add(buf);
   if (*fileName) delete[] *fileName;
   *fileName = copystring(wxFileNameFromPath(buf));
   *fd = wxFopen(buf, _T("w"));
@@ -444,30 +439,16 @@ void AddBrowseButtons(
    *
    */
 
-  if (truncateFilenames)
-  {
-    wxChar buf1[80];
-    wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
-    wxSnprintf(
-      buf,
-      sizeof(buf),
-      _T("\n<A HREF=\"%s.%s\">%s</A> "),
-      buf1,
-      ConvertCase(_T("htm")),
-      contentsReference);
-  }
-  else
-  {
-    wxChar buf1[80];
-    wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
-    wxSnprintf(
-      buf,
-      sizeof(buf),
-      _T("\n<A HREF=\"%s%s\">%s</A> "),
-      buf1,
-      ConvertCase(_T("_contents.html")),
-      contentsReference);
-  }
+  wxChar buf1[80];
+  wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
+  wxSnprintf(
+    buf,
+    sizeof(buf),
+    _T("\n<A HREF=\"%s%s\">%s</A> "),
+    buf1,
+    ConvertCase(_T("_contents.html")),
+    contentsReference);
+
 //  TexOutput(_T("<NOFRAMES>"));
   TexOutput(buf);
 //  TexOutput(_T("</NOFRAMES>"));
@@ -819,14 +800,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       OutputBodyStart();
 
       wxString titleBuf(wxFileNameFromPath(FileRoot));
-      if (truncateFilenames)
-      {
-        titleBuf.append(".htm");
-      }
-      else
-      {
-        titleBuf.append("_contents.html");
-      }
+      titleBuf.append("_contents.html");
 
       wxFprintf(Chapters, _T("<A NAME=\"%s\"></A>"), topicName);
 
@@ -3015,14 +2989,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       SetCurrentOutput(Chapters);
 
       wxString titleBuf(wxFileNameFromPath(FileRoot));
-      if (truncateFilenames)
-      {
-        titleBuf.append(".htm");
-      }
-      else
-      {
-        titleBuf.append("_contents.html");
-      }
+      titleBuf.append("_contents.html");
 
       HTMLHead();
       TexOutput(_T("<title>"));
@@ -3202,26 +3169,12 @@ bool HTMLGo(void)
     Text2HTML(GetTopLevelChunk());
 
     wxChar buf[300];
-    if (truncateFilenames)
-    {
-      wxSnprintf(buf, sizeof(buf), _T("%s.htm"), FileRoot);
-    }
-    else
-    {
-      wxSnprintf(buf, sizeof(buf), _T("%s_contents.html"), FileRoot);
-    }
+    wxSnprintf(buf, sizeof(buf), _T("%s_contents.html"), FileRoot);
     if (TitlepageName) delete[] TitlepageName;
     TitlepageName = copystring(buf);
     Titlepage = wxFopen(buf, _T("w"));
 
-    if (truncateFilenames)
-    {
-      wxSnprintf(buf, sizeof(buf), _T("%s_fc.htm"), FileRoot);
-    }
-    else
-    {
-      wxSnprintf(buf, sizeof(buf), _T("%s_fcontents.html"), FileRoot);
-    }
+    wxSnprintf(buf, sizeof(buf), _T("%s_fcontents.html"), FileRoot);
 
     contentsFrameName = copystring(buf);
 
@@ -3337,14 +3290,7 @@ bool HTMLGo(void)
       if (htmlFrameContents)
       {
         wxChar firstFileName[300];
-        if (truncateFilenames)
-        {
-          wxSnprintf(firstFileName, sizeof(firstFileName), _T("%s1.htm"), FileRoot);
-        }
-        else
-        {
-          wxStrcpy(firstFileName, gs_filenames[1].c_str());
-        }
+        wxStrcpy(firstFileName, gs_filenames[1].c_str());
 
         wxFprintf(tmpTitle, _T("<FRAMESET COLS=\"30%%,70%%\">\n"));
 
@@ -3471,14 +3417,14 @@ void GenerateHTMLIndexFile(const wxString& FileName)
 // output .hpp, .hhc and .hhk files:
 
 
-void GenerateHTMLWorkshopFiles(wxChar *fname)
+void GenerateHTMLWorkshopFiles(const wxString& FileName)
 {
   FILE *f;
   wxChar buf[300];
 
   /* Generate project file : */
 
-  wxSnprintf(buf, sizeof(buf), _T("%s.hhp"), fname);
+  wxSnprintf(buf, sizeof(buf), _T("%s.hhp"), FileName);
   f = wxFopen(buf, _T("wt"));
   wxFprintf(f,
       _T("[OPTIONS]\n")
@@ -3490,11 +3436,11 @@ void GenerateHTMLWorkshopFiles(wxChar *fname)
       _T("Default topic=%s\n")
       _T("Index file=%s.hhk\n")
       _T("Title="),
-      wxFileNameFromPath(fname),
-      wxFileNameFromPath(fname),
-      wxFileNameFromPath(fname),
+      wxFileNameFromPath(FileName),
+      wxFileNameFromPath(FileName),
+      wxFileNameFromPath(FileName),
       wxFileNameFromPath(TitlepageName),
-      wxFileNameFromPath(fname)
+      wxFileNameFromPath(FileName)
       );
 
   if (DocumentTitle) {
@@ -3505,26 +3451,24 @@ void GenerateHTMLWorkshopFiles(wxChar *fname)
 
   wxFprintf(f, _T("\n\n[WINDOWS]\n")
           _T("%sHelp=,\"%s.hhc\",\"%s.hhk\",\"%s\",,,,,,0x2420,,0x380e,,,,,0,,,"),
-          wxFileNameFromPath(fname),
-          wxFileNameFromPath(fname),
-          wxFileNameFromPath(fname),
+          wxFileNameFromPath(FileName),
+          wxFileNameFromPath(FileName),
+          wxFileNameFromPath(FileName),
           wxFileNameFromPath(TitlepageName));
 
 
   wxFprintf(f, _T("\n\n[FILES]\n"));
   wxFprintf(f, _T("%s\n"), wxFileNameFromPath(TitlepageName));
-  for (int i = 1; i <= fileId; i++) {
-    if (truncateFilenames)
-      wxSnprintf(buf, sizeof(buf), _T("%s%d.htm"), wxFileNameFromPath(FileRoot), i);
-    else
-      wxStrcpy(buf, wxFileNameFromPath(gs_filenames[i].c_str()));
+  for (int i = 1; i <= fileId; i++)
+  {
+    wxStrcpy(buf, wxFileNameFromPath(gs_filenames[i].c_str()));
     wxFprintf(f, _T("%s\n"), buf);
   }
   fclose(f);
 
   /* Generate index file : */
 
-  wxSnprintf(buf, sizeof(buf), _T("%s.hhk"), fname);
+  wxSnprintf(buf, sizeof(buf), _T("%s.hhk"), FileName);
   f = wxFopen(buf, _T("wt"));
 
   wxFprintf(f,

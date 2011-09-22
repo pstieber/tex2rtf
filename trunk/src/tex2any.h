@@ -292,7 +292,6 @@ extern bool generateHPJ;      // Generate WinHelp HPJ file
 extern wxString winHelpTitle;    // Title for Windows Help file
 extern int defaultTableColumnWidth;
 extern wxString bitmapMethod;
-extern bool truncateFilenames; // Truncate for DOS
 extern int  winHelpVersion;    // Version e.g. 4 for Win95
 extern bool winHelpContents;   // Generate .cnt file
 extern bool htmlIndex;         // Generate .htx HTML index file
@@ -483,8 +482,8 @@ void AddTexRef(
  * Read and write reference file (.ref), to resolve refs for second pass.
  *
  */
-void WriteTexReferences(wxChar *filename);
-void ReadTexReferences(wxChar *filename);
+void WriteTexReferences(const wxString& FileName);
+void ReadTexReferences(const wxString& FileName);
 
 /*
  * Bibliography stuff

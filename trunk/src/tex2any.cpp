@@ -120,7 +120,6 @@ int             itemIndentTab = 40;   // From left indent to item (points)
 bool            useUpButton = true;
 int             htmlBrowseButtons = HTML_BUTTONS_TEXT;
 
-bool truncateFilenames = false; // Truncate for DOS
 int  winHelpVersion = 3; // WinHelp Version (3 for Windows 3.1, 4 for Win95)
 bool winHelpContents = false; // Generate .cnt file for WinHelp 4
 bool htmlIndex = false; // Generate .htx file for HTML

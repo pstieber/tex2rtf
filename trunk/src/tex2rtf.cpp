@@ -97,12 +97,12 @@ wxString InputFile;
 wxString OutputFile;
 wxString MacroFile = "tex2rtf.ini";
 
-wxChar *FileRoot = NULL;
-wxChar *ContentsName = NULL;    // Contents page from last time around
-wxChar *TmpContentsName = NULL; // Current contents page
-wxChar *TmpFrameContentsName = NULL; // Current frame contents page
-wxChar *WinHelpContentsFileName = NULL; // WinHelp .cnt file
-wxChar *RefFileName = NULL;         // Reference file name
+wxString FileRoot;
+wxString ContentsName;            // Contents page from last time around.
+wxString TmpContentsName;         // Current contents page file name.
+wxString TmpFrameContentsName;    // Current frame contents page.
+wxString WinHelpContentsFileName; // WinHelp .cnt file name.
+wxString RefFileName;             // Reference file name.
 
 wxString RTFCharset = "ansi";
 
@@ -133,13 +133,6 @@ bool MyApp::OnInit()
   // Use default list of macros defined in tex2any.cc
   DefineDefaultMacros();
   AddMacroDef(ltHARDY, _T("hardy"), 0);
-
-  FileRoot = new wxChar[300];
-  ContentsName = new wxChar[300];
-  TmpContentsName = new wxChar[300];
-  TmpFrameContentsName = new wxChar[300];
-  WinHelpContentsFileName = new wxChar[300];
-  RefFileName = new wxChar[300];
 
   for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
   {
@@ -543,36 +536,6 @@ int MyApp::OnExit()
       delete BigBuffer;
       BigBuffer = NULL;
     }
-    if (FileRoot)
-    {
-      delete FileRoot;
-      FileRoot = NULL;
-    }
-    if (ContentsName)
-    {
-      delete ContentsName;
-      ContentsName = NULL;
-    }
-    if (TmpContentsName)
-    {
-      delete TmpContentsName;
-      TmpContentsName = NULL;
-    }
-    if (TmpFrameContentsName)
-    {
-      delete TmpFrameContentsName;
-      TmpFrameContentsName = NULL;
-    }
-    if (WinHelpContentsFileName)
-    {
-      delete WinHelpContentsFileName;
-      WinHelpContentsFileName = NULL;
-    }
-    if (RefFileName)
-    {
-      delete RefFileName;
-      RefFileName = NULL;
-    }
     if (TopLevel)
     {
       delete TopLevel;
@@ -962,26 +925,23 @@ bool Go(void)
 #endif
 
   // Find extension-less filename
-  wxStrcpy(FileRoot, OutputFile.c_str());
+  FileRoot = OutputFile;
   StripExtension(FileRoot);
 
-  if (truncateFilenames && convertMode == TEX_HTML)
-  {
-    // Truncate to five characters. This ensures that
-    // we can generate DOS filenames such as thing999. But 1000 files
-    // may not be enough, of course...
-    wxChar* sName = wxFileNameFromPath( FileRoot);  // this Julian's method is non-destructive reference
+  ContentsName = FileRoot;
+  ContentsName.append(".con");
 
-    if(sName)
-      if(wxStrlen( sName) > 5)
-        sName[5] = '\0';  // that should do!
-  }
+  TmpContentsName = FileRoot;
+  TmpContentsName.append(".cn1");
 
-  wxSnprintf(ContentsName, 300, _T("%s.con"), FileRoot);
-  wxSnprintf(TmpContentsName, 300, _T("%s.cn1"), FileRoot);
-  wxSnprintf(TmpFrameContentsName, 300, _T("%s.frc"), FileRoot);
-  wxSnprintf(WinHelpContentsFileName, 300, _T("%s.cnt"), FileRoot);
-  wxSnprintf(RefFileName, 300, _T("%s.ref"), FileRoot);
+  TmpFrameContentsName = FileRoot;
+  TmpFrameContentsName.append(".frc");
+
+  WinHelpContentsFileName = FileRoot;
+  WinHelpContentsFileName.append(".cnt");
+
+  RefFileName = FileRoot;
+  RefFileName.append(".ref");
 
   TexPathList.EnsureFileAccessible(InputFile);
   if (!bulletFile.empty())
@@ -994,7 +954,9 @@ bool Go(void)
   }
 
   if (wxFileExists(RefFileName))
+  {
     ReadTexReferences(RefFileName);
+  }
 
   bool success = false;
 
