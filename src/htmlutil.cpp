@@ -51,9 +51,9 @@ wxChar *SectionsName = NULL;
 wxChar *SubsectionsName = NULL;
 wxChar *SubsubsectionsName = NULL;
 wxChar *TitlepageName = NULL;
-wxChar *lastFileName = NULL;
-wxChar *lastTopic = NULL;
-wxChar *currentFileName = NULL;
+wxString lastFileName;
+wxString lastTopic;
+wxString currentFileName;
 wxChar *contentsFrameName = NULL;
 
 static TexChunk *descriptionItemArg = NULL;
@@ -118,59 +118,58 @@ class TexNextPage: public wxObject
 
 wxHashTable TexNextPages(wxKEY_STRING);
 
-static wxChar *CurrentChapterName = NULL;
-static wxChar *CurrentChapterFile = NULL;
-static wxChar *CurrentSectionName = NULL;
-static wxChar *CurrentSectionFile = NULL;
-static wxChar *CurrentSubsectionName = NULL;
-static wxChar *CurrentSubsectionFile = NULL;
-static wxChar *CurrentSubsubsectionName = NULL;
-static wxChar *CurrentSubsubsectionFile = NULL;
-static wxChar *CurrentTopic = NULL;
+static wxString CurrentChapterName;
+static wxString CurrentChapterFile;
+static wxString CurrentSectionName;
+static wxString CurrentSectionFile;
+static wxString CurrentSubsectionName;
+static wxString CurrentSubsectionFile;
+static wxString CurrentSubsubsectionName;
+static wxString CurrentSubsubsectionFile;
+static wxString CurrentTopic;
 
 static void SetCurrentTopic(const wxChar *s)
 {
-  if (CurrentTopic) delete[] CurrentTopic;
-  CurrentTopic = copystring(s);
+  CurrentTopic = s;
 }
 
 void SetCurrentChapterName(wxChar *s, wxChar *file)
 {
-  if (CurrentChapterName) delete[] CurrentChapterName;
-  CurrentChapterName = copystring(s);
-  if (CurrentChapterFile) delete[] CurrentChapterFile;
-  CurrentChapterFile = copystring(file);
+  CurrentChapterName = s;
+  CurrentChapterFile = file;
 
   currentFileName = CurrentChapterFile;
 
   SetCurrentTopic(s);
 }
+
 void SetCurrentSectionName(wxChar *s, wxChar *file)
 {
-  if (CurrentSectionName) delete[] CurrentSectionName;
-  CurrentSectionName = copystring(s);
-  if (CurrentSectionFile) delete[] CurrentSectionFile;
-  CurrentSectionFile = copystring(file);
+  CurrentSectionName = s;
+  CurrentSectionFile = file;
 
   currentFileName = CurrentSectionFile;
+
   SetCurrentTopic(s);
 }
+
 void SetCurrentSubsectionName(const wxChar *s, wxChar *file)
 {
-  if (CurrentSubsectionName) delete[] CurrentSubsectionName;
-  CurrentSubsectionName = copystring(s);
-  if (CurrentSubsectionFile) delete[] CurrentSubsectionFile;
-  CurrentSubsectionFile = copystring(file);
+  CurrentSubsectionName = s;
+  CurrentSubsectionFile = file;
+
   currentFileName = CurrentSubsectionFile;
+
   SetCurrentTopic(s);
 }
+
 void SetCurrentSubsubsectionName(wxChar *s, wxChar *file)
 {
-  if (CurrentSubsubsectionName) delete[] CurrentSubsubsectionName;
-  CurrentSubsubsectionName = copystring(s);
-  if (CurrentSubsubsectionFile) delete[] CurrentSubsubsectionFile;
-  CurrentSubsubsectionFile = copystring(file);
+  CurrentSubsubsectionName = s;
+  CurrentSubsubsectionFile = file;
+
   currentFileName = CurrentSubsubsectionFile;
+
   SetCurrentTopic(s);
 }
 
@@ -227,7 +226,7 @@ void ReopenSectionContentsFile(void)
   SectionContentsFD = NULL;
 
   // Create the name from the current section filename
-  if (CurrentSectionFile)
+  if (!CurrentSectionFile.empty())
   {
     SectionContentsFilename = CurrentSectionFile;
     SectionContentsFilename.SetExt("con");
@@ -370,10 +369,10 @@ void Text2HTML(TexChunk *chunk)
 
 // Add the appropriate browse buttons to this page.
 void AddBrowseButtons(
-  const wxChar *upLabel,
-  wxChar *upFilename,
-  wxChar *previousLabel,
-  wxChar *previousFilename,
+  const wxString& upLabel,
+  const wxString& upFilename,
+  const wxString& previousLabel,
+  const wxString& previousFilename,
   const wxChar *thisLabel,
   wxChar *thisFilename)
 {
@@ -447,17 +446,25 @@ void AddBrowseButtons(
   {
     wxChar buf1[80];
     wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
-    wxSnprintf(buf, sizeof(buf),
-               _T("\n<A HREF=\"%s.%s\">%s</A> "),
-               buf1, ConvertCase(_T("htm")), contentsReference);
+    wxSnprintf(
+      buf,
+      sizeof(buf),
+      _T("\n<A HREF=\"%s.%s\">%s</A> "),
+      buf1,
+      ConvertCase(_T("htm")),
+      contentsReference);
   }
   else
   {
     wxChar buf1[80];
     wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
-    wxSnprintf(buf, sizeof(buf),
-               _T("\n<A HREF=\"%s%s\">%s</A> "),
-               buf1, ConvertCase(_T("_contents.html")), contentsReference);
+    wxSnprintf(
+      buf,
+      sizeof(buf),
+      _T("\n<A HREF=\"%s%s\">%s</A> "),
+      buf1,
+      ConvertCase(_T("_contents.html")),
+      contentsReference);
   }
 //  TexOutput(_T("<NOFRAMES>"));
   TexOutput(buf);
@@ -468,19 +475,27 @@ void AddBrowseButtons(
    *
    */
 
-  if (upLabel && upFilename)
+  if (!upFilename.empty())
   {
-    if (
-      (wxStrlen(upLabel) > 0) && !PrimaryAnchorOfTheFile(upFilename, upLabel))
+    if (!upLabel.empty() && !PrimaryAnchorOfTheFile(upFilename, upLabel))
     {
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s#%s\">%s</A> "),
-                 ConvertCase(upFilename), upLabel, upReference);
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s#%s\">%s</A> "),
+        ConvertCase(upFilename),
+        upLabel,
+        upReference);
     }
     else
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s\">%s</A> "),
-                 ConvertCase(upFilename), upReference);
+    {
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s\">%s</A> "),
+        ConvertCase(upFilename),
+        upReference);
+    }
     if (wxStrcmp(upLabel, _T("contents")) == 0)
     {
 //      TexOutput(_T("<NOFRAMES>"));
@@ -488,7 +503,9 @@ void AddBrowseButtons(
 //      TexOutput(_T("</NOFRAMES>"));
     }
     else
+    {
      TexOutput(buf);
+    }
   }
 
   /*
@@ -496,28 +513,37 @@ void AddBrowseButtons(
    *
    */
 
-  if (previousLabel && previousFilename)
+  if (!previousLabel.empty() && !previousFilename.empty())
   {
     if (PrimaryAnchorOfTheFile(previousFilename, previousLabel))
     {
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s\">%s</A> "),
-                 ConvertCase(previousFilename), backReference);
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s\">%s</A> "),
+        ConvertCase(previousFilename),
+        backReference);
     }
     else
     {
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s#%s\">%s</A> "),
-                 ConvertCase(previousFilename), previousLabel, backReference);
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s#%s\">%s</A> "),
+        ConvertCase(previousFilename),
+        previousLabel,
+        backReference);
     }
-    if (wxStrcmp(previousLabel, _T("contents")) == 0)
+    if (previousLabel == _T("contents"))
     {
 //      TexOutput(_T("<NOFRAMES>"));
       TexOutput(buf);
 //      TexOutput(_T("</NOFRAMES>"));
     }
     else
+    {
       TexOutput(buf);
+    }
   }
   else
   {
@@ -537,7 +563,7 @@ void AddBrowseButtons(
     nextLabel = nextPage->label;
     nextFilename = nextPage->filename;
   }
-  if (previousLabel && previousFilename)
+  if (!previousLabel.empty() && !previousFilename.empty())
   {
     TexNextPage *oldNextPage = (TexNextPage *)TexNextPages.Get(previousLabel);
     if (oldNextPage)
@@ -557,13 +583,24 @@ void AddBrowseButtons(
   if (nextLabel && nextFilename)
   {
     if (PrimaryAnchorOfTheFile(nextFilename, nextLabel))
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s\">%s</A> "),
-                 ConvertCase(nextFilename), forwardReference);
+    {
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s\">%s</A> "),
+        ConvertCase(nextFilename),
+        forwardReference);
+    }
     else
-      wxSnprintf(buf, sizeof(buf),
-                 _T("<A HREF=\"%s#%s\">%s</A> "),
-                 ConvertCase(nextFilename), nextLabel, forwardReference);
+    {
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("<A HREF=\"%s#%s\">%s</A> "),
+        ConvertCase(nextFilename),
+        nextLabel,
+        forwardReference);
+    }
     TexOutput(buf);
   }
   else
@@ -581,12 +618,8 @@ void AddBrowseButtons(
   TexOutput(_T("<HR>\n"));
 
   // Update last topic/filename
-  if (lastFileName)
-    delete[] lastFileName;
-  lastFileName = copystring(thisFilename);
-  if (lastTopic)
-    delete[] lastTopic;
-  lastTopic = copystring(thisLabel);
+  lastFileName = thisFilename;
+  lastTopic = thisLabel;
 }
 
 // A colour string is either 3 numbers separated by semicolons (RGB),
@@ -780,11 +813,15 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       TexOutput(_T("</title></head>\n"));
       OutputBodyStart();
 
-      wxChar titleBuf[200];
+      wxString titleBuf(wxFileNameFromPath(FileRoot));
       if (truncateFilenames)
-        wxSnprintf(titleBuf, sizeof(titleBuf), _T("%s.htm"), wxFileNameFromPath(FileRoot));
+      {
+        titleBuf.append(".htm");
+      }
       else
-        wxSnprintf(titleBuf, sizeof(titleBuf), _T("%s_contents.html"), wxFileNameFromPath(FileRoot));
+      {
+        titleBuf.append("_contents.html");
+      }
 
       wxFprintf(Chapters, _T("<A NAME=\"%s\"></A>"), topicName);
 
@@ -2300,8 +2337,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       }
       if (f == _T(""))
       {
-        wxChar buf[300];
-        wxSnprintf(buf, sizeof(buf), _T("Warning: could not find an inline XBM/GIF for %s."), filename);
+        wxString buf;
+        buf
+          << "Warning: could not find an inline XBM/GIF for " << filename
+          << '.';
         OnInform(buf);
       }
       imageFile = wxEmptyString;
@@ -2934,11 +2973,15 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
 
       SetCurrentOutput(Chapters);
 
-      wxChar titleBuf[150];
+      wxString titleBuf(wxFileNameFromPath(FileRoot));
       if (truncateFilenames)
-        wxSnprintf(titleBuf, sizeof(titleBuf), _T("%s.htm"), wxFileNameFromPath(FileRoot));
+      {
+        titleBuf.append(".htm");
+      }
       else
-        wxSnprintf(titleBuf, sizeof(titleBuf), _T("%s_contents.html"), wxFileNameFromPath(FileRoot));
+      {
+        titleBuf.append("_contents.html");
+      }
 
       HTMLHead();
       TexOutput(_T("<title>"));
@@ -2980,7 +3023,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
 //      wxChar *entry = GetArgData();
       wxChar buf[300];
       OutputChunkToString(GetArgChunk(), buf);
-      if (CurrentTopic)
+      if (!CurrentTopic.empty())
       {
         AddKeyWordForTopic(CurrentTopic, buf, currentFileName);
       }
@@ -3289,10 +3332,8 @@ bool HTMLGo(void)
             }
         }
 
-        if (lastFileName) delete[] lastFileName;
-        lastFileName = NULL;
-        if (lastTopic) delete[] lastTopic;
-        lastTopic = NULL;
+        lastFileName.clear();
+        lastTopic.clear();
 
         if (wxFileExists(ContentsName)) wxRemoveFile(ContentsName);
 
