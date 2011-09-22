@@ -62,8 +62,6 @@ static inline wxChar* copystring(const wxChar* s)
     { return wxStrcpy(new wxChar[wxStrlen(s) + 1], s); }
 #endif
 
-const float versionNo = float(TEX2RTF_VERSION_NUMBER);
-
 TexChunk *currentMember = NULL;
 bool startedSections = false;
 wxChar *contentsString = NULL;
@@ -593,7 +591,7 @@ int MyApp::OnExit()
 void ShowVersion(void)
 {
   wxString Version;
-  Version << "Tex2RTF version " << versionNo;
+  Version << "Tex2RTF version " << TEX2RTF_VERSION_NUMBER_STRING;
   OnInform(Version);
 }
 
@@ -864,10 +862,14 @@ void MyFrame::OnHelp(wxCommandEvent& WXUNUSED(event))
 
 void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
 {
-  wxChar buf[300];
-  wxString platform = wxGetOsDescription();
-  wxSnprintf(buf, sizeof(buf), _T("Tex2RTF Version %.2f %s\nLaTeX to RTF, WinHelp, and HTML Conversion\n\n(c) Julian Smart, George Tasker and others, 1999-2005"), versionNo, platform.c_str());
-  wxMessageBox(buf, _T("About Tex2RTF"));
+  wxString Platform = wxGetOsDescription();
+  wxString Message;
+  Message
+    << "Tex2RTF Version " << TEX2RTF_VERSION_NUMBER_STRING
+    << ' ' << Platform << '\n'
+    << "LaTeX to RTF, WinHelp, and HTML Conversion" << "\n\n"
+    << "(c) Julian Smart, George Tasker and others, 1999-2011";
+  wxMessageBox(Message, _T("About Tex2RTF"));
 }
 
 void ChooseInputFile(bool force)
