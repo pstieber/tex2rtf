@@ -1,13 +1,9 @@
-/*
- * File:    wxhlpblk.h
- * Purpose: Text blocks used in wxHelp
- * Author:  Julian Smart
- * Created: 1993
- * Updated:
- * Copyright: (c) 1993, AIAI, University of Edinburgh
- */
-
-/* sccsid[] = "%W% %G%" */
+// File:    wxhlpblk.h
+// Purpose: Text blocks used in wxHelp
+// Author:  Julian Smart
+// Created: 1993
+// Updated:
+// Copyright: (c) 1993, AIAI, University of Edinburgh
 
 #ifndef wxhlpblkh
 #define wxhlpblkh
