@@ -1851,7 +1851,7 @@ bool StringMatch(
       Sstr1.MakeUpper();
       Sstr2.MakeUpper();
     }
-    return Sstr2.find(Sstr1) != wxNOT_FOUND;
+    return Sstr2.Find(Sstr1) != wxNOT_FOUND;
   }
   else
   {
