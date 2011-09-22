@@ -423,9 +423,10 @@ void Tex2RTFYield(bool force = false);
  *
  */
 
-// Look for \label macro, use this ref name if found or
-// make up a topic name otherwise.
-wxChar *FindTopicName(TexChunk *chunk);
+// Look for \label macro, use this ref name if found or make up a topic name
+// otherwise.
+wxString FindTopicName(TexChunk *chunk);
+
 // Force the current topic to be this (e.g. force 'references' label).
 void ForceTopicName(const wxChar *name);
 void ResetTopicCounter(void);

@@ -106,42 +106,44 @@ static bool inTable = false;
  * Current topics
  *
  */
-static wxChar *CurrentChapterName = NULL;
-static wxChar *CurrentSectionName = NULL;
-static wxChar *CurrentSubsectionName = NULL;
-static wxChar *CurrentTopic = NULL;
+static wxString CurrentChapterName;
+static wxString CurrentSectionName;
+static wxString CurrentSubsectionName;
+static wxString CurrentTopic;
 
 static bool InPopups()
 {
-  if (CurrentChapterName && (wxStrcmp(CurrentChapterName, _T("popups")) == 0))
+  if (CurrentChapterName == "popups")
+  {
     return true;
-  if (CurrentSectionName && (wxStrcmp(CurrentSectionName, _T("popups")) == 0))
+  }
+  if (CurrentSectionName == "popups")
+  {
     return true;
+  }
   return false;
 }
 
-static void SetCurrentTopic(wxChar *s)
+static void SetCurrentTopic(const wxString& s)
 {
-  if (CurrentTopic) delete[] CurrentTopic;
-  CurrentTopic = copystring(s);
+  CurrentTopic = s;
 }
 
-void SetCurrentChapterName(wxChar *s)
+void SetCurrentChapterName(const wxString& s)
 {
-  if (CurrentChapterName) delete[] CurrentChapterName;
-  CurrentChapterName = copystring(s);
+  CurrentChapterName = s;
   SetCurrentTopic(s);
 }
-void SetCurrentSectionName(wxChar *s)
+
+void SetCurrentSectionName(const wxString& s)
 {
-  if (CurrentSectionName) delete[] CurrentSectionName;
-  CurrentSectionName = copystring(s);
+  CurrentSectionName = s;
   SetCurrentTopic(s);
 }
-void SetCurrentSubsectionName(wxChar *s)
+
+void SetCurrentSubsectionName(const wxString& s)
 {
-  if (CurrentSubsectionName) delete[] CurrentSubsectionName;
-  CurrentSubsectionName = copystring(s);
+  CurrentSubsectionName = s;
   SetCurrentTopic(s);
 }
 
@@ -149,7 +151,7 @@ void SetCurrentSubsectionName(wxChar *s)
 // Level 1 is a chapter, 2 is a section, etc.
 void NotifyParentHasChildren(int parentLevel)
 {
-  wxChar *parentTopic = NULL;
+  wxString parentTopic;
   switch (parentLevel)
   {
     case 1:
@@ -172,7 +174,7 @@ void NotifyParentHasChildren(int parentLevel)
       break;
     }
   }
-  if (parentTopic)
+  if (!parentTopic.empty())
   {
     TexTopic *texTopic = (TexTopic *)TopicTable.Get(parentTopic);
     if (!texTopic)
@@ -223,7 +225,10 @@ void OutputSectionKeyword(FILE *fd)
 }
 
 // Write a line for the .cnt file, if we're doing this.
-void WriteWinHelpContentsFileLine(wxChar *topicName, wxChar *xitle, int level)
+void WriteWinHelpContentsFileLine(
+  const wxString& topicName,
+  wxChar *xitle,
+  int level)
 {
   // First, convert any RTF characters to ASCII
   wxChar title[255];
@@ -331,7 +336,7 @@ void SplitIndexEntry(const wxChar *entry, wxChar *buf1, wxChar *buf2)
  * Output topic index entries in WinHelp RTF
  *
  */
-void GenerateKeywordsForTopic(const wxChar *topic)
+void GenerateKeywordsForTopic(const wxString& topic)
 {
   TexTopic *texTopic = (TexTopic *)TopicTable.Get(topic);
   if (!texTopic)
@@ -1109,7 +1114,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (macroId != ltCHAPTERSTAR && macroId != ltCHAPTERHEADINGSTAR)
         chapterNo ++;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       SetCurrentChapterName(topicName);
 
       if (winHelpContents && winHelp && !InPopups())
@@ -1256,7 +1261,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (macroId != ltSECTIONSTAR && macroId != ltSECTIONHEADINGSTAR)
         sectionNo ++;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       SetCurrentSectionName(topicName);
       NotifyParentHasChildren(1);
       if (winHelpContents && winHelp && !InPopups())
@@ -1362,10 +1367,13 @@ void RTFOnMacro(int macroId, int no_args, bool start)
             wxFprintf(Sections, _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
                wxFileNameFromPath(FileRoot), _T("Contents"));
           }
-          else if (CurrentChapterName)
+          else if (!CurrentChapterName.empty())
           {
-            wxFprintf(Sections, _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
-               wxFileNameFromPath(FileRoot), CurrentChapterName);
+            wxFprintf(
+              Sections,
+              _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
+              wxFileNameFromPath(FileRoot),
+              CurrentChapterName);
           }
         }
       }
@@ -1447,7 +1455,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (macroId != ltSUBSECTIONSTAR)
         subsectionNo ++;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       SetCurrentSubsectionName(topicName);
       NotifyParentHasChildren(2);
       if (winHelpContents && winHelp && !InPopups())
@@ -1517,10 +1525,13 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         wxFprintf(Subsections, _T("+{\\footnote %s}\n"), GetBrowseString());
         OutputSectionKeyword(Subsections);
         GenerateKeywordsForTopic(topicName);
-        if (useUpButton && CurrentSectionName)
+        if (useUpButton && !CurrentSectionName.empty())
         {
-          wxFprintf(Subsections, _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
-             wxFileNameFromPath(FileRoot), CurrentSectionName);
+          wxFprintf(
+            Subsections,
+            _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
+           wxFileNameFromPath(FileRoot),
+           CurrentSectionName);
         }
       }
       if (!winHelp && indexSubsections && useWord)
@@ -1607,7 +1618,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (macroId != ltSUBSUBSECTIONSTAR)
         subsubsectionNo ++;
 
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       SetCurrentTopic(topicName);
       NotifyParentHasChildren(3);
       if (winHelpContents && winHelp)
@@ -1673,10 +1684,13 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         wxFprintf(Subsubsections, _T("+{\\footnote %s}\n"), GetBrowseString());
         OutputSectionKeyword(Subsubsections);
         GenerateKeywordsForTopic(topicName);
-        if (useUpButton && CurrentSubsectionName)
+        if (useUpButton && !CurrentSubsectionName.empty())
         {
-          wxFprintf(Subsubsections, _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
-             wxFileNameFromPath(FileRoot), CurrentSubsectionName);
+          wxFprintf(
+            Subsubsections,
+            _T("!{\\footnote EnableButton(\"Up\");ChangeButtonBinding(\"Up\", \"JumpId(`%s.hlp', `%s')\")}\n"),
+            wxFileNameFromPath(FileRoot),
+            CurrentSubsectionName);
         }
       }
       if (!winHelp && indexSubsections && useWord)
@@ -1749,7 +1763,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
   {
     if (!start)
     {
-      wxChar *topicName = FindTopicName(GetNextChunk());
+      wxString topicName = FindTopicName(GetNextChunk());
       SetCurrentTopic(topicName);
 
       TexOutput(_T("\\pard\\par"));
@@ -4217,7 +4231,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   }
   case ltFOOTNOTE:
   {
-    static wxChar *helpTopic = NULL;
+    static wxString helpTopic;
     static FILE *savedOutput = NULL;
     if (winHelp)
     {
@@ -4275,7 +4289,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   }
   case ltFOOTNOTEPOPUP:
   {
-    static wxChar *helpTopic = NULL;
+    static wxString helpTopic;
     static FILE *savedOutput = NULL;
     if (winHelp)
     {
@@ -5017,15 +5031,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   }
   case ltINDEX:
   {
-    /*
-     * In Windows help, all keywords should be at the start of the
-     * topic, but Latex \index commands can be anywhere in the text.
-     * So we're going to have to build up lists of keywords for a topic,
-     * and insert them on the second pass.
-     *
-     * In linear RTF, we can embed the index entry now.
-     *
-     */
+    // In Windows help, all keywords should be at the start of the
+    // topic, but Latex \index commands can be anywhere in the text.
+    // So we're going to have to build up lists of keywords for a topic,
+    // and insert them on the second pass.
+    //
+    // In linear RTF, we can embed the index entry now.
     if (start)
     {
 //      wxChar *entry = GetArgData();
@@ -5033,7 +5044,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       OutputChunkToString(GetArgChunk(), buf);
       if (winHelp)
       {
-        if (CurrentTopic)
+        if (!CurrentTopic.empty())
         {
           AddKeyWordForTopic(CurrentTopic, buf);
         }
@@ -5086,7 +5097,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       wxString s = GetArgData();
       // Only insert a bookmark here if it's not just been inserted
       // in a section heading.
-      if (!CurrentTopic || s != CurrentTopic)
+      if (!CurrentTopic.empty() || s != CurrentTopic)
 /*
       if ( (!CurrentChapterName || !(CurrentChapterName && (wxStrcmp(CurrentChapterName, s) == 0))) &&
            (!CurrentSectionName || !(CurrentSectionName && (wxStrcmp(CurrentSectionName, s) == 0))) &&
