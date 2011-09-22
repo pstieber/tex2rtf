@@ -29,7 +29,7 @@ static bool tableVerticalLineLeft = false;
 static bool tableVerticalLineRight = false;
 static bool inTable = false;
 static int citeCount = 1;
-WX_DECLARE_HASH_MAP(int, wxChar*, wxIntegerHash, wxIntegerEqual, IntHashMap);
+WX_DECLARE_HASH_MAP(int, wxString, wxIntegerHash, wxIntegerEqual, IntHashMap);
 IntHashMap hyperLinks;
 WX_DECLARE_STRING_HASH_MAP(long, StringLongMap);
 StringLongMap hyperLabels;
@@ -653,8 +653,8 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
     {
       wxString sec;
 
-      wxChar *refName = GetArgData();
-      if (refName)
+      wxString refName = GetArgData();
+      if (!refName.empty())
       {
         TexRef *texRef = FindReference(refName);
         if (texRef)
@@ -688,8 +688,8 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
     {
       if (start)
       {
-        wxChar *label = GetArgData();
-        hyperLinks[currentBlockId] = copystring(label);
+        wxString label = GetArgData();
+        hyperLinks[currentBlockId] = label;
       }
 
       return false;
@@ -732,11 +732,11 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
         tableVerticalLineLeft = false;
         tableVerticalLineRight = false;
 
-        wxChar *alignString = copystring(GetArgData());
+        wxString alignString = GetArgData();
 
         // Count the number of columns
         noColumns = 0;
-        size_t len = wxStrlen(alignString);
+        size_t len = alignString.length();
         if (len > 0)
         {
           if (alignString[0] == '|')
@@ -793,7 +793,7 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
     wxChar buf[100];
     if (arg_no == 1 && start)
     {
-      wxChar *citeKey = GetArgData();
+      wxString citeKey = GetArgData();
       TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
@@ -857,43 +857,48 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('a'))
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T('e'):
-           TexOutput(_T("e"));
-           break;
-          case _T('i'):
-           TexOutput(_T("i"));
-           break;
-          case _T('o'):
-           TexOutput(_T("o"));
-           break;
-          case _T('u'):
-           TexOutput(_T("u"));
-           break;
-          case _T('A'):
-           TexOutput(_T("a"));
-           break;
-          case _T('E'):
-           TexOutput(_T("E"));
-           break;
-          case _T('I'):
-           TexOutput(_T("I"));
-           break;
-          case _T('O'):
-           TexOutput(_T("O"));
-           break;
-          case _T('U'):
-           TexOutput(_T("U"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == _T('e'))
+        {
+          TexOutput(_T("e"));
+        }
+        else if (val[0] == _T('i'))
+        {
+          TexOutput(_T("i"));
+        }
+        else if (val[0] == _T('o'))
+        {
+          TexOutput(_T("o"));
+        }
+        else if (val[0] == _T('u'))
+        {
+          TexOutput(_T("u"));
+        }
+        else if (val[0] == _T('A'))
+        {
+          TexOutput(_T("A"));
+        }
+        else if (val[0] == _T('E'))
+        {
+          TexOutput(_T("E"));
+        }
+        else if (val[0] == _T('I'))
+        {
+          TexOutput(_T("I"));
+        }
+        else if (val[0] == _T('O'))
+        {
+          TexOutput(_T("O"));
+        }
+        else if (val[0] == _T('U'))
+        {
+          TexOutput(_T("U"));
         }
       }
     }
@@ -903,49 +908,56 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('a'))
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T('e'):
-           TexOutput(_T("e"));
-           break;
-          case _T('i'):
-           TexOutput(_T("i"));
-           break;
-          case _T('o'):
-           TexOutput(_T("o"));
-           break;
-          case _T('u'):
-           TexOutput(_T("u"));
-           break;
-          case _T('y'):
-           TexOutput(_T("y"));
-           break;
-          case _T('A'):
-           TexOutput(_T("A"));
-           break;
-          case _T('E'):
-           TexOutput(_T("E"));
-           break;
-          case _T('I'):
-           TexOutput(_T("I"));
-           break;
-          case _T('O'):
-           TexOutput(_T("O"));
-           break;
-          case _T('U'):
-           TexOutput(_T("U"));
-           break;
-          case _T('Y'):
-           TexOutput(_T("Y"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == _T('e'))
+        {
+          TexOutput(_T("e"));
+        }
+        else if (val[0] == _T('i'))
+        {
+          TexOutput(_T("i"));
+        }
+        else if (val[0] == _T('o'))
+        {
+          TexOutput(_T("o"));
+        }
+        else if (val[0] == _T('u'))
+        {
+          TexOutput(_T("u"));
+        }
+        else if (val[0] == _T('y'))
+        {
+          TexOutput(_T("y"));
+        }
+        else if (val[0] == _T('A'))
+        {
+          TexOutput(_T("A"));
+        }
+        else if (val[0] == _T('E'))
+        {
+          TexOutput(_T("E"));
+        }
+        else if (val[0] == _T('I'))
+        {
+          TexOutput(_T("I"));
+        }
+        else if (val[0] == _T('O'))
+        {
+          TexOutput(_T("O"));
+        }
+        else if (val[0] == _T('U'))
+        {
+          TexOutput(_T("U"));
+        }
+        else if (val[0] == _T('Y'))
+        {
+          TexOutput(_T("Y"));
         }
       }
     }
@@ -955,43 +967,48 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('a'))
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T('e'):
-           TexOutput(_T("e"));
-           break;
-          case _T('i'):
-           TexOutput(_T("i"));
-           break;
-          case _T('o'):
-           TexOutput(_T("o"));
-           break;
-          case _T('u'):
-           TexOutput(_T("u"));
-           break;
-          case _T('A'):
-           TexOutput(_T("A"));
-           break;
-          case _T('E'):
-           TexOutput(_T("E"));
-           break;
-          case _T('I'):
-           TexOutput(_T("I"));
-           break;
-          case _T('O'):
-           TexOutput(_T("O"));
-           break;
-          case _T('U'):
-           TexOutput(_T("U"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == _T('e'))
+        {
+          TexOutput(_T("e"));
+        }
+        else if (val[0] == _T('i'))
+        {
+          TexOutput(_T("i"));
+        }
+        else if (val[0] == _T('o'))
+        {
+          TexOutput(_T("o"));
+        }
+        else if (val[0] == _T('u'))
+        {
+          TexOutput(_T("u"));
+        }
+        else if (val[0] == _T('A'))
+        {
+          TexOutput(_T("A"));
+        }
+        else if (val[0] == _T('E'))
+        {
+          TexOutput(_T("E"));
+        }
+        else if (val[0] == _T('I'))
+        {
+          TexOutput(_T("I"));
+        }
+        else if (val[0] == _T('O'))
+        {
+          TexOutput(_T("O"));
+        }
+        else if (val[0] == _T('U'))
+        {
+          TexOutput(_T("U"));
         }
       }
     }
@@ -1001,34 +1018,36 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('a'))
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T(' '):
-           TexOutput(_T("~"));
-           break;
-          case _T('n'):
-           TexOutput(_T("n"));
-           break;
-          case _T('o'):
-           TexOutput(_T("o"));
-           break;
-          case _T('A'):
-           TexOutput(_T("A"));
-           break;
-          case _T('N'):
-           TexOutput(_T("N"));
-           break;
-          case _T('O'):
-           TexOutput(_T("O"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == _T(' '))
+        {
+          TexOutput(_T("~"));
+        }
+        else if (val[0] == _T('n'))
+        {
+          TexOutput(_T("n"));
+        }
+        else if (val[0] == _T('o'))
+        {
+          TexOutput(_T("o"));
+        }
+        else if (val[0] == _T('A'))
+        {
+          TexOutput(_T("A"));
+        }
+        else if (val[0] == _T('N'))
+        {
+          TexOutput(_T("N"));
+        }
+        else if (val[0] == _T('O'))
+        {
+          TexOutput(_T("O"));
         }
       }
     }
@@ -1038,49 +1057,56 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('a'))
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T('e'):
-           TexOutput(_T("e"));
-           break;
-          case _T('i'):
-           TexOutput(_T("i"));
-           break;
-          case _T('o'):
-           TexOutput(_T("o"));
-           break;
-          case _T('u'):
-           TexOutput(_T("u"));
-           break;
-          case _T('y'):
-           TexOutput(_T("y"));
-           break;
-          case _T('A'):
-           TexOutput(_T("A"));
-           break;
-          case _T('E'):
-           TexOutput(_T("E"));
-           break;
-          case _T('I'):
-           TexOutput(_T("I"));
-           break;
-          case _T('O'):
-           TexOutput(_T("O"));
-           break;
-          case _T('U'):
-           TexOutput(_T("U"));
-           break;
-          case _T('Y'):
-           TexOutput(_T("Y"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == _T('e'))
+        {
+          TexOutput(_T("e"));
+        }
+        else if (val[0] == _T('i'))
+        {
+          TexOutput(_T("i"));
+        }
+        else if (val[0] == _T('o'))
+        {
+          TexOutput(_T("o"));
+        }
+        else if (val[0] == _T('u'))
+        {
+          TexOutput(_T("u"));
+        }
+        else if (val[0] == _T('y'))
+        {
+          TexOutput(_T("y"));
+        }
+        else if (val[0] == _T('A'))
+        {
+          TexOutput(_T("A"));
+        }
+        else if (val[0] == _T('E'))
+        {
+          TexOutput(_T("E"));
+        }
+        else if (val[0] == _T('I'))
+        {
+          TexOutput(_T("I"));
+        }
+        else if (val[0] == _T('O'))
+        {
+          TexOutput(_T("O"));
+        }
+        else if (val[0] == _T('U'))
+        {
+          TexOutput(_T("U"));
+        }
+        else if (val[0] == _T('Y'))
+        {
+          TexOutput(_T("Y"));
         }
       }
     }
@@ -1090,19 +1116,16 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case _T('a'):
-           TexOutput(_T("a"));
-           break;
-          case _T('A'):
-           TexOutput(_T("A"));
-           break;
-          default:
-           break;
+          TexOutput(_T("a"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("A"));
         }
       }
     }
@@ -1112,19 +1135,16 @@ bool XLPOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == _T('c'))
         {
-          case _T('c'):
-           TexOutput(_T("c"));
-           break;
-          case _T('C'):
-           TexOutput(_T("C"));
-           break;
-          default:
-           break;
+          TexOutput(_T("c"));
+        }
+        else if (val[0] == _T('C'))
+        {
+          TexOutput(_T("C"));
         }
       }
     }
@@ -1168,7 +1188,7 @@ bool XLPGo(void)
     for (IntHashMap::iterator iHyperLink = hyperLinks.begin(); iHyperLink != hyperLinks.end(); ++iHyperLink)
     {
       long from = iHyperLink->first;
-      wxChar *label = iHyperLink->second;
+      wxString label = iHyperLink->second;
       StringLongMap::iterator iOther = hyperLabels.find(label);
       if (iOther != hyperLabels.end())
       {

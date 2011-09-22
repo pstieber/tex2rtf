@@ -11,6 +11,7 @@
 /////////////////////////////////////////////////////////////////////////////
 
 #include <wx/app.h>
+#include <wx/filename.h>
 #include <wx/hash.h>
 #include <wx/hashmap.h>
 #include <wx/textfile.h>
@@ -200,7 +201,7 @@ wxChar *FindTopicName(TexChunk *chunk)
 
 void StartSimulateArgument(wxChar *data)
 {
-  wxStrcpy(currentArgData, data);
+  currentArgData = data;
   haveArgData = true;
 }
 
@@ -249,25 +250,28 @@ int ParseUnitArgument(wxString& unitArg)
   else return 0;
 }
 
-/*
- * Strip off any extension (dot something) from end of file,
- * IF one exists. Inserts zero into buffer.
- *
- */
-
-void StripExtension(wxChar *buffer)
+// Strip off any extension (dot something) from end of file, if one exists.
+// Inserts zero into pFileName.
+void StripExtension(wxChar* pFileName)
 {
-  size_t len = wxStrlen(buffer);
+  size_t len = wxStrlen(pFileName);
   size_t i = len-1;
   while (i > 0)
   {
-    if (buffer[i] == '.')
+    if (pFileName[i] == '.')
     {
-      buffer[i] = 0;
+      pFileName[i] = 0;
       break;
     }
     --i;
   }
+}
+
+void StripExtension(wxString& String)
+{
+  wxFileName FileName(String);
+  FileName.ClearExt();
+  String = FileName.GetFullPath();
 }
 
 /*
@@ -1159,7 +1163,7 @@ void ResolveBibReferences(void)
 }
 
 // Remember we need to resolve this citation
-void AddCitation(wxChar *citeKey)
+void AddCitation(const wxString& citeKey)
 {
   StringSet::iterator iCitation = CitationList.find(citeKey);
   if (iCitation == CitationList.end())
@@ -1571,12 +1575,12 @@ void ShowCustomMacros(void)
 }
 
 // Parse a string into several comma-separated fields
-wxChar *ParseMultifieldString(wxChar *allFields, size_t *pos)
+wxChar *ParseMultifieldString(const wxString& allFields, size_t *pos)
 {
   static wxChar buffer[300];
   int i = 0;
   size_t fieldIndex = *pos;
-  size_t len = wxStrlen(allFields);
+  size_t len = allFields.length();
   size_t oldPos = *pos;
   bool keepGoing = true;
   while ((fieldIndex <= len) && keepGoing)
@@ -1618,9 +1622,13 @@ wxChar *ParseMultifieldString(wxChar *allFields, size_t *pos)
  *
  */
 
-ColourTableEntry::ColourTableEntry(const wxChar *theName, unsigned int r,  unsigned int g,  unsigned int b)
+ColourTableEntry::ColourTableEntry(
+  const wxString& theName,
+  unsigned int r,
+  unsigned int g,
+  unsigned int b)
 {
-  name = copystring(theName);
+  mName = theName;
   red = r;
   green = g;
   blue = b;
@@ -1628,10 +1636,13 @@ ColourTableEntry::ColourTableEntry(const wxChar *theName, unsigned int r,  unsig
 
 ColourTableEntry::~ColourTableEntry(void)
 {
-  delete[] name;
 }
 
-void AddColour(const wxChar *theName, unsigned int r,  unsigned int g,  unsigned int b)
+void AddColour(
+  const wxString& theName,
+  unsigned int r,
+  unsigned int g,
+  unsigned int b)
 {
   ColourTableMap::iterator it = ColourTable.find(theName);
   if (it != ColourTable.end())
@@ -1645,43 +1656,51 @@ void AddColour(const wxChar *theName, unsigned int r,  unsigned int g,  unsigned
       ColourTable.erase(it);
     }
   }
-  ColourTableEntry *entry = new ColourTableEntry(theName, r, g, b);
+  ColourTableEntry* entry = new ColourTableEntry(theName, r, g, b);
   ColourTable[theName] = entry;
 }
 
-int FindColourPosition(wxChar *theName)
+int FindColourPosition(const wxString& theName)
 {
   int i = 0;
-  for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
+  for (
+    ColourTableMap::iterator it = ColourTable.begin();
+    it != ColourTable.end();
+    ++it)
   {
     ColourTableEntry *entry = it->second;
-    if (wxStrcmp(theName, entry->name) == 0)
+    if (theName == entry->mName)
+    {
       return i;
-    i ++;
+    }
+    ++i;
   }
   return -1;
 }
 
 // Converts e.g. "red" -> "#FF0000"
 extern void DecToHex(int, wxChar *);
-bool FindColourHTMLString(wxChar *theName, wxChar *buf)
+
+bool FindColourHTMLString(const wxString& theName, wxString& buf)
 {
-  for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
+  for (
+    ColourTableMap::iterator it = ColourTable.begin();
+    it != ColourTable.end();
+    ++it)
   {
     ColourTableEntry *entry = it->second;
-    if (wxStrcmp(theName, entry->name) == 0)
+    if (wxStrcmp(theName, entry->mName) == 0)
     {
-        wxStrcpy(buf, _T("#"));
+      buf = _T("#");
+      wxChar buf2[3];
+      DecToHex(entry->red, buf2);
+      buf.append(buf2);
+      DecToHex(entry->green, buf2);
+      buf.append(buf2);
+      DecToHex(entry->blue, buf2);
+      buf.append(buf2);
 
-        wxChar buf2[3];
-        DecToHex(entry->red, buf2);
-        wxStrcat(buf, buf2);
-        DecToHex(entry->green, buf2);
-        wxStrcat(buf, buf2);
-        DecToHex(entry->blue, buf2);
-        wxStrcat(buf, buf2);
-
-        return true;
+      return true;
     }
   }
   return false;

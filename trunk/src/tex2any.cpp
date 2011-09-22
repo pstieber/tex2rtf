@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <cstdlib>
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -191,14 +192,14 @@ unsigned long LineNumbers[15];
 wxString FileNames[15];
 int CurrentInputIndex = 0;
 
-wxChar *TexFileRoot = NULL;
-wxChar *TexBibName = NULL;         // Bibliography output file name
-wxChar *TexTmpBibName = NULL;      // Temporary bibliography output file name
+wxString TexFileRoot;
+wxString TexBibName;         // Bibliography output file name
+wxString TexTmpBibName;      // Temporary bibliography output file name
 bool isSync = false;             // If true, should not yield to other processes.
 bool stopRunning = false;        // If true, should abort.
 
 static int currentColumn = 0;
-wxChar *currentArgData = NULL;
+wxString currentArgData;
 bool haveArgData = false; // If true, we're simulating the data.
 TexChunk *currentArgument = NULL;
 TexChunk *nextChunk = NULL;
@@ -211,9 +212,6 @@ wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 wxChar *BigBuffer = NULL;  // For reading in large chunks of text
 TexMacroDef *SoloBlockDef = NULL;
 TexMacroDef *VerbatimMacroDef = NULL;
-
-#define IncrementLineNumber() LineNumbers[CurrentInputIndex] ++
-
 
 TexRef::TexRef(
   const wxString& label,
@@ -230,10 +228,10 @@ TexRef::TexRef(
 
 CustomMacro::~CustomMacro()
 {
-    if (macroName)
-        delete [] macroName;
-    if (macroBody)
-        delete [] macroBody;
+  if (macroName)
+    delete [] macroName;
+  if (macroBody)
+    delete [] macroBody;
 }
 
 void TexOutput(const wxString& s, bool ordinaryText)
@@ -503,7 +501,7 @@ bool read_a_line(wxChar *buf)
           if (ch1 == 13)
             getc(Inputs[CurrentInputIndex]);
           buf[bufIndex] = 0;
-          IncrementLineNumber();
+          ++LineNumbers[CurrentInputIndex];
 //          wxStrcat(buf, "\\par\n");
 //          i += 6;
           if (bufIndex + 5 >= MAX_LINE_BUFFER_SIZE)
@@ -668,7 +666,7 @@ bool read_a_line(wxChar *buf)
       {
          ch = ' '; // No real end of file
       }
-      CurrentInputIndex --;
+      --CurrentInputIndex;
 
       if (checkCurlyBraces)
       {
@@ -695,7 +693,7 @@ bool read_a_line(wxChar *buf)
     }
     if (ch == 10)
     {
-      IncrementLineNumber();
+      ++LineNumbers[CurrentInputIndex];
     }
   }
   buf[bufIndex] = 0;
@@ -739,7 +737,11 @@ bool read_a_line(wxChar *buf)
       wxString informStr;
       informStr.Printf(_T("Processing: %s"),actualFile.c_str());
       OnInform(informStr);
-      CurrentInputIndex ++;
+      ++CurrentInputIndex;
+      if (CurrentInputIndex > 14)
+      {
+        cout << "********************ERROR*********************" << endl;
+      }
 
       Inputs[CurrentInputIndex] = wxFopen(actualFile, _T("r"));
       LineNumbers[CurrentInputIndex] = 1;
@@ -751,7 +753,7 @@ bool read_a_line(wxChar *buf)
 
       if (!Inputs[CurrentInputIndex])
       {
-        CurrentInputIndex --;
+        --CurrentInputIndex;
         OnError(_T("Could not open verbatiminput file."));
       }
       else
@@ -827,7 +829,11 @@ bool read_a_line(wxChar *buf)
       wxString informStr;
       informStr << "Processing: " << actualFile;
       OnInform(informStr);
-      CurrentInputIndex++;
+      ++CurrentInputIndex;
+      if (CurrentInputIndex > 14)
+      {
+        cout << "********************ERROR*********************" << endl;
+      }
 
       Inputs[CurrentInputIndex] = wxFopen(actualFile, _T("r"));
       LineNumbers[CurrentInputIndex] = 1;
@@ -998,8 +1004,11 @@ void MacroError(wxChar *buffer)
   if (i > 20)
     macroBuf[20] = 0;
 
-  errBuf.Printf(_T("Could not find macro: %s at line %d, file %s"),
-             macroBuf, (int)(LineNumbers[CurrentInputIndex]-1), FileNames[CurrentInputIndex]);
+  errBuf.Printf(
+    _T("Could not find macro: %s at line %d, file %s"),
+    macroBuf,
+    (int)(LineNumbers[CurrentInputIndex]-1),
+    FileNames[CurrentInputIndex]);
   OnError(errBuf);
 
   if (wxStrcmp(macroBuf,_T("\\end{document}")) == 0)
@@ -1765,34 +1774,41 @@ size_t ParseMacroBody(
   return pos;
 }
 
-bool TexLoadFile(const wxString& filename)
+bool TexLoadFile(const wxString& FileName)
 {
-    static wxChar *line_buffer;
-    stopRunning = false;
-    wxStrcpy(TexFileRoot, filename);
-    StripExtension(TexFileRoot);
-    wxSnprintf(TexBibName, 300, _T("%s.bb"), TexFileRoot);
-    wxSnprintf(TexTmpBibName, 300, _T("%s.bb1"), TexFileRoot);
+  static wxChar *line_buffer;
+  stopRunning = false;
+  TexFileRoot = FileName;
+  StripExtension(TexFileRoot);
+  TexBibName.clear();
+  TexBibName << TexFileRoot << ".bb";
+  TexTmpBibName.clear();
+  TexTmpBibName << TexFileRoot << ".bb1";
 
-    TexPathList.EnsureFileAccessible(filename);
+  TexPathList.EnsureFileAccessible(FileName);
 
-    if (line_buffer)
-        delete line_buffer;
+  if (line_buffer)
+  {
+    delete line_buffer;
+  }
 
-    line_buffer = new wxChar[MAX_LINE_BUFFER_SIZE];
+  line_buffer = new wxChar[MAX_LINE_BUFFER_SIZE];
 
-    Inputs[0] = wxFopen(filename, _T("r"));
-    LineNumbers[0] = 1;
-    FileNames[0] = filename;
+  Inputs[0] = wxFopen(FileName, _T("r"));
+  LineNumbers[0] = 1;
+  FileNames[0] = FileName;
+  if (Inputs[0])
+  {
+    read_a_line(line_buffer);
+    ParseMacroBody(_T("toplevel"), TopLevel, 1, line_buffer, 0, NULL, true);
     if (Inputs[0])
     {
-        read_a_line(line_buffer);
-        ParseMacroBody(_T("toplevel"), TopLevel, 1, line_buffer, 0, NULL, true);
-        if (Inputs[0]) fclose(Inputs[0]);
-        return true;
+      fclose(Inputs[0]);
     }
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
 TexMacroDef::TexMacroDef(
@@ -1902,8 +1918,8 @@ void GetArgData1(TexChunk *chunk)
 
       if (def && (wxStrcmp(def->mName, _T("solo block")) != 0))
       {
-        wxStrcat(currentArgData, _T("\\"));
-        wxStrcat(currentArgData, def->mName);
+        currentArgData.append("\\");
+        currentArgData.append(def->mName);
       }
 
       for (
@@ -1912,9 +1928,9 @@ void GetArgData1(TexChunk *chunk)
         ++iNode)
       {
         TexChunk* child_chunk = *iNode;
-        wxStrcat(currentArgData, _T("{"));
+        currentArgData.append("{");
         GetArgData1(child_chunk);
-        wxStrcat(currentArgData, _T("}"));
+        currentArgData.append("}");
       }
       break;
     }
@@ -1934,26 +1950,26 @@ void GetArgData1(TexChunk *chunk)
     {
       if (chunk->value)
       {
-        wxStrcat(currentArgData, chunk->value);
+        currentArgData.append(chunk->value);
       }
       break;
     }
   }
 }
 
-wxChar *GetArgData(TexChunk *WXUNUSED(chunk))
+wxString GetArgData(TexChunk *WXUNUSED(chunk))
 {
-  currentArgData[0] = 0;
+  currentArgData.clear();
   GetArgData1(currentArgument);
   haveArgData = false;
   return currentArgData;
 }
 
-wxChar *GetArgData(void)
+wxString GetArgData()
 {
   if (!haveArgData)
   {
-    currentArgData[0] = 0;
+    currentArgData.clear();
     GetArgData1(currentArgument);
   }
   return currentArgData;
@@ -2134,10 +2150,6 @@ void TexInitialize(int bufSize)
 
   IgnorableInputFiles.Add(_T("psbox.tex"));
   BigBuffer = new wxChar[(bufSize*1000)];
-  currentArgData = new wxChar[2000];
-  TexFileRoot = new wxChar[300];
-  TexBibName = new wxChar[300];
-  TexTmpBibName = new wxChar[300];
   AddMacroDef(ltTOPLEVEL, _T("toplevel"), 1);
   TopLevel = new TexChunk(CHUNK_TYPE_MACRO);
 //  TopLevel->name = copystring(_T("toplevel"));
@@ -3354,8 +3366,8 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     {
     if (arg_no == 1 && start)
     {
-      wxChar *refName = GetArgData();
-      if (refName)
+      wxString refName = GetArgData();
+      if (!refName.empty())
       {
         TexRef* texRef = FindReference(refName);
         if (texRef)
@@ -3458,7 +3470,8 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       }
 
       OnMacro(ltHELPFONTSIZE, 1, true);
-      wxSnprintf(currentArgData, 2000, _T("%d"), normalFont);
+      currentArgData.clear();
+      currentArgData << normalFont;
       haveArgData = true;
       OnArgument(ltHELPFONTSIZE, 1, true);
       OnArgument(ltHELPFONTSIZE, 1, false);
@@ -3549,7 +3562,7 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && !IsArgOptional())
     {
-      wxChar *citeKeys = GetArgData();
+      wxString citeKeys = GetArgData();
       size_t pos = 0;
       wxChar *citeKey = ParseMultifieldString(citeKeys, &pos);
       while (citeKey)
@@ -3580,7 +3593,7 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && !IsArgOptional())
     {
-      wxChar *citeKey = GetArgData();
+      wxString citeKey = GetArgData();
       AddCitation(citeKey);
       return false;
     }
@@ -3590,12 +3603,12 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *data = GetArgData();
-      if (wxStrcmp(data, _T("10")) == 0)
+      wxString data = GetArgData();
+      if (data == "10")
         SetFontSizes(10);
-      else if (wxStrcmp(data, _T("11")) == 0)
+      else if (data == "11")
         SetFontSizes(11);
-      else if (wxStrcmp(data, _T("12")) == 0)
+      else if (data == "12")
         SetFontSizes(12);
       return false;
     }
@@ -3685,7 +3698,7 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       }
 
       // Read in the .bib file, resolve all known references, write out the RTF.
-      wxChar *allFiles = GetArgData();
+      wxString allFiles = GetArgData();
       size_t pos = 0;
       wxChar *bibFile = ParseMultifieldString(allFiles, &pos);
       while (bibFile)
@@ -3727,7 +3740,10 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       fclose(Biblio);
       if (wxFileExists(TexTmpBibName))
       {
-        if (wxFileExists(TexBibName)) wxRemoveFile(TexBibName);
+        if (wxFileExists(TexBibName))
+        {
+          wxRemoveFile(TexBibName);
+        }
         wxRenameFile(TexTmpBibName, TexBibName);
       }
       SetCurrentOutputs(save1, save2);
@@ -3743,15 +3759,11 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && (arg_no == 1))
     {
-      wxChar *s = GetArgData();
-      if (s)
+      wxString s = GetArgData();
+      if (!s.empty())
       {
-        wxChar *s1 = copystring(s);
-        int i;
-        for (i = 0; i < (int)wxStrlen(s); i++)
-          s1[i] = (wxChar)wxToupper(s[i]);
-        TexOutput(s1);
-        delete[] s1;
+        wxString Upper = s.MakeUpper();
+        TexOutput(Upper);
         return false;
       }
       else return true;
@@ -3763,15 +3775,11 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && (arg_no == 1))
     {
-      wxChar *s = GetArgData();
-      if (s)
+      wxString s = GetArgData();
+      if (!s.empty())
       {
-        wxChar *s1 = copystring(s);
-        int i;
-        for (i = 0; i < (int)wxStrlen(s); i++)
-          s1[i] = (wxChar)wxTolower(s[i]);
-        TexOutput(s1);
-        delete[] s1;
+        wxString Lower = s.MakeLower();
+        TexOutput(Lower);
         return false;
       }
       else return true;
@@ -3783,15 +3791,11 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && (arg_no == 1))
     {
-      wxChar *s = GetArgData();
-      if (s)
+      wxString s = GetArgData();
+      if (!s.empty())
       {
-        wxChar *s1 = copystring(s);
-        int i;
-        for (i = 0; i < (int)wxStrlen(s); i++)
-          s1[i] = (wxChar)wxToupper(s[i]);
-        TexOutput(s1);
-        delete[] s1;
+        wxString Upper = s.MakeUpper();
+        TexOutput(Upper);
         return false;
       }
       else return true;
@@ -3905,15 +3909,14 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     static int redVal = 0;
     static int greenVal = 0;
     static int blueVal = 0;
-    static wxChar *colourName = NULL;
+    static wxString colourName;
     if (start)
     {
       switch (arg_no)
       {
         case 1:
         {
-          if (colourName) delete[] colourName;
-          colourName = copystring(GetArgData());
+          colourName = GetArgData();
           break;
         }
         case 2:

@@ -2058,8 +2058,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     {
       wxString sec;
 
-      wxChar *refName = GetArgData();
-      if (refName)
+      wxString refName = GetArgData();
+      if (!refName.empty())
       {
         TexRef *texRef = FindReference(refName);
         if (texRef)
@@ -2124,10 +2124,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     {
       if (start)
       {
-        wxChar *refName = GetArgData();
+        wxString refName = GetArgData();
         wxString refFilename;
 
-        if (refName)
+        if (!refName.empty())
         {
           TexRef* texRef = FindReference(refName);
           if (texRef)
@@ -2203,7 +2203,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         }
 
         // Try to find an XBM or GIF image first.
-        wxChar *filename = copystring(GetArgData());
+        wxString filename = GetArgData();
         wxChar buf[500];
 
         wxStrcpy(buf, filename);
@@ -2283,7 +2283,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 2))
     {
       // Try to find an XBM or GIF image first.
-      wxChar *filename = copystring(GetArgData());
+      wxString filename = GetArgData();
       wxChar buf[500];
 
       wxStrcpy(buf, filename);
@@ -2304,7 +2304,6 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         wxSnprintf(buf, sizeof(buf), _T("Warning: could not find an inline XBM/GIF for %s."), filename);
         OnInform(buf);
       }
-      delete[] filename;
       imageFile = wxEmptyString;
       if (!f.empty())
       {
@@ -2327,12 +2326,16 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
           SHGToMap(f, currentFileName);
         }
 
-        wxChar *mapName = GetArgData();
+        wxString mapName = GetArgData();
         TexOutput(_T("<A HREF=\"/cgi-bin/imagemap/"));
-        if (mapName)
+        if (!mapName.empty())
+        {
           TexOutput(mapName);
+        }
         else
+        {
           TexOutput(_T("unknown"));
+        }
         TexOutput(_T("\">"));
         TexOutput(_T("<img src=\""));
         TexOutput(ConvertCase(wxFileNameFromPath(imageFile)));
@@ -2423,7 +2426,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     wxChar buf[100];
     if (arg_no == 1 && start)
     {
-      wxChar *citeKey = GetArgData();
+      wxString citeKey = GetArgData();
       TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
@@ -2489,43 +2492,48 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("&agrave;"));
-           break;
-          case 'e':
-           TexOutput(_T("&egrave;"));
-           break;
-          case 'i':
-           TexOutput(_T("&igrave;"));
-           break;
-          case 'o':
-           TexOutput(_T("&ograve;"));
-           break;
-          case 'u':
-           TexOutput(_T("&ugrave;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Agrave;"));
-           break;
-          case 'E':
-           TexOutput(_T("&Egrave;"));
-           break;
-          case 'I':
-           TexOutput(_T("&Igrave;"));
-           break;
-          case 'O':
-           TexOutput(_T("&Ograve;"));
-           break;
-          case 'U':
-           TexOutput(_T("&Igrave;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&agrave;"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("&egrave;"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("&igrave;"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("&ograve;"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("&ugrave;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Agrave;"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("&Egrave;"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("&Igrave;"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("&Ograve;"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("&Ugrave;"));
         }
       }
     }
@@ -2535,49 +2543,56 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("&aacute;"));
-           break;
-          case 'e':
-           TexOutput(_T("&eacute;"));
-           break;
-          case 'i':
-           TexOutput(_T("&iacute;"));
-           break;
-          case 'o':
-           TexOutput(_T("&oacute;"));
-           break;
-          case 'u':
-           TexOutput(_T("&uacute;"));
-           break;
-          case 'y':
-           TexOutput(_T("&yacute;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Aacute;"));
-           break;
-          case 'E':
-           TexOutput(_T("&Eacute;"));
-           break;
-          case 'I':
-           TexOutput(_T("&Iacute;"));
-           break;
-          case 'O':
-           TexOutput(_T("&Oacute;"));
-           break;
-          case 'U':
-           TexOutput(_T("&Uacute;"));
-           break;
-          case 'Y':
-           TexOutput(_T("&Yacute;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&aacute;"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("&eacute;"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("&iacute;"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("&oacute;"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("&uacute;"));
+        }
+        else if (val[0] == 'y')
+        {
+          TexOutput(_T("&yacute;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Aacute;"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("&Eacute;"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("&Iacute;"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("&Oacute;"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("&Uacute;"));
+        }
+        else if (val[0] == 'Y')
+        {
+          TexOutput(_T("&Yacute;"));
         }
       }
     }
@@ -2587,43 +2602,48 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("&acirc;"));
-           break;
-          case 'e':
-           TexOutput(_T("&ecirc;"));
-           break;
-          case 'i':
-           TexOutput(_T("&icirc;"));
-           break;
-          case 'o':
-           TexOutput(_T("&ocirc;"));
-           break;
-          case 'u':
-           TexOutput(_T("&ucirc;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Acirc;"));
-           break;
-          case 'E':
-           TexOutput(_T("&Ecirc;"));
-           break;
-          case 'I':
-           TexOutput(_T("&Icirc;"));
-           break;
-          case 'O':
-           TexOutput(_T("&Ocirc;"));
-           break;
-          case 'U':
-           TexOutput(_T("&Icirc;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&acirc;"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("&ecirc;"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("&icirc;"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("&ocirc;"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("&ucirc;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Acirc;"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("&Ecirc;"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("&Icirc;"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("&Ocirc;"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("&Icirc;"));
         }
       }
     }
@@ -2633,34 +2653,36 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == ' ')
         {
-          case ' ':
-           TexOutput(_T("~"));
-           break;
-          case 'a':
-           TexOutput(_T("&atilde;"));
-           break;
-          case 'n':
-           TexOutput(_T("&ntilde;"));
-           break;
-          case 'o':
-           TexOutput(_T("&otilde;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Atilde;"));
-           break;
-          case 'N':
-           TexOutput(_T("&Ntilde;"));
-           break;
-          case 'O':
-           TexOutput(_T("&Otilde;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("~"));
+        }
+        else if (val[0] == 'a')
+        {
+          TexOutput(_T("&atilde;"));
+        }
+        else if (val[0] == 'n')
+        {
+          TexOutput(_T("&ntilde;"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("&otilde;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Atilde;"));
+        }
+        else if (val[0] == 'N')
+        {
+          TexOutput(_T("&Ntilde;"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("&Otilde;"));
         }
       }
     }
@@ -2670,49 +2692,56 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("&auml;"));
-           break;
-          case 'e':
-           TexOutput(_T("&euml;"));
-           break;
-          case 'i':
-           TexOutput(_T("&iuml;"));
-           break;
-          case 'o':
-           TexOutput(_T("&ouml;"));
-           break;
-          case 'u':
-           TexOutput(_T("&uuml;"));
-           break;
-          case 'y':
-           TexOutput(_T("&yuml;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Auml;"));
-           break;
-          case 'E':
-           TexOutput(_T("&Euml;"));
-           break;
-          case 'I':
-           TexOutput(_T("&Iuml;"));
-           break;
-          case 'O':
-           TexOutput(_T("&Ouml;"));
-           break;
-          case 'U':
-           TexOutput(_T("&Uuml;"));
-           break;
-          case 'Y':
-           TexOutput(_T("&Yuml;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&auml;"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("&euml;"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("&iuml;"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("&ouml;"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("&uuml;"));
+        }
+        else if (val[0] == 'y')
+        {
+          TexOutput(_T("&yuml;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Auml;"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("&Euml;"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("&Iuml;"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("&Ouml;"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("&Uuml;"));
+        }
+        else if (val[0] == 'Y')
+        {
+          TexOutput(_T("&Yuml;"));
         }
       }
     }
@@ -2722,19 +2751,16 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("&aring;"));
-           break;
-          case 'A':
-           TexOutput(_T("&Aring;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&aring;"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("&Aring;"));
         }
       }
     }
@@ -2825,19 +2851,16 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'c')
         {
-          case 'c':
-           TexOutput(_T("&ccedil;"));
-           break;
-          case 'C':
-           TexOutput(_T("&Ccedil;"));
-           break;
-          default:
-           break;
+          TexOutput(_T("&ccedil;"));
+        }
+        else if (val[0] == 'C')
+        {
+          TexOutput(_T("&Ccedil;"));
         }
       }
     }
@@ -2867,7 +2890,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         tableVerticalLineLeft = false;
         tableVerticalLineRight = false;
 
-        wxChar *alignString = copystring(GetArgData());
+        wxString alignString = GetArgData();
         ParseTableArgument(alignString);
 
         TexOutput(_T("<TABLE BORDER>\n"));
@@ -2888,7 +2911,6 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
           TexOutput(_T("\\pard\\intbl\n"));
 */
         }
-        delete[] alignString;
 
         return false;
       }
@@ -2974,13 +2996,13 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       {
         case 1:
         {
-          wxChar *name = GetArgData();
-          wxChar buf2[10];
+          wxString name = GetArgData();
+          wxString buf2;
           if (!FindColourHTMLString(name, buf2))
           {
-            wxStrcpy(buf2, _T("#000000"));
-            wxChar buf[100];
-            wxSnprintf(buf, sizeof(buf), _T("Could not find colour name %s"), name);
+            buf2 = _T("#000000");
+            wxString buf;
+            buf << "Could not find colour name " << name;
             OnError(buf);
           }
           TexOutput(_T("<FONT COLOR=\""));
@@ -3018,7 +3040,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         {
           oldLevelFile = CurrentOutput1;
 
-          wxChar *str = GetArgData();
+          wxString str = GetArgData();
           currentLevelNo = wxAtoi(str);
           FILE* outputFile;
           // TODO: cope with article style (no chapters)

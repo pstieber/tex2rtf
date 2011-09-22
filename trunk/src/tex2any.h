@@ -195,6 +195,7 @@ void SetCurrentOutput(FILE *fd);
 void SetCurrentOutputs(FILE *fd1, FILE *fd2);
 extern FILE *CurrentOutput1;
 extern FILE *CurrentOutput2;
+extern wxString currentArgData;
 void AddMacroDef(
   int the_id,
   const wxChar *name,
@@ -204,8 +205,8 @@ void AddMacroDef(
 void TexInitialize(int bufSize);
 void TexCleanUp(void);
 void TexOutput(const wxString& s, bool ordinaryText = false);
-wxChar *GetArgData(TexChunk *chunk);
-wxChar *GetArgData(void);           // Get the string for the current argument
+wxString GetArgData(TexChunk *chunk);
+wxString GetArgData();           // Get the string for the current argument
 int GetNoArgs(void);                // Get the number of arguments for the current macro
 TexChunk *GetArgChunk(void);        // Get the chunk for the current argument
 TexChunk *GetTopLevelChunk(void);   // Get the chunk for the top level
@@ -385,7 +386,6 @@ extern void FakeCurrentSection(
  *
  */
 
-extern wxChar *currentArgData;
 extern bool haveArgData; // If true, we're simulating the data.
 void StartSimulateArgument(wxChar *data);
 void EndSimulateArgument(void);
@@ -436,13 +436,11 @@ int ParseUnitArgument(wxString& unitArg);
 // Set small, large, normal etc. point sizes for reference size
 void SetFontSizes(int pointSize);
 
-/*
- * Strip off any extension (dot something) from end of file,
- * IF one exists. Inserts zero into buffer.
- *
- */
+// Strip off any extension (dot something) from end of the passed file name if
+// one exists.  Inserts zero into buffer.
+void StripExtension(wxChar* pFileName);
 
-void StripExtension(wxChar *buffer);
+void StripExtension(wxString& FileName);
 
 /*
  * Reference structure
@@ -551,7 +549,7 @@ extern StringSet CitationList;
 bool ReadBib(const wxString& filename);
 void OutputBib(void);
 void ResolveBibReferences(void);
-void AddCitation(wxChar *citeKey);
+void AddCitation(const wxString& citeKey);
 TexRef* FindReference(const wxString& key);
 
 /*
@@ -590,7 +588,7 @@ extern BibMap BibList;
 bool ReadCustomMacros(const wxString& filename);
 void ShowCustomMacros(void);
 CustomMacro *FindCustomMacro(wxChar *name);
-wxChar *ParseMultifieldString(wxChar *s, size_t *pos);
+wxChar* ParseMultifieldString(const wxString& s, size_t *pos);
 
 /*
  * Colour table stuff
@@ -600,13 +598,13 @@ wxChar *ParseMultifieldString(wxChar *s, size_t *pos);
 class ColourTableEntry: public wxObject
 {
   public:
-    wxChar *name;
+    wxString mName;
     unsigned int red;
     unsigned int green;
     unsigned int blue;
 
     ColourTableEntry(
-      const wxChar *theName,
+      const wxString& theName,
       unsigned int r,
       unsigned int g,
       unsigned int b);
@@ -616,13 +614,13 @@ class ColourTableEntry: public wxObject
 WX_DECLARE_STRING_HASH_MAP(ColourTableEntry*, ColourTableMap);
 extern ColourTableMap ColourTable;
 extern void AddColour(
-  const wxChar *theName,
+  const wxString& theName,
   unsigned int r,
   unsigned int g,
   unsigned int b);
-extern int FindColourPosition(wxChar *theName);
+extern int FindColourPosition(const wxString& theName);
 // Converts e.g. "red" -> "#FF0000"
-extern bool FindColourHTMLString(wxChar *theName, wxChar *buf);
+extern bool FindColourHTMLString(const wxString& Name, wxString& buf);
 extern void InitialiseColourTable(void);
 
 #define ltABSTRACT          1

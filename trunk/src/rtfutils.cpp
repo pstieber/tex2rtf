@@ -36,8 +36,8 @@ static int indentLevel = 0;
 static int forbidParindent = 0; // if > 0, no parindent (e.g. in center environment)
 int forbidResetPar = 0; // If > 0, don't reset memory of having output a new par
 
-static wxChar *contentsLineSection = NULL;
-static wxChar *contentsLineValue = NULL;
+static wxString contentsLineSection;
+static wxString contentsLineValue;
 static TexChunk *descriptionItemArg = NULL;
 static wxArrayString environmentStack; // Stack of paragraph styles we need to remember
 static int footnoteCount = 0;
@@ -68,7 +68,7 @@ static bool hotSpotUnderline = true;
 static bool bitmapTransparency = true;
 
 // Linear RTF requires us to set the style per section.
-static wxChar *currentNumberStyle = NULL;
+static wxString currentNumberStyle;
 static int currentItemSep = 8;
 static int CurrentTextWidth = 8640; // Say, six inches
 static int CurrentLeftMarginOdd = 400;
@@ -484,27 +484,27 @@ void WriteRTFHeader(FILE *fd)
   wxFprintf(fd, _T("\n"));
 }
 
-void OutputNumberStyle(wxChar *numberStyle)
+void OutputNumberStyle(const wxString& numberStyle)
 {
-  if (numberStyle)
+  if (!numberStyle.empty())
   {
-    if (wxStrcmp(numberStyle, _T("arabic")) == 0)
+    if (numberStyle == "arabic")
     {
       TexOutput(_T("\\pgndec"));
     }
-    else if (wxStrcmp(numberStyle, _T("roman")) == 0)
+    else if (numberStyle == "roman")
     {
       TexOutput(_T("\\pgnlcrm"));
     }
-    else if (wxStrcmp(numberStyle, _T("Roman")) == 0)
+    else if (numberStyle == "Roman")
     {
       TexOutput(_T("\\pgnucrm"));
     }
-    else if (wxStrcmp(numberStyle, _T("alph")) == 0)
+    else if (numberStyle == "alph")
     {
       TexOutput(_T("\\pgnlcltr"));
     }
-    else if (wxStrcmp(numberStyle, _T("Alph")) == 0)
+    else if (numberStyle == "Alph")
     {
       TexOutput(_T("\\pgnucltr"));
     }
@@ -2695,13 +2695,13 @@ void RTFOnMacro(int macroId, int no_args, bool start)
   {
     if (!start)
     {
-    if (contentsLineSection && contentsLineValue)
+    if (!contentsLineSection.empty() && !contentsLineValue.empty())
     {
-      if (wxStrcmp(contentsLineSection, _T("chapter")) == 0)
+      if (contentsLineSection == "chapter")
       {
         wxFprintf(Contents, _T("\\par\n{\\b %s}\\par\n"), contentsLineValue);
       }
-      else if (wxStrcmp(contentsLineSection, _T("section")) == 0)
+      else if (contentsLineSection == "section")
       {
         if (DocumentStyle != LATEX_ARTICLE)
           wxFprintf(Contents, _T("\n\\tab%s\\par\n"), contentsLineValue);
@@ -3352,12 +3352,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     {
       wxString sec;
 
-      wxChar *refName = GetArgData();
+      wxString refName = GetArgData();
       if (winHelp || !useWord)
       {
-        if (refName)
+        if (!refName.empty())
         {
-          TexRef *texRef = FindReference(refName);
+          TexRef* texRef = FindReference(refName);
           if (texRef)
           {
             sec = texRef->sectionNumber;
@@ -3370,8 +3370,10 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       }
       else
       {
-        wxFprintf(Chapters, _T("{\\field{\\*\\fldinst  REF %s \\\\* MERGEFORMAT }{\\fldrslt ??}}"),
-                refName);
+        wxFprintf(
+          Chapters,
+          _T("{\\field{\\*\\fldinst  REF %s \\\\* MERGEFORMAT }{\\fldrslt ??}}"),
+          refName);
       }
       return false;
     }
@@ -3424,15 +3426,15 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         if (macroId != ltHELPREFN)
         {
-          wxChar *refName = GetArgData();
+          wxString refName = GetArgData();
           TexRef *texRef = NULL;
-          if (refName)
+          if (!refName.empty())
             texRef = FindReference(refName);
           if (start)
           {
             if (texRef || !ignoreBadRefs)
               TexOutput(_T(" ("));
-            if (refName)
+            if (!refName.empty())
             {
                 if (texRef || !ignoreBadRefs)
                 {
@@ -3544,9 +3546,9 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (start && !winHelp)
     {
       if (arg_no == 2)
-        contentsLineSection = copystring(GetArgData());
+        contentsLineSection = GetArgData();
       else if (arg_no == 3)
-        contentsLineValue = copystring(GetArgData());
+        contentsLineValue = GetArgData();
       return false;
     }
     else return false;
@@ -3565,7 +3567,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
 
     if (start && (arg_no == 1))
     {
-      wxChar *imageDimensions = copystring(GetArgData());
+      wxString imageDimensions = GetArgData();
 
       // imageWidth - Convert points to TWIPS (1 twip = 1/20th of point)
       wxStringTokenizer tok(imageDimensions, _T(";:"), wxTOKEN_STRTOK);
@@ -3590,13 +3592,11 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         imageHeight = 0;
       }
 
-      if (imageDimensions)  // glt
-          delete [] imageDimensions;
       return false;
     }
     else if (start && (arg_no == 2 ))
     {
-      wxChar *filename = copystring(GetArgData());
+      wxString filename = GetArgData();
       wxString f = _T("");
       if ((winHelp || (wxStrcmp(bitmapMethod, _T("includepicture")) == 0)  || (wxStrcmp(bitmapMethod, _T("import")) == 0)) && useWord)
       {
@@ -3666,8 +3666,6 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
           wxSnprintf(buf, sizeof(buf), _T("Warning: could not find a BMP or WMF equivalent for %s."), filename);
           OnInform(buf);
         }
-        if (filename)  // glt
-            delete [] filename;
       }
       else // linear RTF
       {
@@ -3744,7 +3742,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         tableVerticalLineRight = false;
         int currentWidth = 0;
 
-        wxChar *alignString = copystring(GetArgData());
+        wxString alignString = GetArgData();
         ParseTableArgument(alignString);
 
 //        TexOutput(_T("\\trowd\\trgaph108\\trleft-108"));
@@ -3762,7 +3760,6 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
           }
           TexOutput(_T("\\pard\\intbl\n"));
         }
-        delete[] alignString;
 
         return false;
       }
@@ -3833,12 +3830,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *data = GetArgData();
-      if (wxStrcmp(data, _T("10")) == 0)
+      wxString data = GetArgData();
+      if (data == "10")
         SetFontSizes(10);
-      else if (wxStrcmp(data, _T("11")) == 0)
+      else if (data == "11")
         SetFontSizes(11);
-      else if (wxStrcmp(data, _T("12")) == 0)
+      else if (data == "12")
         SetFontSizes(12);
       wxSnprintf(buf, sizeof(buf), _T("\\fs%d\n"), normalFont*2);
       TexOutput(buf);
@@ -3851,12 +3848,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *data = GetArgData();
-      if (wxStrcmp(data, _T("Swiss")) == 0)
+      wxString data = GetArgData();
+      if (data == "Swiss")
         TexOutput(_T("\\f2\n"));
-      else if (wxStrcmp(data, _T("Symbol")) == 0)
+      else if (data == "Symbol")
         TexOutput(_T("\\f1\n"));
-      else if (wxStrcmp(data, _T("Times")) == 0)
+      else if (data == "Times")
         TexOutput(_T("\\f0\n"));
 
       return false;
@@ -3921,43 +3918,48 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e0"));
-           break;
-          case 'e':
-           TexOutput(_T("\\'e8"));
-           break;
-          case 'i':
-           TexOutput(_T("\\'ec"));
-           break;
-          case 'o':
-           TexOutput(_T("\\'f2"));
-           break;
-          case 'u':
-           TexOutput(_T("\\'f9"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c0"));
-           break;
-          case 'E':
-           TexOutput(_T("\\'c8"));
-           break;
-          case 'I':
-           TexOutput(_T("\\'cc"));
-           break;
-          case 'O':
-           TexOutput(_T("\\'d2"));
-           break;
-          case 'U':
-           TexOutput(_T("\\'d9"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e0"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("\\'e8"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("\\'ec"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("\\'f2"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("\\'f9"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c0"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("\\'c8"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("\\'cc"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("\\'d2"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("\\'d9"));
         }
       }
     }
@@ -3967,49 +3969,56 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e1"));
-           break;
-          case 'e':
-           TexOutput(_T("\\'e9"));
-           break;
-          case 'i':
-           TexOutput(_T("\\'ed"));
-           break;
-          case 'o':
-           TexOutput(_T("\\'f3"));
-           break;
-          case 'u':
-           TexOutput(_T("\\'fa"));
-           break;
-          case 'y':
-           TexOutput(_T("\\'fd"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c1"));
-           break;
-          case 'E':
-           TexOutput(_T("\\'c9"));
-           break;
-          case 'I':
-           TexOutput(_T("\\'cd"));
-           break;
-          case 'O':
-           TexOutput(_T("\\'d3"));
-           break;
-          case 'U':
-           TexOutput(_T("\\'da"));
-           break;
-          case 'Y':
-           TexOutput(_T("\\'dd"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e1"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("\\'e9"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("\\'ed"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("\\'f3"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("\\'fa"));
+        }
+        else if (val[0] == 'y')
+        {
+          TexOutput(_T("\\'fd"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c1"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("\\'c9"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("\\'cd"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("\\'d3"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("\\'da"));
+        }
+        else if (val[0] == 'Y')
+        {
+          TexOutput(_T("\\'dd"));
         }
       }
     }
@@ -4019,43 +4028,48 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e2"));
-           break;
-          case 'e':
-           TexOutput(_T("\\'ea"));
-           break;
-          case 'i':
-           TexOutput(_T("\\'ee"));
-           break;
-          case 'o':
-           TexOutput(_T("\\'f4"));
-           break;
-          case 'u':
-           TexOutput(_T("\\'fb"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c2"));
-           break;
-          case 'E':
-           TexOutput(_T("\\'ca"));
-           break;
-          case 'I':
-           TexOutput(_T("\\'ce"));
-           break;
-          case 'O':
-           TexOutput(_T("\\'d4"));
-           break;
-          case 'U':
-           TexOutput(_T("\\'db"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e2"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("\\'ea"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("\\'ee"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("\\'f4"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("\\'fb"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c2"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("\\'ca"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("\\'ce"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("\\'d4"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("\\'db"));
         }
       }
     }
@@ -4065,34 +4079,36 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e3"));
-           break;
-          case ' ':
-           TexOutput(_T("~"));
-           break;
-          case 'n':
-           TexOutput(_T("\\'f1"));
-           break;
-          case 'o':
-           TexOutput(_T("\\'f5"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c3"));
-           break;
-          case 'N':
-           TexOutput(_T("\\'d1"));
-           break;
-          case 'O':
-           TexOutput(_T("\\'d5"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e3"));
+        }
+        else if (val[0] == ' ')
+        {
+          TexOutput(_T("~"));
+        }
+        else if (val[0] == 'n')
+        {
+          TexOutput(_T("\\'f1"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("\\'f5"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c3"));
+        }
+        else if (val[0] == 'N')
+        {
+          TexOutput(_T("\\'d1"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("\\'d5"));
         }
       }
     }
@@ -4102,52 +4118,60 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e4"));
-           break;
-          case 'e':
-           TexOutput(_T("\\'eb"));
-           break;
-          case 'i':
-           TexOutput(_T("\\'ef"));
-           break;
-          case 'o':
-           TexOutput(_T("\\'f6"));
-           break;
-          case 'u':
-           TexOutput(_T("\\'fc"));
-           break;
-          case 's':
-           TexOutput(_T("\\'df"));
-           break;
-          case 'y':
-           TexOutput(_T("\\'ff"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c4"));
-           break;
-          case 'E':
-           TexOutput(_T("\\'cb"));
-           break;
-          case 'I':
-           TexOutput(_T("\\'cf"));
-           break;
-          case 'O':
-           TexOutput(_T("\\'d6"));
-           break;
-          case 'U':
-           TexOutput(_T("\\'dc"));
-           break;
-          case 'Y':
-           TexOutput(_T("\\'df"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e4"));
+        }
+        else if (val[0] == 'e')
+        {
+          TexOutput(_T("\\'eb"));
+        }
+        else if (val[0] == 'i')
+        {
+          TexOutput(_T("\\'ef"));
+        }
+        else if (val[0] == 'o')
+        {
+          TexOutput(_T("\\'f6"));
+        }
+        else if (val[0] == 'u')
+        {
+          TexOutput(_T("\\'fc"));
+        }
+        else if (val[0] == 's')
+        {
+          TexOutput(_T("\\'df"));
+        }
+        else if (val[0] == 'y')
+        {
+          TexOutput(_T("\\'ff"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c4"));
+        }
+        else if (val[0] == 'E')
+        {
+          TexOutput(_T("\\'cb"));
+        }
+        else if (val[0] == 'I')
+        {
+          TexOutput(_T("\\'cf"));
+        }
+        else if (val[0] == 'O')
+        {
+          TexOutput(_T("\\'d6"));
+        }
+        else if (val[0] == 'U')
+        {
+          TexOutput(_T("\\'dc"));
+        }
+        else if (val[0] == 'Y')
+        {
+          TexOutput(_T("\\'df"));
         }
       }
     }
@@ -4157,19 +4181,16 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'a')
         {
-          case 'a':
-           TexOutput(_T("\\'e5"));
-           break;
-          case 'A':
-           TexOutput(_T("\\'c5"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e5"));
+        }
+        else if (val[0] == 'A')
+        {
+          TexOutput(_T("\\'c5"));
         }
       }
     }
@@ -4179,19 +4200,16 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start)
     {
-      wxChar *val = GetArgData();
-      if (val)
+      wxString val = GetArgData();
+      if (!val.empty())
       {
-        switch (val[0])
+        if (val[0] == 'c')
         {
-          case 'c':
-           TexOutput(_T("\\'e7"));
-           break;
-          case 'C':
-           TexOutput(_T("\\'c7"));
-           break;
-          default:
-           break;
+          TexOutput(_T("\\'e7"));
+        }
+        else if (val[0] == 'C')
+        {
+          TexOutput(_T("\\'c7"));
         }
       }
     }
@@ -4340,7 +4358,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         case 1:
           LeftHeaderEven = GetArgChunk();
-          if (wxStrlen(GetArgData(LeftHeaderEven)) == 0)
+          if (GetArgData(LeftHeaderEven).empty())
             LeftHeaderEven = NULL;
           break;
         case 2:
@@ -4484,9 +4502,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (start)
     {
       TexOutput(_T("\\pgnrestart"));
-      wxChar *data = GetArgData();
-      if (currentNumberStyle) delete[] currentNumberStyle;
-      currentNumberStyle = copystring(data);
+      wxString data = GetArgData();
+      currentNumberStyle = data;
       OutputNumberStyle(currentNumberStyle);
 
       TexOutput(_T("\n"));
@@ -4863,8 +4880,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (!start)
     {
-      wxChar *text = GetArgData();
-      if (wxStrcmp(text, _T("yes")) == 0 || wxStrcmp(text, _T("on")) == 0 || wxStrcmp(text, _T("ok")) == 0)
+      wxString text = GetArgData();
+      if (text == "yes" || text == "on" || text == "ok")
         hotSpotColour = true;
       else
         hotSpotColour = false;
@@ -4875,8 +4892,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (!start)
     {
-      wxChar *text = GetArgData();
-      if (wxStrcmp(text, _T("yes")) == 0 || wxStrcmp(text, _T("on")) == 0 || wxStrcmp(text, _T("ok")) == 0)
+      wxString text = GetArgData();
+      if (text == "yes" || text == "on" || text == "ok")
         bitmapTransparency = true;
       else
         bitmapTransparency = false;
@@ -4887,8 +4904,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (!start)
     {
-      wxChar *text = GetArgData();
-      if (wxStrcmp(text, _T("yes")) == 0 || wxStrcmp(text, _T("on")) == 0 || wxStrcmp(text, _T("ok")) == 0)
+      wxString text = GetArgData();
+      if (text == "yes" || text == "on" || text == "ok")
         hotSpotUnderline = true;
       else
         hotSpotUnderline = false;
@@ -4899,7 +4916,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (arg_no == 1 && start)
     {
-      wxChar *citeKey = GetArgData();
+      wxString citeKey = GetArgData();
       TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
@@ -5034,7 +5051,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         case 1:
         {
-          wxChar *name = GetArgData();
+          wxString name = GetArgData();
           int pos = FindColourPosition(name);
           if (pos > -1)
           {
@@ -5066,10 +5083,10 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && !winHelp && useWord)
     {
-      wxChar *s = GetArgData();
+      wxString s = GetArgData();
       // Only insert a bookmark here if it's not just been inserted
       // in a section heading.
-      if ( !CurrentTopic || !(wxStrcmp(CurrentTopic, s) == 0) )
+      if (!CurrentTopic || s != CurrentTopic)
 /*
       if ( (!CurrentChapterName || !(CurrentChapterName && (wxStrcmp(CurrentChapterName, s) == 0))) &&
            (!CurrentSectionName || !(CurrentSectionName && (wxStrcmp(CurrentSectionName, s) == 0))) &&
@@ -5086,9 +5103,10 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && useWord && !winHelp)
     {
-      wxChar *s = GetArgData();
-      wxFprintf(Chapters, _T("{\\field{\\*\\fldinst  PAGEREF %s \\\\* MERGEFORMAT }{\\fldrslt ??}}"),
-              s);
+      wxString s = GetArgData();
+      wxFprintf(
+        Chapters, _T("{\\field{\\*\\fldinst  PAGEREF %s \\\\* MERGEFORMAT }{\\fldrslt ??}}"),
+        s);
     }
     return false;
   }
@@ -5116,7 +5134,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         {
           oldLevelFile = CurrentOutput1;
 
-          wxChar *str = GetArgData();
+          wxString str = GetArgData();
           currentLevelNo = wxAtoi(str);
           FILE* outputFile;
           // TODO: cope with article style (no chapters)
@@ -5184,8 +5202,8 @@ bool RTFGo(void)
     // Reset variables
     indentLevel = 0;
     forbidParindent = 0;
-    contentsLineSection = NULL;
-    contentsLineValue = NULL;
+    contentsLineSection.clear();
+    contentsLineValue.clear();
     descriptionItemArg = NULL;
     inTabular = false;
     inTable = false;

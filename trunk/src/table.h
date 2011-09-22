@@ -35,4 +35,4 @@ extern int noColumns;   // Current number of columns in table
 extern int ruleTop;
 extern int ruleBottom;
 extern int currentRowNumber;
-extern bool ParseTableArgument(wxChar *value);
+extern bool ParseTableArgument(const wxString& value);
