@@ -300,9 +300,11 @@ bool MyApp::OnInit()
 #ifdef NO_GUI
   if (InputFile.empty() || OutputFile.empty())
   {
-      cout << "Tex2RTF: input or output file is missing.\n";
-      ShowOptions();
-      exit(1);
+    wxString Message;
+    Message << "Tex2RTF: input or output file is missing.";
+    OnError(Message);
+    ShowOptions();
+    exit(1);
   }
 #endif
 
@@ -1110,26 +1112,25 @@ bool Go(void)
   return false;
 }
 
-void OnError(const wxString& msg)
+void OnError(const wxString& ErrorMessage)
 {
-  wxString msg_string = msg;
-  errorCount++;
+  ++errorCount;
 
 #ifdef NO_GUI
-  cerr << "Error: " << msg_string.mb_str() << '\n';
+  cerr << "Error: " << ErrorMessage << '\n';
   cerr.flush();
 #else
   if (isInteractive && frame)
   {
-    (*frame->textWindow) << _T("Error: ") << msg << '\n';
+    (*frame->textWindow) << _T("Error: ") << ErrorMessage << '\n';
   }
   else
   {
 #if defined(__UNIX__)
-    cerr << "Error: " << msg_string.mb_str() << '\n';
+    cerr << "Error: " << ErrorMessage << '\n';
     cerr.flush();
 #elif defined(__WXMSW__)
-    wxLogError(msg);
+    wxLogError(ErrorMessage);
 #endif
   }
 
@@ -1145,7 +1146,7 @@ void OnInform(const wxString& Message)
 #else
   if (isInteractive && frame)
   {
-     (*frame->textWindow) << Message << '\n';
+    (*frame->textWindow) << Message << '\n';
   }
   else
   {
@@ -1153,14 +1154,14 @@ void OnInform(const wxString& Message)
     cout << Message << '\n';
     cout.flush();
 #elif defined(__WXMSW__)
-    wxLogInfo(msg);
+    wxLogInfo(Message);
 #endif
   }
 
-    if (isInteractive)
-    {
-        Tex2RTFYield(true);
-    }
+  if (isInteractive)
+  {
+    Tex2RTFYield(true);
+  }
 #endif // NO_GUI
 }
 
