@@ -1,25 +1,28 @@
-/////////////////////////////////////////////////////////////////////////////
+//*****************************************************************************
 // Name:        readshg.h
 // Purpose:     Petr Smilauer's .SHG (Segmented Hypergraphics file) reading
 //              code.
-//              Note: .SHG is undocumented (anywhere!) so this is
-//              reverse-engineering
-//              and guesswork at its best.
+//              Note: .SHG is undocumented so this is reverse-engineering
+//              and guesswork.
 // Author:      Petr Smilauer
 // Modified by:
 // Created:     01/01/99
 // RCS-ID:      $Id: readshg.h 25095 2004-01-08 11:54:30Z JS $
 // Copyright:   (c) Petr Smilauer
 // Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+//*****************************************************************************
 
 #ifndef readshgh
 #define readshgh
 
-#include  <stdio.h>
-#include <stdlib.h>
+#include <wx/string.h>
 
-typedef enum { TypePopup = 0xE2, TypeJump = 0xE3, TypeMacro = 0xC8} HotspotType;
+typedef enum
+{
+  TypePopup = 0xE2,
+  TypeJump = 0xE3,
+  TypeMacro = 0xC8
+} HotspotType;
 
 #define NOT_VISIBLE  0x04
 
@@ -41,24 +44,13 @@ typedef struct
 
 struct HotSpot
 {
-          HotspotType type;
-          unsigned int left,
-                      top,
-                      right,
-                      bottom;
-          wxChar      szHlpTopic_Macro[65];
-          bool        IsVisible;
+  HotspotType type;
+  unsigned int left, top, right, bottom;
+  wxChar szHlpTopic_Macro[65];
+  bool IsVisible;
 };
 
-// Returns the number of hotspots, and the array of hotspots.
-// E.g.
-// HotSpots *array;
-// int n = ParseSHG("thing.shg", &array);
-
-extern int ParseSHG( const wxChar* fileName, HotSpot **hotspots);
-
 // Converts Windows .SHG file to HTML map file
-extern bool SHGToMap(wxString& filename, wxChar *defaultFile);
+extern bool SHGToMap(const wxString& FileName, const wxString& DefaultFile);
 
 #endif
-

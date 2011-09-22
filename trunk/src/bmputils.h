@@ -11,8 +11,25 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-static char hexArray[] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B',
-  'C', 'D', 'E', 'F' };
+static char hexArray[] =
+{
+  '0',
+  '1',
+  '2',
+  '3',
+  '4',
+  '5',
+  '6',
+  '7',
+  '8',
+  '9',
+  'A',
+  'B',
+  'C',
+  'D',
+  'E',
+  'F'
+};
 
 void DecToHex(int dec, wxChar *buf)
 {
@@ -241,4 +258,3 @@ bool OutputMetafileData(FILE *handle)
 }
 
 #endif
-

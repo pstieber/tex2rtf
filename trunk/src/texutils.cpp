@@ -10,34 +10,15 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
+#include <wx/app.h>
+#include <wx/hash.h>
+#include <wx/hashmap.h>
+#include <wx/textfile.h>
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-    #include "wx/log.h"
-#endif
-
-#include "wx/app.h"
-#include "wx/hash.h"
-#include "wx/hashmap.h"
-#include "wx/textfile.h"
-
-#ifdef new
-#undef new
-#endif
-
-#if wxUSE_IOSTREAMH
-#include <iostream.h>
-#include <fstream.h>
-#else
 #include <iostream>
 #include <fstream>
+
 using namespace std;
-#endif
 
 #include <ctype.h>
 #include "tex2any.h"
@@ -182,18 +163,20 @@ wxChar *FindTopicName(TexChunk *chunk)
   if (chunk && (chunk->type == CHUNK_TYPE_MACRO) &&
       (chunk->macroId == ltLABEL))
   {
-    wxList::compatibility_iterator iNode = chunk->children.GetFirst();
-    if (iNode)
+    list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
+    if (iNode != chunk->mChildren.end())
     {
-      TexChunk *child = (TexChunk *)iNode->GetData();
+      TexChunk* child = *iNode;
       if (child->type == CHUNK_TYPE_ARG)
       {
-        wxList::compatibility_iterator iNode2 = child->children.GetFirst();
-        if (iNode2)
+        list<TexChunk*>::iterator iNode2 = child->mChildren.begin();
+        if (iNode2 != child->mChildren.end())
         {
-          TexChunk *schunk = (TexChunk *)iNode2->GetData();
+          TexChunk* schunk = *iNode2;
           if (schunk->type == CHUNK_TYPE_STRING)
+          {
             topicName = schunk->value;
+          }
         }
       }
     }
@@ -491,7 +474,7 @@ void BibEatWhiteSpace(wxString& line)
     }
 }
 
-void BibEatWhiteSpace(wxSTD istream& str)
+void BibEatWhiteSpace(istream& str)
 {
   char ch = (char)str.peek();
 
@@ -537,7 +520,7 @@ wxString BibReadWord(wxString& line)
     return val;
 }
 
-void BibReadWord(wxSTD istream& istr, wxChar *buffer)
+void BibReadWord(istream& istr, wxChar *buffer)
 {
   int i = 0;
   buffer[i] = 0;
@@ -581,7 +564,7 @@ wxString BibReadToEOL(wxString& line)
     return val;
 }
 
-void BibReadToEOL(wxSTD istream& istr, wxChar *buffer)
+void BibReadToEOL(istream& istr, wxChar *buffer)
 {
     int i = 0;
     buffer[i] = 0;
@@ -661,8 +644,11 @@ wxString BibReadValue(wxString& line,
     return val;
 }
 
-void BibReadValue(wxSTD istream& istr, wxChar *buffer, bool ignoreBraces = true,
-                  bool quotesMayTerminate = true)
+void BibReadValue(
+  istream& istr,
+  wxChar *buffer,
+  bool ignoreBraces = true,
+  bool quotesMayTerminate = true)
 {
     int braceCount = 1;
     int i = 0;
@@ -720,7 +706,7 @@ bool ReadBib(const wxString& filename)
 
   wxString name = filename;
   wxChar buf[300];
-  wxSTD ifstream istr((char const *)name.fn_str(), wxSTD ios::in);
+  ifstream istr((char const *)name.fn_str(), ios::in);
   if (istr.bad()) return false;
 
   BibLine = 1;

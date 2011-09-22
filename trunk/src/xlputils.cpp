@@ -10,18 +10,9 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-#endif
-
 #include "tex2any.h"
 #include "tex2rtf.h"
+
 #include <ctype.h>
 
 #if !WXWIN_COMPATIBILITY_2_4

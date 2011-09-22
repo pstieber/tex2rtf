@@ -10,33 +10,15 @@
 // Licence:     wxWindows licence
 /////////////////////////////////////////////////////////////////////////////
 
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
+#include "table.h"
+#include "tex2any.h"
 
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
+#include <wx/hash.h>
 
-#ifndef WX_PRECOMP
-#endif
-
-#include "wx/hash.h"
-
-#ifdef new
-#undef new
-#endif
-
-#if wxUSE_IOSTREAMH
-#include <iostream.h>
-#include <fstream.h>
-#else
 #include <iostream>
 #include <fstream>
-#endif
 
 #include <ctype.h>
-#include "tex2any.h"
-#include "table.h"
 
 ColumnData TableData[40];
 bool inTabular = false;

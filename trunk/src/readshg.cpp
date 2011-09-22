@@ -1,9 +1,9 @@
-/////////////////////////////////////////////////////////////////////////////
+//*****************************************************************************
 // Name:        readshg.cpp
 // Purpose:     Petr Smilauer's .SHG (Segmented Hypergraphics file) reading
 //              code.
-//              Note: .SHG is undocumented (anywhere!) so this is
-//              reverse-engineering and guesswork at its best.
+//              Note: .SHG is undocumented so this is reverse-engineering and
+//              guesswork.
 // Author:      Petr Smilauer
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
@@ -11,151 +11,181 @@
 // RCS-ID:      $Id: readshg.cpp 35650 2005-09-23 12:56:45Z MR $
 // Copyright:   (c) Petr Smilauer
 // Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
-
-// For compilers that support precompilation, includes "wx.h".
-#include "wx/wxprec.h"
-
-#ifdef __BORLANDC__
-#pragma hdrstop
-#endif
-
-#ifndef WX_PRECOMP
-#endif
-
-#include <stdio.h>
-#include <stdlib.h>
+//*****************************************************************************
 
 #include "readshg.h"
 #include "tex2any.h"
 
-// Returns the number of hotspots, and the array of hotspots.
+#include <cstdio>
+#include <cstdlib>
+#include <vector>
+
+using namespace std;
+
+//*****************************************************************************
+// Returns a vector of hotspots.
 // E.g.
-// HotSpots *array;
-// int n = ParseSHG("thing.shg", &array);
-
-int ParseSHG(const wxString& FileName, HotSpot **hotspots)
+// vector<HotSpot> HotSpots;
+// HotSpots = ParseSHG("thing.shg");
+//*****************************************************************************
+vector<HotSpot> ParseSHG(const wxString& FileName)
 {
-  FILE*   fSHG = wxFopen(FileName, _T("rb"));
-  long    offset;
-  int nHotspots = 0;
+  vector<HotSpot> HotSpots;
 
-  if(fSHG == 0)
-    return 0;
-  nHotspots = 0;
-  //first, look at offset OFF_OFFSET to get another offset :-)
-  fseek( fSHG, OFF_OFFSET, SEEK_SET);
-  offset = 0L;                  // init whole 4-byte variable
-  fread( &offset, 2, 1, fSHG);  // get the offset in first two bytes..
-  if(offset == 0)               // if zero, used next DWORD field
-    fread( &offset, 4, 1, fSHG);// this is our offset for very long DIB
-  offset += 9;                  // don't know hot this delta comes-about
-  if(fseek( fSHG, offset, SEEK_SET) != 0)
+  FILE* fSHG = wxFopen(FileName, _T("rb"));
+  if (fSHG == 0)
   {
-    fclose( fSHG);
-    return -1;    // this is probably because incorrect offset calculation.
+    return HotSpots;
   }
-  fread( &nHotspots, 2, 1, fSHG);
 
-  *hotspots = new HotSpot[nHotspots];
+  long offset;
+
+  // Look at offset OFF_OFFSET to get another offset :-)
+  fseek(fSHG, OFF_OFFSET, SEEK_SET);
+
+  // Initialize the whole 4-byte variable
+  offset = 0L;
+
+  // Get the offset in first two bytes.
+  fread(&offset, 2, 1, fSHG);
+
+  // If the offset is zero, used next DWORD field.
+  if (offset == 0)
+  {
+    // This is our offset for very large DIB.
+    fread(&offset, 4, 1, fSHG);
+  }
+
+  // Don't know how this delta comes-about.
+  offset += 9;
+
+  if (fseek(fSHG, offset, SEEK_SET) != 0)
+  {
+    // This condition is probably due to an incorrect offset calculation.
+    fclose(fSHG);
+    return HotSpots;
+  }
+
+  int HotSpotCount = 0;
+  fread(&HotSpotCount, 2, 1, fSHG);
+
+  HotSpots.resize(HotSpotCount);
 
   int nMacroStrings = 0;
 
-  fread( &nMacroStrings, 2, 1, fSHG); // we can ignore the macros, as this is
-                         // repeated later, but we need to know how much to skip
-  fseek( fSHG, 2, SEEK_CUR);  // skip another 2 bytes I do not understand ;-)
+  // We can ignore the macros, as this is repeated later, but we need to know
+  // how much to skip.
+  fread(&nMacroStrings, 2, 1, fSHG);
+
+  // Skip another 2 bytes I do not understand.
+  fseek(fSHG, 2, SEEK_CUR);
 
   ShgInfoBlock  sib;
-  int           i;
-
-  int sizeOf = sizeof( ShgInfoBlock);
-
-  for( i = 0 ; i < nHotspots ; ++i)
+  for (int i = 0 ; i < HotSpotCount ; ++i)
   {
-    fread( &sib, sizeOf, 1, fSHG); // read one hotspot' info
-    // analyse it:
-    (*hotspots)[i].type    = (HotspotType)(sib.hotspotType & 0xFB);
-    (*hotspots)[i].left    = sib.left;
-    (*hotspots)[i].top     = sib.top;
-    (*hotspots)[i].right   = sib.left + sib.width;
-    (*hotspots)[i].bottom  = sib.top  + sib.height;
-    (*hotspots)[i].IsVisible = ((sib.hotspotType & 4) == 0);
-    (*hotspots)[i].szHlpTopic_Macro[0] = '\0';
+    // Read one hotspot's information.
+    fread(&sib, sizeof(ShgInfoBlock), 1, fSHG);
+
+    // Analyse the data.
+    HotSpots[i].type    = (HotspotType)(sib.hotspotType & 0xFB);
+    HotSpots[i].left    = sib.left;
+    HotSpots[i].top     = sib.top;
+    HotSpots[i].right   = sib.left + sib.width;
+    HotSpots[i].bottom  = sib.top  + sib.height;
+    HotSpots[i].IsVisible = ((sib.hotspotType & 4) == 0);
+    HotSpots[i].szHlpTopic_Macro[0] = '\0';
   }
-  // we have it...now read-off the macro-string block
+
+  // we have it...now read-off the macro-string block.
   if(nMacroStrings > 0)
-    fseek( fSHG, nMacroStrings, SEEK_CUR);  //nMacroStrings is byte offset...
-  // and, at the last, read through the strings: hotspot-id[ignored], then topic/macro
-  int c;
-  for( i = 0 ; i < nHotspots ; ++i)
   {
-    while( (c = fgetc( fSHG)) != 0)
+    // nMacroStrings is the byte offset.
+    fseek(fSHG, nMacroStrings, SEEK_CUR);
+  }
+
+  // Read through the strings: hotspot-id[ignored], then topic/macro.
+  int c;
+  for (int i = 0 ; i < HotSpotCount ; ++i)
+  {
+    while ((c = fgetc(fSHG)) != 0)
       ;
-    // now read it:
+
+    // Now read it.
     int j = 0;
-    while( (c = fgetc( fSHG)) != 0)
+    while ((c = fgetc(fSHG)) != 0)
     {
-      (*hotspots)[i].szHlpTopic_Macro[j] = (wxChar)c;
+      HotSpots[i].szHlpTopic_Macro[j] = (wxChar)c;
       ++j;
     }
-    (*hotspots)[i].szHlpTopic_Macro[j] = 0;
+    HotSpots[i].szHlpTopic_Macro[j] = 0;
   }
-  fclose( fSHG);
-  return nHotspots;
+
+  fclose(fSHG);
+
+  return HotSpots;
 }
 
 
+//*****************************************************************************
 // Convert Windows .SHG file to HTML map file
-
-bool SHGToMap(wxString& filename, wxChar *defaultFile)
+//*****************************************************************************
+bool SHGToMap(const wxString& FileName, const wxString& DefaultFile)
 {
   // Test the SHG parser
-  HotSpot *hotspots = NULL;
-  int n = ParseSHG(filename, &hotspots);
-  if (n == 0)
-    return false;
-
-  wxChar buf[100];
-  wxSnprintf(buf, sizeof(buf), _T("Converting .SHG file to HTML map file: there are %d hotspots in %s."), n, filename);
-  OnInform(buf);
-
-  wxChar outBuf[256];
-  wxStrcpy(outBuf, filename);
-  StripExtension(outBuf);
-  wxStrcat(outBuf, _T(".map"));
-
-  FILE *fd = wxFopen(outBuf, _T("w"));
-  if (!fd)
+  vector<HotSpot> HotSpots = ParseSHG(FileName);
+  if (HotSpots.empty())
   {
-    OnError(_T("Could not open .map file for writing."));
-    delete[] hotspots;
     return false;
   }
 
-  wxFprintf(fd, _T("default %s\n"), defaultFile);
-  for (int i = 0; i < n; i++)
+  wxString Message;
+  Message
+    << "Converting .SHG file to HTML map file: there are " << HotSpots.size()
+    << " hotspots in " << FileName;
+  OnInform(Message);
+
+  wxChar outBuf[256];
+  wxStrcpy(outBuf, FileName);
+  StripExtension(outBuf);
+  wxStrcat(outBuf, _T(".map"));
+
+  FILE* fd = wxFopen(outBuf, _T("w"));
+  if (!fd)
+  {
+    OnError("Could not open .map file for writing.");
+    return false;
+  }
+
+  wxFprintf(fd, _T("default %s\n"), DefaultFile);
+  for (unsigned i = 0; i < HotSpots.size(); ++i)
   {
     wxString refFilename = "??";
 
-    TexRef *texRef = FindReference(hotspots[i].szHlpTopic_Macro);
+    TexRef *texRef = FindReference(HotSpots[i].szHlpTopic_Macro);
     if (texRef)
     {
       refFilename = texRef->refFile;
     }
     else
     {
-      wxChar buf[300];
-      wxSnprintf(buf, sizeof(buf), _T("Warning: could not find hotspot reference %s"), hotspots[i].szHlpTopic_Macro);
-      OnInform(buf);
+      Message.clear();
+      Message
+        << "Warning: could not find hotspot reference "
+        << HotSpots[i].szHlpTopic_Macro;
+      OnInform(Message);
     }
-    wxFprintf(fd, _T("rect %s %d %d %d %d\n"), refFilename, (int)hotspots[i].left, (int)hotspots[i].top,
-      (int)hotspots[i].right, (int)hotspots[i].bottom);
+    wxFprintf(
+      fd,
+      _T("rect %s %d %d %d %d\n"),
+      refFilename,
+      (int)HotSpots[i].left,
+      (int)HotSpots[i].top,
+      (int)HotSpots[i].right,
+      (int)HotSpots[i].bottom);
   }
-  wxFprintf(fd, _T("\n"));
+  wxFprintf(fd, "\n");
 
   fclose(fd);
 
-  delete[] hotspots;
   return true;
 }
-
