@@ -384,78 +384,87 @@ void AddTexRef(
   TexReferences[name] = new TexRef(name, file, tmp, sectionName);
 }
 
-void WriteTexReferences(wxChar *filename)
+void WriteTexReferences(const wxString& FileName)
 {
-    wxString name = filename;
-    wxTextFile file;
+  wxTextFile file;
 
-    if (!(wxFileExists(name)?file.Open(name):file.Create(name)))
-        return;
+  if (!(wxFileExists(FileName) ? file.Open(FileName) : file.Create(FileName)))
+  {
+    return;
+  }
 
-    file.Clear();
+  file.Clear();
 
-    for (TexReferenceMap::iterator iTexRef = TexReferences.begin(); iTexRef != TexReferences.end(); ++iTexRef)
+  for (
+    TexReferenceMap::iterator iTexRef = TexReferences.begin();
+    iTexRef != TexReferences.end();
+    ++iTexRef)
+  {
+    Tex2RTFYield();
+    TexRef* pTexRef = iTexRef->second;
+    wxString converter = pTexRef->refLabel;
+    converter << wxT(" ");
+    converter << (!pTexRef->refFile.empty() ? pTexRef->refFile : _T("??"));
+    converter << wxT(" ");
+    converter << (!pTexRef->sectionName.empty() ? pTexRef->sectionName : _T("??")) ;
+    converter << wxT(" ");
+    converter << (!pTexRef->sectionNumber.empty() ? pTexRef->sectionNumber : _T("??")) ;
+    file.AddLine(converter);
+
+    if (
+      !pTexRef->sectionNumber ||
+      (wxStrcmp(pTexRef->sectionNumber, _T("??")) == 0 && wxStrcmp(pTexRef->sectionName, _T("??")) == 0))
     {
-        Tex2RTFYield();
-        TexRef *ref = iTexRef->second;
-        wxString converter = ref->refLabel;
-        converter << wxT(" ");
-        converter << (!ref->refFile.empty() ? ref->refFile : _T("??"));
-        converter << wxT(" ");
-        converter << (!ref->sectionName.empty() ? ref->sectionName : _T("??")) ;
-        converter << wxT(" ");
-        converter << (!ref->sectionNumber.empty() ? ref->sectionNumber : _T("??")) ;
-        file.AddLine(converter);
-
-        if (!ref->sectionNumber || (wxStrcmp(ref->sectionNumber, _T("??")) == 0 && wxStrcmp(ref->sectionName, _T("??")) == 0))
-        {
-            wxChar buf[200];
-            wxSnprintf(buf, sizeof(buf), _T("Warning: reference %s not resolved."), ref->refLabel);
-            OnInform(buf);
-        }
+      wxString WarningMessage;
+      WarningMessage
+        << "Warning: reference " << pTexRef->refLabel << " not resolved.";
+      OnInform(WarningMessage);
     }
+  }
 
-    file.Write();
-    file.Close();
+  file.Write();
+  file.Close();
 }
 
-void ReadTexReferences(wxChar *filename)
+void ReadTexReferences(const wxString& FileName)
 {
-    wxString name = filename;
+  if (!wxFileExists(FileName))
+  {
+    return;
+  }
 
-    if (!wxFileExists(name))
-        return;
+  wxTextFile file;
+  if (!file.Open(FileName))
+  {
+    return;
+  }
 
-    wxTextFile file;
-    if (!file.Open(name))
-        return;
+  wxString line;
+  for (line = file.GetFirstLine(); !file.Eof(); line = file.GetNextLine())
+  {
+    wxString labelStr = line.BeforeFirst(wxT(' '));
+    line = line.AfterFirst(wxT(' '));
+    wxString fileStr  = line.BeforeFirst(wxT(' '));
+    line = line.AfterFirst(wxT(' '));
+    wxString sectionNameStr = line.BeforeFirst(wxT(' '));
+    wxString sectionStr = line.AfterFirst(wxT(' '));
 
-    wxString line;
-    for ( line = file.GetFirstLine(); !file.Eof(); line = file.GetNextLine() )
+    // gt - needed to trick the hash table "TexReferences" into deleting the key
+    // strings it creates in the Put() function, but not the item that is
+    // created here, as that is destroyed elsewhere.  Without doing this, there
+    // were massive memory leaks
+    TexReferenceMap::iterator iTexRef = TexReferences.find(labelStr.c_str());
+    if (iTexRef != TexReferences.end())
     {
-        wxString labelStr = line.BeforeFirst(wxT(' '));
-        line = line.AfterFirst(wxT(' '));
-        wxString fileStr  = line.BeforeFirst(wxT(' '));
-        line = line.AfterFirst(wxT(' '));
-        wxString sectionNameStr = line.BeforeFirst(wxT(' '));
-        wxString sectionStr = line.AfterFirst(wxT(' '));
-
-        // gt - needed to trick the hash table "TexReferences" into deleting the key
-        // strings it creates in the Put() function, but not the item that is
-        // created here, as that is destroyed elsewhere.  Without doing this, there
-        // were massive memory leaks
-        TexReferenceMap::iterator iTexRef = TexReferences.find(labelStr.c_str());
-        if (iTexRef != TexReferences.end())
-        {
-            delete iTexRef->second;
-        }
-
-        TexReferences[labelStr.c_str()] = new TexRef(
-            labelStr.c_str(),
-            fileStr.c_str(),
-            sectionStr.c_str(),
-            sectionNameStr.c_str());
+      delete iTexRef->second;
     }
+
+    TexReferences[labelStr.c_str()] = new TexRef(
+      labelStr.c_str(),
+      fileStr.c_str(),
+      sectionStr.c_str(),
+      sectionNameStr.c_str());
+  }
 }
 
 
@@ -705,19 +714,22 @@ void BibReadValue(
     wxUnusedVar(stopping);
 }
 
-bool ReadBib(const wxString& filename)
+bool ReadBib(const wxString& FileName)
 {
-  if (!wxFileExists(filename))
-      return false;
+  if (!wxFileExists(FileName))
+  {
+    return false;
+  }
 
-  wxString name = filename;
-  wxChar buf[300];
-  ifstream istr((char const *)name.fn_str(), ios::in);
-  if (istr.bad()) return false;
+  ifstream istr(FileName.wx_str(), ios::in);
+  if (istr.bad())
+  {
+    return false;
+  }
 
   BibLine = 1;
 
-  OnInform(_T("Reading .bib file..."));
+  OnInform("Reading .bib file...");
 
   char ch;
   wxChar fieldValue[4000];
@@ -735,7 +747,7 @@ bool ReadBib(const wxString& filename)
       wxString Message;
       Message
         << "Expected @: malformed bib file at line "
-        << BibLine << " (" << filename << ')';
+        << BibLine << " (" << FileName << ')';
       OnError(Message);
       return false;
     }
@@ -744,8 +756,11 @@ bool ReadBib(const wxString& filename)
     istr.get(ch);
     if (ch != '{' && ch != '(')
     {
-      wxSnprintf(buf, sizeof(buf), _T("Expected { or ( after record type: malformed .bib file at line %ld (%s)"), BibLine, filename);
-      OnError(buf);
+      wxString ErrorMessage;
+      ErrorMessage
+        << "Expected { or ( after record type: malformed .bib file at line "
+        << BibLine << " (" << FileName << ')';
+      OnError(ErrorMessage);
       return false;
     }
     BibEatWhiteSpace(istr);
@@ -756,23 +771,31 @@ bool ReadBib(const wxString& filename)
       istr.get(ch);
       if (ch != '=')
       {
-        wxSnprintf(buf, sizeof(buf), _T("Expected = after string key: malformed .bib file at line %ld (%s)"), BibLine, filename);
-        OnError(buf);
+        wxString ErrorMessage;
+        ErrorMessage
+          << "Expected = after string key: malformed .bib file at line "
+          << BibLine << " (" << FileName << ')';
+        OnError(ErrorMessage);
         return false;
       }
       BibEatWhiteSpace(istr);
       istr.get(ch);
       if (ch != '"' && ch != '{')
       {
-        wxSnprintf(buf, sizeof(buf), _T("Expected = after string key: malformed .bib file at line %ld (%s)"), BibLine, filename);
-        OnError(buf);
+        wxString ErrorMessage;
+        ErrorMessage
+          << "Expected = after string key: malformed .bib file at line "
+          << BibLine << " (" << FileName << ')';
+        OnError(ErrorMessage);
         return false;
       }
       BibReadValue(istr, fieldValue);
 
       // Now put in hash table if necesary
       if (!BibStringTable.Get(recordType))
+      {
         BibStringTable.Put(recordType, (wxObject *)copystring(fieldValue));
+      }
 
       // Read closing ) or }
       BibEatWhiteSpace(istr);
@@ -804,8 +827,11 @@ bool ReadBib(const wxString& filename)
           istr.get(ch);
           if (ch != '=')
           {
-            wxSnprintf(buf, sizeof(buf), _T("Expected = after field type: malformed .bib file at line %ld (%s)"), BibLine, filename);
-            OnError(buf);
+            wxString ErrorMessage;
+            ErrorMessage
+              << "Expected = after field type: malformed .bib file at line "
+              << BibLine << " (" << FileName << ')';
+            OnError(ErrorMessage);
             return false;
           }
           BibEatWhiteSpace(istr);
@@ -823,7 +849,9 @@ bool ReadBib(const wxString& filename)
             }
           }
           else
+          {
             BibReadValue(istr, fieldValue, true, (ch == _T('"') ? true : false));
+          }
 
           // Now we can add a field
           if (StringMatch(recordField, _T("author"), false, true))
@@ -880,8 +908,11 @@ bool ReadBib(const wxString& filename)
             bibEntry->chapter= copystring(fieldValue);
           else
           {
-            wxSnprintf(buf, sizeof(buf), _T("Unrecognised bib field type %s at line %ld (%s)"), recordField, BibLine, filename);
-            OnError(buf);
+            wxString ErrorMessage;
+            ErrorMessage
+              << "Unrecognized bib field type " << recordField<< " at line "
+              << BibLine << " (" << FileName << ')';
+            OnError(ErrorMessage);
           }
         }
       }
@@ -1320,8 +1351,6 @@ wxChar *RegisterSetting(
     RegisterIntSetting(settingValueStr, &contentsDepth);
   else if (StringMatch(settingName, _T("generateHPJ"), false, true))
     generateHPJ = StringTobool(settingValue);
-  else if (StringMatch(settingName, _T("truncateFilenames"), false, true))
-    truncateFilenames = StringTobool(settingValue);
   else if (StringMatch(settingName, _T("winHelpVersion"), false, true))
     RegisterIntSetting(settingValueStr, &winHelpVersion);
   else if (StringMatch(settingName, _T("winHelpContents"), false, true))
@@ -1465,12 +1494,14 @@ wxChar *RegisterSetting(
   return errorCode;
 }
 
-bool ReadCustomMacros(const wxString& filename)
+bool ReadCustomMacros(const wxString& FileName)
 {
-    if (!wxFileExists(filename))
-        return false;
+    if (!wxFileExists(FileName))
+    {
+      return false;
+    }
 
-    wxFileInputStream input( filename );
+    wxFileInputStream input(FileName);
     if(!input.Ok()) return false;
     wxTextInputStream ini( input );
 
@@ -1537,7 +1568,7 @@ bool ReadCustomMacros(const wxString& filename)
 
     }
     wxChar mbuf[200];
-    wxSnprintf(mbuf, sizeof(mbuf), _T("Read initialization file %s."), filename.c_str());
+    wxSnprintf(mbuf, sizeof(mbuf), _T("Read initialization file %s."), FileName);
     OnInform(mbuf);
     return true;
 }
