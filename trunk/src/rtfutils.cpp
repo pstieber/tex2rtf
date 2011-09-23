@@ -26,11 +26,6 @@
 
 using namespace std;
 
-static inline wxChar* copystring(const wxChar* s)
-{
-  return wxStrcpy(new wxChar[wxStrlen(s) + 1], s);
-}
-
 wxList itemizeStack;
 static int indentLevel = 0;
 static int forbidParindent = 0; // if > 0, no parindent (e.g. in center environment)
@@ -4941,7 +4936,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
             ref->sectionNumber = wxEmptyString;
           }
           wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
-          ref->sectionNumber = copystring(buf);
+          ref->sectionNumber = buf;
         }
       }
 
