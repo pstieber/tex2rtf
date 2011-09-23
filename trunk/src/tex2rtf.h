@@ -21,13 +21,17 @@
 
 // Define a new application type
 #ifdef NO_GUI
-class MyApp : public wxAppConsole
+class Tex2RtfApplication : public wxAppConsole
 #else
-class MyApp : public wxApp
+class Tex2RtfApplication : public wxApp
 #endif
 {
   public:
+
+    Tex2RtfApplication();
+
     bool OnInit();
+
 #ifdef NO_GUI
     int OnRun()
     {
@@ -36,6 +40,7 @@ class MyApp : public wxApp
 #else
     int OnExit();
 #endif
+
     void CleanUp();
 };
 

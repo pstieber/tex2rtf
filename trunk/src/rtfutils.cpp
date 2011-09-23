@@ -586,24 +586,20 @@ bool WriteHPJ(const wxString& filename)
 }
 
 
-/*
- * Given a TexChunk with a string value, scans through the string
- * converting Latex-isms into RTF-isms, such as 2 newlines -> \par,
- * and inserting spaces at the start of lines since in Latex, a newline
- * implies a space, but not in RTF.
- *
- */
-
+// Given a TexChunk with a string value, scans through the string
+// converting Latex-isms into RTF-isms, such as 2 newlines -> \par,
+// and inserting spaces at the start of lines since in Latex, a newline
+// implies a space, but not in RTF.
 void ProcessText2RTF(TexChunk *chunk)
 {
   bool changed = false;
   size_t ptr = 0;
   size_t i = 0;
   wxChar ch = 1;
-  size_t len = wxStrlen(chunk->value);
+  size_t len = chunk->mValue.length();
   while (ch != 0)
   {
-    ch = chunk->value[i];
+    ch = chunk->mValue[i];
 
     if (ch == 10)
     {
@@ -625,19 +621,19 @@ void ProcessText2RTF(TexChunk *chunk)
         if (
           (
             i > 0 &&
-            (len > i + 1 && isascii(chunk->value[i + 1])) &&
-            !isspace(chunk->value[i + 1])) ||
+            (len > i + 1 && isascii(chunk->mValue[i + 1])) &&
+            !isspace(chunk->mValue[i + 1])) ||
           (
-            (len > i + 1 && chunk->value[i + 1] == 13) &&
-            (len > i + 2 && isascii(chunk->value[i + 2]) &&
-            !isspace(chunk->value[i + 2]))))
+            (len > i + 1 && chunk->mValue[i + 1] == 13) &&
+            (len > i + 2 && isascii(chunk->mValue[i + 2]) &&
+            !isspace(chunk->mValue[i + 2]))))
 //        if (true)
         {
           // DOS files have a 13 after the 10
           BigBuffer[ptr] = 10;
           ptr ++;
           i ++;
-          if (chunk->value[i] == 13)
+          if (chunk->mValue[i] == 13)
           {
             BigBuffer[ptr] = 13;
             ptr ++;
@@ -658,7 +654,9 @@ void ProcessText2RTF(TexChunk *chunk)
         }
       }
     }
-    else if (!inVerbatim && ch == '`' && (len >= i+1 && chunk->value[i+1] == '`'))
+    else if (
+      !inVerbatim && ch == '`' &&
+      (len >= i + 1 && chunk->mValue[i + 1] == '`'))
     {
       BigBuffer[ptr] = '"'; ptr ++;
       i += 2;
@@ -695,8 +693,7 @@ void ProcessText2RTF(TexChunk *chunk)
 
   if (changed)
   {
-    delete[] chunk->value;
-    chunk->value = copystring(BigBuffer);
+    chunk->mValue = BigBuffer;
   }
 }
 
@@ -753,8 +750,10 @@ void Text2RTF(TexChunk *chunk)
     }
     case CHUNK_TYPE_STRING:
     {
-      if (chunk->value)
+      if (!chunk->mValue.empty())
+      {
         ProcessText2RTF(chunk);
+      }
       break;
     }
   }

@@ -111,7 +111,7 @@ class TexChunk
   int type;
 //  char *name;
   TexMacroDef *def;
-  wxChar *value;
+  wxString mValue;
   int macroId;
   int no_args;
   int argn;
@@ -203,7 +203,7 @@ void AddMacroDef(
   bool ignore = false,
   bool forbidden = false);
 void TexInitialize(int bufSize);
-void TexCleanUp(void);
+void TexCleanUp();
 void TexOutput(const wxString& s, bool ordinaryText = false);
 wxString GetArgData(TexChunk *chunk);
 wxString GetArgData();           // Get the string for the current argument
@@ -427,7 +427,7 @@ void Tex2RTFYield(bool force = false);
 wxString FindTopicName(TexChunk *chunk);
 
 // Force the current topic to be this (e.g. force 'references' label).
-void ForceTopicName(const wxChar *name);
+void ForceTopicName(const wxString& name);
 void ResetTopicCounter(void);
 
 // Parse unit eg. 14, 12pt, 34cm and return value in points.
@@ -447,7 +447,7 @@ void StripExtension(wxString& FileName);
  *
  */
 
-class TexRef: public wxObject
+class TexRef : public wxObject
 {
   public:
     TexRef(
