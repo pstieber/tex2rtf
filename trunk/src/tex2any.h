@@ -1,13 +1,12 @@
-/////////////////////////////////////////////////////////////////////////////
+//*****************************************************************************
 // Name:        tex2any.h
 // Purpose:     Latex conversion header
 // Author:      Julian Smart
 // Modified by:
 // Created:     7.9.93
-// RCS-ID:      $Id: tex2any.h 41020 2006-09-05 20:47:48Z VZ $
 // Copyright:   (c) Julian Smart
 // Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+//*****************************************************************************
 
 #include <wx/utils.h>
 #include <wx/hash.h>
@@ -38,7 +37,7 @@ const unsigned long MAX_LINE_BUFFER_SIZE = 600;
 const unsigned long MAX_LINE_BUFFER_SIZE = 11000;
 #endif
 
-class TexMacroDef: public wxObject
+class TexMacroDef : public wxObject
 {
   public:
 
@@ -49,10 +48,8 @@ class TexMacroDef: public wxObject
       bool ig,
       bool forbidLevel = FORBID_OK);
 
-    virtual ~TexMacroDef(void);
-
     int no_args;
-    wxChar* mName;
+    wxString mName;
     bool ignore;
     int forbidden;
     int macroId;
@@ -164,17 +161,16 @@ size_t ParseArg(
   std::list<TexChunk*>& children,
   wxChar *buffer,
   size_t pos,
-  wxChar *environment = NULL,
+  const wxString& environment,
   bool parseArgToBrace = true,
   TexChunk *customMacroArgs = NULL);
 size_t ParseMacroBody(
-  const wxChar *macro_name,
   TexChunk *parent,
   int no_args,
   wxChar *buffer,
   size_t pos,
-  wxChar *environment = NULL,
-  bool parseArgToBrace = true,
+  const wxString& environment,
+  bool parseArgToBrace,
   TexChunk *customMacroArgs = NULL);
 void TraverseDocument(void);
 
@@ -464,10 +460,9 @@ class TexRef : public wxObject
 
 WX_DECLARE_STRING_HASH_MAP(TexRef*, TexReferenceMap);
 
-/*
- * Add a reference
- *
- */
+//*****************************************************************************
+// Add a reference
+//*****************************************************************************
 
 void AddTexRef(
   const wxString& name,
@@ -485,63 +480,36 @@ void AddTexRef(
 void WriteTexReferences(const wxString& FileName);
 void ReadTexReferences(const wxString& FileName);
 
-/*
- * Bibliography stuff
- *
- */
+//*****************************************************************************
+// Bibliography stuff
+//*****************************************************************************
 
-class BibEntry: public wxObject
+class BibEntry : public wxObject
 {
  public:
-  wxChar *key;
 
-  /*
-   * book, inbook, article, phdthesis, inproceedings, techreport
-   */
-  wxChar *type;
+  wxString mKey;
 
-  /*
-   * Possible fields
-   *
-   */
-  wxChar *editor;
-  wxChar *title;
-  wxChar *booktitle;
-  wxChar *author;
-  wxChar *journal;
-  wxChar *volume;
-  wxChar *number;
-  wxChar *year;
-  wxChar *month;
-  wxChar *pages;
-  wxChar *chapter;
-  wxChar *publisher;
-  wxChar *address;
-  wxChar *institution;
-  wxChar *organization;
-  wxChar *comment;
+  // book, inbook, article, phdthesis, inproceedings, techreport
+  wxString mType;
 
-  inline BibEntry(void)
-  {
-    key = NULL;
-    type = NULL;
-    editor = NULL;
-    title = NULL;
-    booktitle = NULL;
-    author = NULL;
-    journal = NULL;
-    volume = NULL;
-    number = NULL;
-    chapter = NULL;
-    year = NULL;
-    month = NULL;
-    pages = NULL;
-    publisher = NULL;
-    address = NULL;
-    institution = NULL;
-    organization = NULL;
-    comment = NULL;
-  }
+  // Possible fields
+  wxString mEditor;
+  wxString mTitle;
+  wxString mBooktitle;
+  wxString mAuthor;
+  wxString mJournal;
+  wxString mVolume;
+  wxString mNumber;
+  wxString mYear;
+  wxString mMonth;
+  wxString mPages;
+  wxString mChapter;
+  wxString mPublisher;
+  wxString mAddress;
+  wxString mInstitution;
+  wxString mOrganization;
+  wxString mComment;
 };
 
 extern StringSet CitationList;
@@ -552,31 +520,24 @@ void ResolveBibReferences(void);
 void AddCitation(const wxString& citeKey);
 TexRef* FindReference(const wxString& key);
 
-/*
- * Ability to customize, or at least suppress unknown macro errors
- *
- */
-
+//*****************************************************************************
+// Ability to customize, or at least suppress unknown macro errors
+//*****************************************************************************
 #define CUSTOM_MACRO_IGNORE 0
 #define CUSTOM_MACRO_OUTPUT 1
 #define CUSTOM_MACRO_MARK   2
 
+//*****************************************************************************
+//*****************************************************************************
 class CustomMacro: public wxObject
 {
-public:
-    wxChar *macroName;
-    wxChar *macroBody;
-    int noArgs;
-    inline CustomMacro(const wxChar *name, int args, wxChar *body)
-    {
-        noArgs = args;
-        macroName = wxStrcpy(new wxChar[wxStrlen(name) + 1], name);
-        if (body)
-            macroBody = wxStrcpy(new wxChar[wxStrlen(body) + 1], body);
-        else
-            macroBody = NULL;
-    }
-    virtual ~CustomMacro();
+  public:
+
+    wxString mName;
+    wxString mBody;
+    int mArgumentCount;
+
+    CustomMacro(const wxString& Name, int ArgumentCount, const wxString Body);
 };
 
 WX_DECLARE_STRING_HASH_MAP(CustomMacro*, MacroMap);
@@ -587,7 +548,7 @@ extern BibMap BibList;
 
 bool ReadCustomMacros(const wxString& filename);
 void ShowCustomMacros(void);
-CustomMacro *FindCustomMacro(wxChar *name);
+CustomMacro *FindCustomMacro(const wxString& Name);
 wxChar* ParseMultifieldString(const wxString& s, size_t *pos);
 
 /*

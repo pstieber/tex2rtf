@@ -16,24 +16,20 @@
 #include <wx/hashmap.h>
 #include <wx/textfile.h>
 
-#include <iostream>
 #include <fstream>
+#include <iostream>
+#include <map>
 
 using namespace std;
 
 #include <ctype.h>
 #include "tex2any.h"
 
-static inline wxChar* copystring(const wxChar* s)
-{
-  return wxStrcpy(new wxChar[wxStrlen(s) + 1], s);
-}
-
 TexReferenceMap TexReferences;
 BibMap BibList;
 StringSet CitationList;
 ColourTableMap ColourTable;
-wxHashTable BibStringTable(wxKEY_STRING);
+map<wxString, wxString> BibStringMap;
 MacroMap CustomMacroMap;
 TexChunk *currentSection = NULL;
 wxString fakeCurrentSection;
@@ -540,18 +536,18 @@ wxString BibReadWord(wxString& line)
     return val;
 }
 
-void BibReadWord(istream& istr, wxChar *buffer)
+void BibReadWord(istream& Is, wxChar *buffer)
 {
   int i = 0;
   buffer[i] = 0;
-  char ch = (char)istr.peek();
-  while (!istr.eof() && ch != ' ' && ch != '{' && ch != '(' && ch != 13 && ch != 10 && ch != '\t' &&
+  char ch = (char)Is.peek();
+  while (!Is.eof() && ch != ' ' && ch != '{' && ch != '(' && ch != 13 && ch != 10 && ch != '\t' &&
          ch != ',' && ch != '=')
   {
-    istr.get(ch);
+    Is.get(ch);
     buffer[i] = ch;
     i ++;
-    ch = (char)istr.peek();
+    ch = (char)Is.peek();
   }
   buffer[i] = 0;
 }
@@ -584,32 +580,34 @@ wxString BibReadToEOL(wxString& line)
     return val;
 }
 
-void BibReadToEOL(istream& istr, wxChar *buffer)
+void BibReadToEOL(istream& Is, wxChar *buffer)
 {
-    int i = 0;
-    buffer[i] = 0;
-    char ch = (char)istr.peek();
-    bool inQuotes = false;
-    if (ch == '"')
-    {
-        istr.get(ch);
-        ch = (char)istr.peek();
-        inQuotes = true;
-    }
-    // If in quotes, read white space too. If not,
-    // stop at white space or comment.
-    while (!istr.eof() && ch != 13 && ch != 10 && ch != _T('"') &&
-           (inQuotes || ((ch != _T(' ')) && (ch != 9) &&
-                          (ch != _T(';')) && (ch != _T('%')) && (ch != _T('#')))))
-    {
-        istr.get(ch);
-        buffer[i] = ch;
-        i ++;
-        ch = (char)istr.peek();
-    }
-    if (ch == '"')
-        istr.get(ch);
-    buffer[i] = 0;
+  int i = 0;
+  buffer[i] = 0;
+  char ch = (char)Is.peek();
+  bool inQuotes = false;
+  if (ch == '"')
+  {
+    Is.get(ch);
+    ch = (char)Is.peek();
+    inQuotes = true;
+  }
+  // If in quotes, read white space too. If not,
+  // stop at white space or comment.
+  while (!Is.eof() && ch != 13 && ch != 10 && ch != _T('"') &&
+         (inQuotes || ((ch != _T(' ')) && (ch != 9) &&
+                        (ch != _T(';')) && (ch != _T('%')) && (ch != _T('#')))))
+  {
+    Is.get(ch);
+    buffer[i] = ch;
+    i ++;
+    ch = (char)Is.peek();
+  }
+  if (ch == '"')
+  {
+    Is.get(ch);
+  }
+  buffer[i] = 0;
 }
 
 // Read }-terminated value, taking nested braces into account.
@@ -665,58 +663,66 @@ wxString BibReadValue(wxString& line,
 }
 
 void BibReadValue(
-  istream& istr,
+  istream& Is,
   wxChar *buffer,
   bool ignoreBraces = true,
   bool quotesMayTerminate = true)
 {
-    int braceCount = 1;
-    int i = 0;
-    buffer[i] = 0;
-    char ch = (char)istr.peek();
-    bool stopping = false;
-    while (!istr.eof() && !stopping)
+  int braceCount = 1;
+  int i = 0;
+  buffer[i] = 0;
+  char ch = (char)Is.peek();
+  bool stopping = false;
+  while (!Is.eof() && !stopping)
+  {
+//    i ++;
+    if (i >= 4000)
     {
-//      i ++;
-        if (i >= 4000)
-        {
-            wxChar buf[100];
-            wxSnprintf(buf, sizeof(buf), _T("Sorry, value > 4000 chars in bib file at line %ld."), BibLine);
-            wxLogError(buf, "Tex2RTF Fatal Error");
-            return;
-        }
-        istr.get(ch);
-
-        if (ch == '{')
-            braceCount ++;
-
-        if (ch == '}')
-        {
-            braceCount --;
-            if (braceCount == 0)
-            {
-                stopping = true;
-                break;
-            }
-        }
-        else if (quotesMayTerminate && ch == '"')
-        {
-            stopping = true;
-            break;
-        }
-        if (!stopping)
-        {
-            if (!ignoreBraces || (ch != '{' && ch != '}'))
-            {
-                buffer[i] = ch;
-                i ++;
-            }
-        }
-        if (ch == 10)
-            BibLine ++;
+      wxChar buf[100];
+      wxSnprintf(
+        buf,
+        sizeof(buf),
+        _T("Sorry, value > 4000 chars in bib file at line %ld."),
+        BibLine);
+      wxLogError(buf, "Tex2RTF Fatal Error");
+      return;
     }
-    buffer[i] = 0;
-    wxUnusedVar(stopping);
+    Is.get(ch);
+
+    if (ch == '{')
+    {
+      braceCount ++;
+    }
+
+    if (ch == '}')
+    {
+      braceCount --;
+      if (braceCount == 0)
+      {
+        stopping = true;
+        break;
+      }
+    }
+    else if (quotesMayTerminate && ch == '"')
+    {
+      stopping = true;
+      break;
+    }
+    if (!stopping)
+    {
+      if (!ignoreBraces || (ch != '{' && ch != '}'))
+      {
+        buffer[i] = ch;
+        i ++;
+      }
+    }
+    if (ch == 10)
+    {
+      BibLine ++;
+    }
+  }
+  buffer[i] = 0;
+  wxUnusedVar(stopping);
 }
 
 bool ReadBib(const wxString& FileName)
@@ -726,8 +732,8 @@ bool ReadBib(const wxString& FileName)
     return false;
   }
 
-  ifstream istr(FileName.wx_str(), ios::in);
-  if (istr.bad())
+  ifstream Is(FileName.wx_str(), ios::in);
+  if (Is.bad())
   {
     return false;
   }
@@ -741,12 +747,12 @@ bool ReadBib(const wxString& FileName)
   wxChar recordType[100];
   wxChar recordKey[100];
   wxChar recordField[100];
-  while (!istr.eof())
+  while (!Is.eof())
   {
     Tex2RTFYield();
 
-    BibEatWhiteSpace(istr);
-    istr.get(ch);
+    BibEatWhiteSpace(Is);
+    Is.get(ch);
     if (ch != '@')
     {
       wxString Message;
@@ -756,9 +762,9 @@ bool ReadBib(const wxString& FileName)
       OnError(Message);
       return false;
     }
-    BibReadWord(istr, recordType);
-    BibEatWhiteSpace(istr);
-    istr.get(ch);
+    BibReadWord(Is, recordType);
+    BibEatWhiteSpace(Is);
+    Is.get(ch);
     if (ch != '{' && ch != '(')
     {
       wxString ErrorMessage;
@@ -768,12 +774,12 @@ bool ReadBib(const wxString& FileName)
       OnError(ErrorMessage);
       return false;
     }
-    BibEatWhiteSpace(istr);
+    BibEatWhiteSpace(Is);
     if (StringMatch(recordType, _T("string"), false, true))
     {
-      BibReadWord(istr, recordType);
-      BibEatWhiteSpace(istr);
-      istr.get(ch);
+      BibReadWord(Is, recordType);
+      BibEatWhiteSpace(Is);
+      Is.get(ch);
       if (ch != '=')
       {
         wxString ErrorMessage;
@@ -783,8 +789,8 @@ bool ReadBib(const wxString& FileName)
         OnError(ErrorMessage);
         return false;
       }
-      BibEatWhiteSpace(istr);
-      istr.get(ch);
+      BibEatWhiteSpace(Is);
+      Is.get(ch);
       if (ch != '"' && ch != '{')
       {
         wxString ErrorMessage;
@@ -794,42 +800,44 @@ bool ReadBib(const wxString& FileName)
         OnError(ErrorMessage);
         return false;
       }
-      BibReadValue(istr, fieldValue);
+      BibReadValue(Is, fieldValue);
 
       // Now put in hash table if necesary
-      if (!BibStringTable.Get(recordType))
+      map<wxString, wxString>::const_iterator iBibMap =
+        BibStringMap.find(recordType);
+      if (iBibMap != BibStringMap.end())
       {
-        BibStringTable.Put(recordType, (wxObject *)copystring(fieldValue));
+        BibStringMap.insert(make_pair(recordType, fieldValue));
       }
 
       // Read closing ) or }
-      BibEatWhiteSpace(istr);
-      istr.get(ch);
-      BibEatWhiteSpace(istr);
+      BibEatWhiteSpace(Is);
+      Is.get(ch);
+      BibEatWhiteSpace(Is);
     }
     else
     {
-      BibReadWord(istr, recordKey);
+      BibReadWord(Is, recordKey);
 
       BibEntry *bibEntry = new BibEntry;
-      bibEntry->key = copystring(recordKey);
-      bibEntry->type = copystring(recordType);
+      bibEntry->mKey = recordKey;
+      bibEntry->mType = recordType;
 
       bool moreRecords = true;
-      while (moreRecords && !istr.eof())
+      while (moreRecords && !Is.eof())
       {
-        BibEatWhiteSpace(istr);
-        istr.get(ch);
+        BibEatWhiteSpace(Is);
+        Is.get(ch);
         if (ch == '}' || ch == ')')
         {
           moreRecords = false;
         }
         else if (ch == ',')
         {
-          BibEatWhiteSpace(istr);
-          BibReadWord(istr, recordField);
-          BibEatWhiteSpace(istr);
-          istr.get(ch);
+          BibEatWhiteSpace(Is);
+          BibReadWord(Is, recordField);
+          BibEatWhiteSpace(Is);
+          Is.get(ch);
           if (ch != '=')
           {
             wxString ErrorMessage;
@@ -839,78 +847,126 @@ bool ReadBib(const wxString& FileName)
             OnError(ErrorMessage);
             return false;
           }
-          BibEatWhiteSpace(istr);
-          istr.get(ch);
+          BibEatWhiteSpace(Is);
+          Is.get(ch);
           if (ch != '{' && ch != '"')
           {
             fieldValue[0] = ch;
-            BibReadWord(istr, fieldValue+1);
+            BibReadWord(Is, fieldValue+1);
 
             // If in the table of strings, replace with string from table.
-            wxChar *s = (wxChar *)BibStringTable.Get(fieldValue);
-            if (s)
+            map<wxString, wxString>::iterator iBibMap =
+              BibStringMap.find(fieldValue);
+            if (iBibMap != BibStringMap.end())
             {
-              wxStrcpy(fieldValue, s);
+              wxStrcpy(fieldValue, BibStringMap[fieldValue]);
             }
           }
           else
           {
-            BibReadValue(istr, fieldValue, true, (ch == _T('"') ? true : false));
+            BibReadValue(Is, fieldValue, true, (ch == _T('"') ? true : false));
           }
 
           // Now we can add a field
           if (StringMatch(recordField, _T("author"), false, true))
-            bibEntry->author = copystring(fieldValue);
+            bibEntry->mAuthor = fieldValue;
           else if (StringMatch(recordField, _T("key"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("annotate"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("abstract"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("edition"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("howpublished"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("note"), false, true) || StringMatch(recordField, _T("notes"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("series"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("type"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("keywords"), false, true))
-            {}
+          {
+          }
           else if (StringMatch(recordField, _T("editor"), false, true) || StringMatch(recordField, _T("editors"), false, true))
-            bibEntry->editor= copystring(fieldValue);
+          {
+            bibEntry->mEditor = fieldValue;
+          }
           else if (StringMatch(recordField, _T("title"), false, true))
-            bibEntry->title= copystring(fieldValue);
+          {
+            bibEntry->mTitle = fieldValue;
+          }
           else if (StringMatch(recordField, _T("booktitle"), false, true))
-            bibEntry->booktitle= copystring(fieldValue);
+          {
+            bibEntry->mBooktitle = fieldValue;
+          }
           else if (StringMatch(recordField, _T("journal"), false, true))
-            bibEntry->journal= copystring(fieldValue);
+          {
+            bibEntry->mJournal= fieldValue;
+          }
           else if (StringMatch(recordField, _T("volume"), false, true))
-            bibEntry->volume= copystring(fieldValue);
+          {
+            bibEntry->mVolume = fieldValue;
+          }
           else if (StringMatch(recordField, _T("number"), false, true))
-            bibEntry->number= copystring(fieldValue);
+          {
+            bibEntry->mNumber = fieldValue;
+          }
           else if (StringMatch(recordField, _T("year"), false, true))
-            bibEntry->year= copystring(fieldValue);
+          {
+            bibEntry->mYear = fieldValue;
+          }
           else if (StringMatch(recordField, _T("month"), false, true))
-            bibEntry->month= copystring(fieldValue);
+          {
+            bibEntry->mMonth = fieldValue;
+          }
           else if (StringMatch(recordField, _T("pages"), false, true))
-            bibEntry->pages= copystring(fieldValue);
+          {
+            bibEntry->mPages = fieldValue;
+          }
           else if (StringMatch(recordField, _T("publisher"), false, true))
-            bibEntry->publisher= copystring(fieldValue);
+          {
+            bibEntry->mPublisher = fieldValue;
+          }
           else if (StringMatch(recordField, _T("address"), false, true))
-            bibEntry->address= copystring(fieldValue);
-          else if (StringMatch(recordField, _T("institution"), false, true) || StringMatch(recordField, _T("school"), false, true))
-            bibEntry->institution= copystring(fieldValue);
-          else if (StringMatch(recordField, _T("organization"), false, true) || StringMatch(recordField, _T("organisation"), false, true))
-            bibEntry->organization= copystring(fieldValue);
-          else if (StringMatch(recordField, _T("comment"), false, true) || StringMatch(recordField, _T("comments"), false, true))
-            bibEntry->comment= copystring(fieldValue);
+          {
+            bibEntry->mAddress = fieldValue;
+          }
+          else if (
+            StringMatch(recordField, _T("institution"), false, true) ||
+            StringMatch(recordField, _T("school"), false, true))
+          {
+            bibEntry->mInstitution= fieldValue;
+          }
+          else if (
+            StringMatch(recordField, _T("organization"), false, true) ||
+            StringMatch(recordField, _T("organisation"), false, true))
+          {
+            bibEntry->mOrganization = fieldValue;
+          }
+          else if (
+            StringMatch(recordField, _T("comment"), false, true) ||
+            StringMatch(recordField, _T("comments"), false, true))
+          {
+            bibEntry->mComment= fieldValue;
+          }
           else if (StringMatch(recordField, _T("annote"), false, true))
-            bibEntry->comment= copystring(fieldValue);
+          {
+            bibEntry->mComment= fieldValue;
+          }
           else if (StringMatch(recordField, _T("chapter"), false, true))
-            bibEntry->chapter= copystring(fieldValue);
+          {
+            bibEntry->mChapter= fieldValue;
+          }
           else
           {
             wxString ErrorMessage;
@@ -922,7 +978,7 @@ bool ReadBib(const wxString& FileName)
         }
       }
       BibList[recordKey] = bibEntry;
-      BibEatWhiteSpace(istr);
+      BibEatWhiteSpace(Is);
     }
   }
   return true;
@@ -941,186 +997,216 @@ void OutputBibItem(TexRef *ref, BibEntry *bib)
   TexOutput(_T(" "));
   OnMacro(ltBF, 1, true);
   OnArgument(ltBF, 1, true);
-  if (bib->author)
-    TexOutput(bib->author);
+  if (!bib->mAuthor.empty())
+  {
+    TexOutput(bib->mAuthor);
+  }
   OnArgument(ltBF, 1, false);
   OnMacro(ltBF, 1, false);
-  if (bib->author && (wxStrlen(bib->author) > 0) && (bib->author[wxStrlen(bib->author) - 1] != '.'))
-    TexOutput(_T(". "));
-  else
-    TexOutput(_T(" "));
-
-  if (bib->year)
+  if (
+    !bib->mAuthor.empty() &&
+    (bib->mAuthor[bib->mAuthor.length() - 1] != '.'))
   {
-    TexOutput(bib->year);
+    TexOutput(_T(". "));
   }
-  if (bib->month)
+  else
+  {
+    TexOutput(_T(" "));
+  }
+
+  if (!bib->mYear.empty())
+  {
+    TexOutput(bib->mYear);
+  }
+  if (!bib->mMonth.empty())
   {
     TexOutput(_T(" ("));
-    TexOutput(bib->month);
+    TexOutput(bib->mMonth);
     TexOutput(_T(")"));
   }
-  if (bib->year || bib->month)
-    TexOutput(_T(". "));
-
-  if (StringMatch(bib->type, _T("article"), false, true))
+  if (!bib->mYear.empty() || !bib->mMonth.empty())
   {
-    if (bib->title)
+    TexOutput(_T(". "));
+  }
+
+  if (StringMatch(bib->mType, _T("article"), false, true))
+  {
+    if (!bib->mTitle.empty())
     {
-      TexOutput(bib->title);
+      TexOutput(bib->mTitle);
       TexOutput(_T(". "));
     }
-    if (bib->journal)
+    if (!bib->mJournal.empty())
     {
       OnMacro(ltIT, 1, true);
       OnArgument(ltIT, 1, true);
-      TexOutput(bib->journal);
+      TexOutput(bib->mJournal);
       OnArgument(ltIT, 1, false);
       OnMacro(ltIT, 1, false);
     }
-    if (bib->volume)
+    if (!bib->mVolume.empty())
     {
       TexOutput(_T(", "));
       OnMacro(ltBF, 1, true);
       OnArgument(ltBF, 1, true);
-      TexOutput(bib->volume);
+      TexOutput(bib->mVolume);
       OnArgument(ltBF, 1, false);
       OnMacro(ltBF, 1, false);
     }
-    if (bib->number)
+    if (!bib->mNumber.empty())
     {
       TexOutput(_T("("));
-      TexOutput(bib->number);
+      TexOutput(bib->mNumber);
       TexOutput(_T(")"));
     }
-    if (bib->pages)
+    if (!bib->mPages.empty())
     {
       TexOutput(_T(", pages "));
-      TexOutput(bib->pages);
+      TexOutput(bib->mPages);
     }
     TexOutput(_T("."));
   }
-  else if (StringMatch(bib->type, _T("book"), false, true) ||
-           StringMatch(bib->type, _T("unpublished"), false, true) ||
-           StringMatch(bib->type, _T("manual"), false, true) ||
-           StringMatch(bib->type, _T("phdthesis"), false, true) ||
-           StringMatch(bib->type, _T("mastersthesis"), false, true) ||
-           StringMatch(bib->type, _T("misc"), false, true) ||
-           StringMatch(bib->type, _T("techreport"), false, true) ||
-           StringMatch(bib->type, _T("booklet"), false, true))
+  else if (
+    StringMatch(bib->mType, _T("book"), false, true) ||
+    StringMatch(bib->mType, _T("unpublished"), false, true) ||
+    StringMatch(bib->mType, _T("manual"), false, true) ||
+    StringMatch(bib->mType, _T("phdthesis"), false, true) ||
+    StringMatch(bib->mType, _T("mastersthesis"), false, true) ||
+    StringMatch(bib->mType, _T("misc"), false, true) ||
+    StringMatch(bib->mType, _T("techreport"), false, true) ||
+    StringMatch(bib->mType, _T("booklet"), false, true))
   {
-    if (bib->title || bib->booktitle)
+    if (!bib->mTitle.empty() || !bib->mBooktitle.empty())
     {
       OnMacro(ltIT, 1, true);
       OnArgument(ltIT, 1, true);
-      TexOutput(bib->title ? bib->title : bib->booktitle);
+      TexOutput(!bib->mTitle.empty() ? bib->mTitle : bib->mBooktitle);
       TexOutput(_T(". "));
       OnArgument(ltIT, 1, false);
       OnMacro(ltIT, 1, false);
     }
-    if (StringMatch(bib->type, _T("phdthesis"), false, true))
+    if (StringMatch(bib->mType, _T("phdthesis"), false, true))
+    {
       TexOutput(_T("PhD thesis. "));
-    if (StringMatch(bib->type, _T("techreport"), false, true))
+    }
+    if (StringMatch(bib->mType, _T("techreport"), false, true))
+    {
       TexOutput(_T("Technical report. "));
-    if (bib->editor)
+    }
+    if (!bib->mEditor.empty())
     {
       TexOutput(_T("Ed. "));
-      TexOutput(bib->editor);
+      TexOutput(bib->mEditor);
       TexOutput(_T(". "));
     }
-    if (bib->institution)
+    if (!bib->mInstitution.empty())
     {
-      TexOutput(bib->institution);
+      TexOutput(bib->mInstitution);
       TexOutput(_T(". "));
     }
-    if (bib->organization)
+    if (!bib->mOrganization.empty())
     {
-      TexOutput(bib->organization);
+      TexOutput(bib->mOrganization);
       TexOutput(_T(". "));
     }
-    if (bib->publisher)
+    if (!bib->mPublisher.empty())
     {
-      TexOutput(bib->publisher);
+      TexOutput(bib->mPublisher);
       TexOutput(_T(". "));
     }
-    if (bib->address)
+    if (!bib->mAddress.empty())
     {
-      TexOutput(bib->address);
+      TexOutput(bib->mAddress);
       TexOutput(_T(". "));
     }
   }
-  else if (StringMatch(bib->type, _T("inbook"), false, true) ||
-           StringMatch(bib->type, _T("inproceedings"), false, true) ||
-           StringMatch(bib->type, _T("incollection"), false, true) ||
-           StringMatch(bib->type, _T("conference"), false, true))
+  else if (
+    StringMatch(bib->mType, _T("inbook"), false, true) ||
+    StringMatch(bib->mType, _T("inproceedings"), false, true) ||
+    StringMatch(bib->mType, _T("incollection"), false, true) ||
+    StringMatch(bib->mType, _T("conference"), false, true))
   {
-    if (bib->title)
+    if (!bib->mTitle.empty())
     {
-      TexOutput(bib->title);
+      TexOutput(bib->mTitle);
     }
-    if (bib->booktitle)
+    if (!bib->mBooktitle.empty())
     {
       TexOutput(_T(", from "));
       OnMacro(ltIT, 1, true);
       OnArgument(ltIT, 1, true);
-      TexOutput(bib->booktitle);
+      TexOutput(bib->mBooktitle);
       TexOutput(_T("."));
       OnArgument(ltIT, 1, false);
       OnMacro(ltIT, 1, false);
     }
-    if (bib->editor)
+    if (!bib->mEditor.empty())
     {
       TexOutput(_T(", ed. "));
-      TexOutput(bib->editor);
+      TexOutput(bib->mEditor);
     }
-    if (bib->publisher)
+    if (!bib->mPublisher.empty())
     {
       TexOutput(_T(" "));
-      TexOutput(bib->publisher);
+      TexOutput(bib->mPublisher);
     }
-    if (bib->address)
+    if (!bib->mAddress.empty())
     {
-      if (bib->publisher) TexOutput(_T(", "));
-      else TexOutput(_T(" "));
-      TexOutput(bib->address);
+      if (!bib->mPublisher.empty())
+      {
+        TexOutput(_T(", "));
+      }
+      else
+      {
+        TexOutput(_T(" "));
+      }
+      TexOutput(bib->mAddress);
     }
-    if (bib->publisher || bib->address)
+    if (!bib->mPublisher.empty() || !bib->mAddress.empty())
+    {
       TexOutput(_T("."));
+    }
 
-    if (bib->volume)
+    if (!bib->mVolume.empty())
     {
       TexOutput(_T(" "));
       OnMacro(ltBF, 1, true);
       OnArgument(ltBF, 1, true);
-      TexOutput(bib->volume);
+      TexOutput(bib->mVolume);
       OnArgument(ltBF, 1, false);
       OnMacro(ltBF, 1, false);
     }
-    if (bib->number)
+    if (!bib->mNumber.empty())
     {
-      if (bib->volume)
+      if (!bib->mVolume.empty())
       {
         TexOutput(_T("("));
-        TexOutput(bib->number);
+        TexOutput(bib->mNumber);
         TexOutput(_T(")."));
       }
       else
       {
         TexOutput(_T(" Number "));
-        TexOutput(bib->number);
+        TexOutput(bib->mNumber);
         TexOutput(_T("."));
       }
     }
-    if (bib->chapter)
+    if (!bib->mChapter.empty())
     {
       TexOutput(_T(" Chap. "));
-      TexOutput(bib->chapter);
+      TexOutput(bib->mChapter);
     }
-    if (bib->pages)
+    if (!bib->mPages.empty())
     {
-      if (bib->chapter) TexOutput(_T(", pages "));
-      else TexOutput(_T(" Pages "));
-      TexOutput(bib->pages);
+      if (!bib->mChapter.empty())
+      {
+        TexOutput(_T(", pages "));
+      }
+      else
+      {
+        TexOutput(_T(" Pages "));
+      }
+      TexOutput(bib->mPages);
       TexOutput(_T("."));
     }
   }
@@ -1194,7 +1280,7 @@ void ResolveBibReferences(void)
           ref->sectionNumber = wxEmptyString;
         }
         wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
-        ref->sectionNumber = copystring(buf);
+        ref->sectionNumber = buf;
         citeCount ++;
       }
       else
@@ -1507,93 +1593,101 @@ wxChar *RegisterSetting(
 
 bool ReadCustomMacros(const wxString& FileName)
 {
-    if (!wxFileExists(FileName))
+  if (!wxFileExists(FileName))
+  {
+    return false;
+  }
+
+  wxFileInputStream input(FileName);
+  if (!input.Ok())
+  {
+    return false;
+  }
+
+  wxTextInputStream ini(input);
+
+  CustomMacroMap.clear();
+
+  while (!input.Eof())
+  {
+    wxString line = ini.ReadLine();
+    BibEatWhiteSpace(line);
+    if (line.empty()) continue;
+
+    if (line[0] != _T('\\')) // Not a macro definition, so must be NAME=VALUE
     {
-      return false;
-    }
-
-    wxFileInputStream input(FileName);
-    if(!input.Ok()) return false;
-    wxTextInputStream ini( input );
-
-    CustomMacroMap.clear();
-
-    while (!input.Eof())
-    {
-        wxString line = ini.ReadLine();
+      wxString settingName = BibReadWord(line);
+      BibEatWhiteSpace(line);
+      if (line.empty() || line[0] != _T('='))
+      {
+        OnError(_T("Expected = following name: malformed tex2rtf.ini file."));
+        return false;
+      }
+      else
+      {
+        line = line.substr(1);
         BibEatWhiteSpace(line);
-        if (line.empty()) continue;
-
-        if (line[0] != _T('\\')) // Not a macro definition, so must be NAME=VALUE
-        {
-            wxString settingName = BibReadWord(line);
-            BibEatWhiteSpace(line);
-            if (line.empty() || line[0] != _T('='))
-            {
-                OnError(_T("Expected = following name: malformed tex2rtf.ini file."));
-                return false;
-            }
-            else
-            {
-                line = line.substr(1);
-                BibEatWhiteSpace(line);
-                wxString settingValue = BibReadToEOL(line);
-                RegisterSetting(settingName, settingValue);
-            }
-        }
-        else
-        {
-            line = line.substr(1);
-            wxString macroName = BibReadWord(line);
-            BibEatWhiteSpace(line);
-            if (line[0] != _T('['))
-            {
-                OnError(_T("Expected [ followed by number of arguments: malformed tex2rtf.ini file."));
-                return false;
-            }
-            line = line.substr(1);
-            wxString noAargStr = line.BeforeFirst(_T(']'));
-            line = line.AfterFirst(_T(']'));
-            long noArgs;
-            if (!noAargStr.ToLong(&noArgs) || line.empty())
-            {
-                OnError(_T("Expected ] following number of arguments: malformed tex2rtf.ini file."));
-                return false;
-            }
-            BibEatWhiteSpace(line);
-            if (line[0] != _T('{'))
-            {
-                OnError(_T("Expected { followed by macro body: malformed tex2rtf.ini file."));
-                return false;
-            }
-
-            CustomMacro *macro = new CustomMacro(macroName.c_str(), noArgs, NULL);
-            wxString macroBody = BibReadValue(line, false, false); // Don't ignore extra braces
-            if (!macroBody.empty())
-                macro->macroBody = copystring(macroBody.c_str());
-
-            BibEatWhiteSpace(line);
-            CustomMacroMap[macroName] = macro;
-            AddMacroDef(ltCUSTOM_MACRO, macroName.c_str(), noArgs);
-        }
-
+        wxString settingValue = BibReadToEOL(line);
+        RegisterSetting(settingName, settingValue);
+      }
     }
-    wxChar mbuf[200];
-    wxSnprintf(mbuf, sizeof(mbuf), _T("Read initialization file %s."), FileName);
-    OnInform(mbuf);
-    return true;
+    else
+    {
+      line = line.substr(1);
+      wxString macroName = BibReadWord(line);
+      BibEatWhiteSpace(line);
+      if (line[0] != _T('['))
+      {
+        OnError(_T("Expected [ followed by number of arguments: malformed tex2rtf.ini file."));
+        return false;
+      }
+      line = line.substr(1);
+      wxString noAargStr = line.BeforeFirst(_T(']'));
+      line = line.AfterFirst(_T(']'));
+      long noArgs;
+      if (!noAargStr.ToLong(&noArgs) || line.empty())
+      {
+        OnError(_T("Expected ] following number of arguments: malformed tex2rtf.ini file."));
+        return false;
+      }
+      BibEatWhiteSpace(line);
+      if (line[0] != _T('{'))
+      {
+        OnError(_T("Expected { followed by macro body: malformed tex2rtf.ini file."));
+        return false;
+      }
+
+      CustomMacro *macro = new CustomMacro(macroName, noArgs, wxEmptyString);
+      wxString macroBody = BibReadValue(line, false, false); // Don't ignore extra braces
+      if (!macroBody.empty())
+      {
+        macro->mBody = macroBody;
+      }
+
+      BibEatWhiteSpace(line);
+      CustomMacroMap[macroName] = macro;
+      AddMacroDef(ltCUSTOM_MACRO, macroName.c_str(), noArgs);
+    }
+
+  }
+
+  wxChar mbuf[200];
+  wxSnprintf(mbuf, sizeof(mbuf), _T("Read initialization file %s."), FileName);
+  OnInform(mbuf);
+
+  return true;
 }
 
-CustomMacro *FindCustomMacro(wxChar *name)
+CustomMacro* FindCustomMacro(const wxString& Name)
 {
-  MacroMap::iterator it = CustomMacroMap.find(name);
+  MacroMap::iterator it = CustomMacroMap.find(Name);
   if (it != CustomMacroMap.end())
   {
-    CustomMacro *macro = it->second;
+    CustomMacro* macro = it->second;
 
     return macro;
   }
-  return NULL;
+  return 0;
 }
 
 // Display custom macros
@@ -1610,9 +1704,16 @@ void ShowCustomMacros(void)
   wxChar buf[400];
   while (it != CustomMacroMap.end())
   {
-    CustomMacro *macro = it->second;
-    wxSnprintf(buf, sizeof(buf), _T("\\%s[%d]\n    {%s}"), macro->macroName, macro->noArgs,
-     macro->macroBody ? macro->macroBody : _T(""));
+    CustomMacro* macro = it->second;
+
+    wxSnprintf(
+      buf,
+      sizeof(buf),
+      _T("\\%s[%d]\n    {%s}"),
+      macro->mName,
+      macro->mArgumentCount,
+      macro->mBody);
+
     OnInform(buf);
     ++it;
   }

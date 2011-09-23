@@ -19,11 +19,6 @@
 
 using namespace std;
 
-static inline wxChar* copystring(const wxChar* s)
-{
-  return wxStrcpy(new wxChar[wxStrlen(s) + 1], s);
-}
-
 //*****************************************************************************
 // Variables accessible from clients.
 //*****************************************************************************
@@ -228,12 +223,14 @@ TexRef::TexRef(
 //*****************************************************************************
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-CustomMacro::~CustomMacro()
+CustomMacro::CustomMacro(
+  const wxString& Name,
+  int ArgumentCount,
+  const wxString Body)
+  : mName(Name),
+    mBody(Body),
+    mArgumentCount(ArgumentCount)
 {
-  if (macroName)
-    delete [] macroName;
-  if (macroBody)
-    delete [] macroBody;
 }
 
 //*****************************************************************************
@@ -297,7 +294,7 @@ void ForbidWarning(TexMacroDef *def)
 TexMacroDef *MatchMacro(
   wxChar *buffer,
   size_t *pos,
-  wxChar **env,
+  wxString& env,
   bool *parseToBrace)
 {
   *parseToBrace = true;
@@ -322,7 +319,7 @@ TexMacroDef *MatchMacro(
     if (def)
     {
       *pos = j + 1;  // BUGBUG Should this be + 1???
-      *env = def->mName;
+      env = def->mName;
       ForbidWarning(def);
       return def;
     }
@@ -415,15 +412,16 @@ void EatWhiteSpace(wxChar *buffer, size_t *pos)
 
 //*****************************************************************************
 //*****************************************************************************
-bool FindEndEnvironment(wxChar *buffer, size_t *pos, wxChar *env)
+bool FindEndEnvironment(wxChar *buffer, size_t& pos, const wxString& env)
 {
-  size_t i = *pos;
+  size_t i = pos;
 
   // Try to find end{thing}
-  if ((wxStrncmp(buffer+i, _T("end{"), 4) == 0) &&
-      (wxStrncmp(buffer+i+4, env, wxStrlen(env)) == 0))
+  if (
+    (wxStrncmp(buffer + i, _T("end{"), 4) == 0) &&
+    (wxStrncmp(buffer + i + 4, env, env.length()) == 0))
   {
-    *pos = i + 5 + wxStrlen(env);
+    pos = i + 5 + env.length();
     return true;
   }
   else return false;
@@ -1024,9 +1022,11 @@ bool ParseNewCommand(wxChar *buffer, size_t *pos)
     }
     commandValue[i] = 0;
 
-    CustomMacro *macro = new CustomMacro(commandName, noArgs, NULL);
+    CustomMacro *macro = new CustomMacro(commandName, noArgs, wxEmptyString);
     if (wxStrlen(commandValue) > 0)
-      macro->macroBody = copystring(commandValue);
+    {
+      macro->mBody = commandValue;
+    }
     MacroMap::iterator it = CustomMacroMap.find(commandName);
     if (it != CustomMacroMap.end())
     {
@@ -1082,7 +1082,7 @@ size_t ParseArg(
   list<TexChunk*>& children,
   wxChar *buffer,
   size_t pos,
-  wxChar *environment,
+  const wxString& environment,
   bool parseToBrace,
   TexChunk *customMacroArgs)
 {
@@ -1103,7 +1103,7 @@ size_t ParseArg(
   // a space, because this could be e.g. {\large {\bf thing}} where {\bf thing}
   // is the argument of \large AS WELL as being a block in its
   // own right.
-  if (!environment)
+  if (environment.empty())
   {
     if ((pos > 0) && (buffer[pos-1] != ' ') && buffer[pos] == '{')
     {
@@ -1244,7 +1244,9 @@ size_t ParseArg(
         pos ++;
 
         // Try matching \end{environment}
-        if (environment && FindEndEnvironment(buffer, &pos, environment))
+        if (
+          !environment.empty() &&
+          FindEndEnvironment(buffer, pos, environment))
         {
           // Eliminate newline after an \end{} if possible
           if (buffer[pos] == 13)
@@ -1376,9 +1378,9 @@ size_t ParseArg(
         }
         else
         {
-          wxChar *env = NULL;
+          wxString env;
           bool tmpParseToBrace = true;
-          TexMacroDef *def = MatchMacro(buffer, &pos, &env, &tmpParseToBrace);
+          TexMacroDef *def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
           if (def)
           {
             CustomMacro *customMacro = FindCustomMacro(def->mName);
@@ -1386,7 +1388,6 @@ size_t ParseArg(
             TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
 
             chunk->no_args = def->no_args;
-//            chunk->name = copystring(def->name);
             chunk->macroId = def->macroId;
 
             if (!customMacro)
@@ -1396,7 +1397,7 @@ size_t ParseArg(
 
             // Eliminate newline after a \begin{} or a \\ if possible
             if (
-              (env || wxStrcmp(def->mName, _T("\\")) == 0) &&
+              (!env.empty() || wxStrcmp(def->mName, _T("\\")) == 0) &&
               (buffer[pos] == 13))
             {
               ++pos;
@@ -1407,7 +1408,6 @@ size_t ParseArg(
             }
 
             pos = ParseMacroBody(
-              def->mName,
               chunk,
               chunk->no_args,
               buffer,
@@ -1420,13 +1420,20 @@ size_t ParseArg(
             // args.
             if (customMacro)
             {
-              if (customMacro->macroBody)
+              if (!customMacro->mBody.empty())
               {
                 wxChar macroBuf[300];
 //                wxStrcpy(macroBuf, _T("{"));
-                wxStrcpy(macroBuf, customMacro->macroBody);
+                wxStrcpy(macroBuf, customMacro->mBody);
                 wxStrcat(macroBuf, _T("}"));
-                ParseArg(thisArg, children, macroBuf, 0, NULL, true, chunk);
+                ParseArg(
+                  thisArg,
+                  children,
+                  macroBuf,
+                  0,
+                  wxEmptyString,
+                  true,
+                  chunk);
               }
 
               delete chunk; // Might delete children
@@ -1456,40 +1463,45 @@ size_t ParseArg(
           }
           pos ++;
 
-          wxChar *env;
+          wxString env;
           bool tmpParseToBrace;
-          TexMacroDef *def = MatchMacro(buffer, &pos, &env, &tmpParseToBrace);
+          TexMacroDef *def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
           if (def)
           {
             CustomMacro *customMacro = FindCustomMacro(def->mName);
 
             TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
             chunk->no_args = def->no_args;
-//            chunk->name = copystring(def->name);
             chunk->macroId = def->macroId;
             if (!customMacro)
               children.push_back(chunk);
 
             pos = ParseMacroBody(
-              def->mName,
               chunk,
               chunk->no_args,
               buffer,
               pos,
-              NULL,
+              wxEmptyString,
               true,
               customMacroArgs);
 
             // If custom macro, parse the body substituting the above found args.
             if (customMacro)
             {
-              if (customMacro->macroBody)
+              if (!customMacro->mBody.empty())
               {
                 wxChar macroBuf[300];
 //                wxStrcpy(macroBuf, _T("{"));
-                wxStrcpy(macroBuf, customMacro->macroBody);
+                wxStrcpy(macroBuf, customMacro->mBody);
                 wxStrcat(macroBuf, _T("}"));
-                ParseArg(thisArg, children, macroBuf, 0, NULL, true, chunk);
+                ParseArg(
+                  thisArg,
+                  children,
+                  macroBuf,
+                  0,
+                  wxEmptyString,
+                  true,
+                  chunk);
               }
 
 //            delete chunk; // Might delete children
@@ -1531,7 +1543,7 @@ size_t ParseArg(
             arg->mChildren,
             buffer,
             pos,
-            NULL,
+            wxEmptyString,
             true,
             customMacroArgs);
         }
@@ -1554,7 +1566,6 @@ size_t ParseArg(
         {
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
-//          chunk->name = copystring(_T("$$"));
           chunk->macroId = ltSPECIALDOUBLEDOLLAR;
           children.push_back(chunk);
           pos ++;
@@ -1563,7 +1574,6 @@ size_t ParseArg(
         {
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
-//          chunk->name = copystring(_T("_$"));
           chunk->macroId = ltSPECIALDOLLAR;
           children.push_back(chunk);
         }
@@ -1583,7 +1593,6 @@ size_t ParseArg(
         pos ++;
         TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
         chunk->no_args = 0;
-//        chunk->name = copystring(_T("_~"));
         chunk->macroId = ltSPECIALTILDE;
         children.push_back(chunk);
         break;
@@ -1604,7 +1613,6 @@ size_t ParseArg(
         {
           TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
-//          chunk->name = copystring(_T("_#"));
           chunk->macroId = ltSPECIALHASH;
           children.push_back(chunk);
         }
@@ -1661,7 +1669,6 @@ size_t ParseArg(
 
         TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
         chunk->no_args = 0;
-//        chunk->name = copystring(_T("_&"));
         chunk->macroId = ltSPECIALAMPERSAND;
         children.push_back(chunk);
         break;
@@ -1708,13 +1715,12 @@ size_t ParseArg(
 // Consume as many arguments as the macro definition specifies
 //*****************************************************************************
 size_t ParseMacroBody(
-  const wxChar *WXUNUSED(macro_name),
   TexChunk *parent,
   int no_args,
   wxChar
   *buffer,
   size_t pos,
-  wxChar *environment,
+  const wxString& environment,
   bool parseToBrace,
   TexChunk *customMacroArgs)
 {
@@ -1735,8 +1741,12 @@ size_t ParseMacroBody(
     no_args ++;
   }
   else
+  {
     if (buffer[pos] == '[')
+    {
       no_args ++;
+    }
+  }
 
   int maxArgs = 0;
 
@@ -1747,23 +1757,27 @@ size_t ParseMacroBody(
     TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, parent->def);
 
     parent->mChildren.push_back(arg);
-//    arg->name = copystring(macro_name);
     arg->argn = maxArgs;
     arg->macroId = parent->macroId;
 
     // To parse the first arg of a 2 arg \begin{thing}{arg} ... \end{thing}
     // have to fool parser into thinking this is a regular kind of block.
-    wxChar *actualEnv;
+    wxString actualEnv;
     if ((no_args == 2) && (i == 0))
-      actualEnv = NULL;
+    {
+//      actualEnv = wxEmptyString;
+    }
     else
+    {
       actualEnv = environment;
+    }
 
     bool isOptional = false;
 
     // Remove the first { of the argument so it doesn't get recognized as { ... }
 //    EatWhiteSpace(buffer, &pos);
-    if (!actualEnv)
+
+    if (actualEnv.empty())
     {
       // The reason for these tests is to not consume braces that don't
       // belong to this macro.
@@ -1793,8 +1807,8 @@ size_t ParseMacroBody(
         ErrorMessage.Printf(_T("Missing macro argument in the line:\n\t%s\n"),tmpBuffer.c_str());
         OnError(ErrorMessage);
       }
-
     }
+
     arg->optional = isOptional;
 
     pos = ParseArg(
@@ -1850,7 +1864,7 @@ bool TexLoadFile(const wxString& FileName)
   if (Inputs[0])
   {
     read_a_line(line_buffer);
-    ParseMacroBody(_T("toplevel"), TopLevel, 1, line_buffer, 0, NULL, true);
+    ParseMacroBody(TopLevel, 1, line_buffer, 0, wxEmptyString, true);
     if (Inputs[0])
     {
       fclose(Inputs[0]);
@@ -1872,21 +1886,11 @@ TexMacroDef::TexMacroDef(
   bool ig,
   bool forbidLevel)
 {
-  mName = copystring(the_name);
+  mName = the_name;
   no_args = n;
   ignore = ig;
   macroId = the_id;
   forbidden = forbidLevel;
-}
-
-//-----------------------------------------------------------------------------
-//-----------------------------------------------------------------------------
-TexMacroDef::~TexMacroDef()
-{
-  if (mName)
-  {
-    delete[] mName;
-  }
 }
 
 //*****************************************************************************
@@ -2238,7 +2242,6 @@ void TexInitialize(int bufSize)
   BigBuffer = new wxChar[bufSize * 1000];
   AddMacroDef(ltTOPLEVEL, _T("toplevel"), 1);
   TopLevel = new TexChunk(CHUNK_TYPE_MACRO);
-//  TopLevel->name = copystring(_T("toplevel"));
   TopLevel->macroId = ltTOPLEVEL;
   TopLevel->no_args = 1;
   VerbatimMacroDef = (TexMacroDef *)MacroDefs.Get(_T("verbatim"));
@@ -2268,7 +2271,6 @@ void TexCleanUp()
   if (TopLevel)
     delete TopLevel;
   TopLevel = new TexChunk(CHUNK_TYPE_MACRO);
-//  TopLevel->name = copystring(_T("toplevel"));
   TopLevel->macroId = ltTOPLEVEL;
   TopLevel->no_args = 1;
 
