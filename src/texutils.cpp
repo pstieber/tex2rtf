@@ -136,19 +136,16 @@ void FakeCurrentSection(const wxString& fakeSection, bool addToContents)
 // make up a topic name otherwise.
 static long topicCounter = 0;
 
-void ResetTopicCounter(void)
+void ResetTopicCounter()
 {
   topicCounter = 0;
 }
 
 static wxString forceTopicName;
 
-void ForceTopicName(const wxChar *name)
+void ForceTopicName(const wxString& name)
 {
-  if (name)
-    forceTopicName = name;
-  else
-    forceTopicName.clear();
+  forceTopicName = name;
 }
 
 wxString FindTopicName(TexChunk *chunk)
@@ -160,8 +157,10 @@ wxString FindTopicName(TexChunk *chunk)
 
   wxString topicName;
 
-  if (chunk && (chunk->type == CHUNK_TYPE_MACRO) &&
-      (chunk->macroId == ltLABEL))
+  if (
+    chunk &&
+    (chunk->type == CHUNK_TYPE_MACRO) &&
+    (chunk->macroId == ltLABEL))
   {
     list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
     if (iNode != chunk->mChildren.end())
@@ -175,7 +174,7 @@ wxString FindTopicName(TexChunk *chunk)
           TexChunk* schunk = *iNode2;
           if (schunk->type == CHUNK_TYPE_STRING)
           {
-            topicName = schunk->value;
+            topicName = schunk->mValue;
           }
         }
       }
@@ -381,6 +380,14 @@ void AddTexRef(
     wxStrcat(buf, buf2);
   }
   wxChar *tmp = ((wxStrlen(buf) > 0) ? buf : (wxChar *)NULL);
+
+  // Delete ant previously existing entry.
+  TexReferenceMap::iterator iTexRef = TexReferences.find(name);
+  if (iTexRef != TexReferences.end())
+  {
+    delete iTexRef->second;
+  }
+
   TexReferences[name] = new TexRef(name, file, tmp, sectionName);
 }
 
@@ -412,8 +419,9 @@ void WriteTexReferences(const wxString& FileName)
     file.AddLine(converter);
 
     if (
-      !pTexRef->sectionNumber ||
-      (wxStrcmp(pTexRef->sectionNumber, _T("??")) == 0 && wxStrcmp(pTexRef->sectionName, _T("??")) == 0))
+      !pTexRef->sectionNumber || (
+        wxStrcmp(pTexRef->sectionNumber, _T("??")) == 0 &&
+        wxStrcmp(pTexRef->sectionName, _T("??")) == 0))
     {
       wxString WarningMessage;
       WarningMessage
@@ -453,17 +461,14 @@ void ReadTexReferences(const wxString& FileName)
     // strings it creates in the Put() function, but not the item that is
     // created here, as that is destroyed elsewhere.  Without doing this, there
     // were massive memory leaks
-    TexReferenceMap::iterator iTexRef = TexReferences.find(labelStr.c_str());
+    TexReferenceMap::iterator iTexRef = TexReferences.find(labelStr);
     if (iTexRef != TexReferences.end())
     {
       delete iTexRef->second;
     }
 
-    TexReferences[labelStr.c_str()] = new TexRef(
-      labelStr.c_str(),
-      fileStr.c_str(),
-      sectionStr.c_str(),
-      sectionNameStr.c_str());
+    TexReferences[labelStr] =
+      new TexRef(labelStr, fileStr, sectionStr, sectionNameStr);
   }
 }
 
@@ -1128,7 +1133,7 @@ void OutputBib(void)
   // Write the heading
   ForceTopicName(_T("bibliography"));
   FakeCurrentSection(ReferencesNameString);
-  ForceTopicName(NULL);
+  ForceTopicName(wxEmptyString);
 
   OnMacro(ltPAR, 0, true);
   OnMacro(ltPAR, 0, false);
@@ -1139,7 +1144,10 @@ void OutputBib(void)
     OnMacro(ltPAR, 0, false);
   }
 
-  for (StringSet::iterator it = CitationList.begin(); it != CitationList.end(); ++it)
+  for (
+    StringSet::iterator it = CitationList.begin();
+    it != CitationList.end();
+    ++it)
   {
     const wxString& citeKey = *it;
     TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
@@ -1165,7 +1173,10 @@ void ResolveBibReferences(void)
 
   citeCount = 1;
   wxChar buf[200];
-  for (StringSet::iterator it = CitationList.begin(); it != CitationList.end(); ++it)
+  for (
+    StringSet::iterator it = CitationList.begin();
+    it != CitationList.end();
+    ++it)
   {
     Tex2RTFYield();
     const wxString& citeKey = *it;

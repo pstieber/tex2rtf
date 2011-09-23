@@ -23,11 +23,6 @@ using namespace std;
 
 #define HTML_FILENAME_PATTERN _T("%s_%s.html")
 
-#if !WXWIN_COMPATIBILITY_2_4
-static inline wxChar* copystring(const wxChar* s)
-    { return wxStrcpy(new wxChar[wxStrlen(s) + 1], s); }
-#endif
-
 extern TexReferenceMap TexReferences;
 
 extern int passNumber;
@@ -49,15 +44,15 @@ void OutputContentsFrame(void);
 
 #include "readshg.h" // Segmented hypergraphics parsing
 
-wxChar *ChaptersName = NULL;
-wxChar *SectionsName = NULL;
-wxChar *SubsectionsName = NULL;
-wxChar *SubsubsectionsName = NULL;
-wxChar *TitlepageName = NULL;
+wxString ChaptersName;
+wxString SectionsName;
+wxString SubsectionsName;
+wxString SubsubsectionsName;
+wxString TitlepageName;
 wxString lastFileName;
 wxString lastTopic;
 wxString currentFileName;
-wxChar *contentsFrameName = NULL;
+wxString contentsFrameName;
 
 static TexChunk *descriptionItemArg = NULL;
 static TexChunk *helpRefFilename = NULL;
@@ -89,36 +84,55 @@ extern wxChar *BigBuffer;
 static int TwoColWidthA = -1;
 static int TwoColWidthB = -1;
 
-
-class HyperReference: public wxObject
+//*****************************************************************************
+//*****************************************************************************
+class HyperReference : public wxObject
 {
  public:
-  wxChar *refName;
-  wxChar *refFile;
-  HyperReference(wxChar *name, wxChar *file)
+
+  wxString mReferenceName;
+  wxString mReferenceFile;
+
+  HyperReference(const wxString& ReferenceName, const wxString& ReferenceFile)
+    : mReferenceName(ReferenceName),
+      mReferenceFile(ReferenceFile)
   {
-    if (name) refName = copystring(name);
-    if (file) refFile = copystring(file);
   }
 };
 
-class TexNextPage: public wxObject
+//*****************************************************************************
+//*****************************************************************************
+class TexNextPage : public wxObject
 {
- public:
-  const wxString mLabel;
-  const wxString mFileName;
+  public:
 
-  TexNextPage(const wxString Label, const wxString& FileName)
-    : mLabel(Label),
-      mFileName(FileName)
-  {
-  }
-  virtual ~TexNextPage()
-  {
-  }
+   const wxString mLabel;
+   const wxString mFileName;
+
+    TexNextPage(const wxString Label, const wxString& FileName)
+      : mLabel(Label),
+        mFileName(FileName)
+    {
+    }
 };
 
 wxHashTable TexNextPages(wxKEY_STRING);
+
+//*****************************************************************************
+//*****************************************************************************
+void CleanupHtmlProcessing()
+{
+  TexNextPages.BeginFind();
+  for (
+    wxHashTable::Node* pNode = TexNextPages.Next();
+    pNode;
+    pNode = TexNextPages.Next())
+  {
+    TexNextPage* pTexNextPage = (TexNextPage *)pNode->GetData();
+    delete pTexNextPage;
+  }
+  TexNextPages.Clear();
+}
 
 static wxString CurrentChapterName;
 static wxString CurrentChapterFile;
@@ -185,23 +199,22 @@ static wxArrayString gs_filenames;
  *
  */
 
-void ReopenFile(FILE **fd, wxChar **fileName, const wxString& label)
+void ReopenFile(FILE **fd, wxString& FileName, const wxString& label)
 {
   if (*fd)
   {
     wxFprintf(*fd, _T("\n</FONT></BODY></HTML>\n"));
     fclose(*fd);
   }
-  fileId ++;
-  wxChar buf[400];
+  ++fileId;
   if (fileId == 1)
   {
     gs_filenames.Add(wxEmptyString);
   }
+  wxChar buf[400];
   wxSnprintf(buf, sizeof(buf), HTML_FILENAME_PATTERN, FileRoot, label);
   gs_filenames.Add(buf);
-  if (*fileName) delete[] *fileName;
-  *fileName = copystring(wxFileNameFromPath(buf));
+  FileName = wxFileNameFromPath(buf);
   *fd = wxFopen(buf, _T("w"));
   wxFprintf(*fd, _T("<HTML>\n"));
 }
@@ -244,30 +257,35 @@ void ProcessText2HTML(TexChunk *chunk)
   bool changed = false;
   size_t ptr = 0;
   size_t i = 0;
-  wxChar ch = 1;
-  size_t len = wxStrlen(chunk->value);
-  while (ch != 0)
+  size_t len = chunk->mValue.length();
+  while (i < len)
   {
-    ch = chunk->value[i];
+    wxChar ch = chunk->mValue[i];
 
     // 2 newlines means \par
-    if (!inVerbatim && chunk->value[i] == 10 && ((len > i+1 && chunk->value[i+1] == 10) ||
-                        ((len > i+1 && chunk->value[i+1] == 13) &&
-                        (len > i+2 && chunk->value[i+2] == 10))))
+    if (
+      !inVerbatim && chunk->mValue[i] == 10 &&
+      ((len > i + 1 && chunk->mValue[i + 1] == 10) ||
+      ((len > i + 1 && chunk->mValue[i + 1] == 13) &&
+      (len > i + 2 && chunk->mValue[i + 2] == 10))))
     {
       BigBuffer[ptr] = 0; wxStrcat(BigBuffer, _T("<P>\n\n")); ptr += 5;
       i += 2;
       changed = true;
     }
-    else if (!inVerbatim && ch == _T('`') && (len >= i+1 && chunk->value[i+1] == '`'))
+    else if (
+      !inVerbatim && ch == _T('`') &&
+      (len >= i + 1 && chunk->mValue[i + 1] == '`'))
     {
-      BigBuffer[ptr] = '"'; ptr ++;
+      BigBuffer[ptr] = '"';
+      ptr++;
       i += 2;
       changed = true;
     }
     else if (!inVerbatim && ch == _T('`')) // Change ` to '
     {
-      BigBuffer[ptr] = 39; ptr ++;
+      BigBuffer[ptr] = 39;
+      ptr++;
       i += 1;
       changed = true;
     }
@@ -298,23 +316,23 @@ void ProcessText2HTML(TexChunk *chunk)
 
   if (changed)
   {
-    delete chunk->value;
-    chunk->value = copystring(BigBuffer);
+    chunk->mValue.clear();
+    chunk->mValue = BigBuffer;
   }
 }
 
-/*
- * Scan through all chunks starting from the given one,
- * calling ProcessText2HTML to convert Latex-isms to RTF-isms.
- * This should be called after Tex2Any has parsed the file,
- * and before TraverseDocument is called.
- *
- */
+//   Scan through all chunks starting from the given one, calling
+// ProcessText2HTML to convert Latex-isms to RTF-isms.
+// This should be called after Tex2Any has parsed the file, and before
+// TraverseDocument is called.
 
 void Text2HTML(TexChunk *chunk)
 {
   Tex2RTFYield();
-  if (stopRunning) return;
+  if (stopRunning)
+  {
+    return;
+  }
 
   switch (chunk->type)
   {
@@ -323,10 +341,18 @@ void Text2HTML(TexChunk *chunk)
       TexMacroDef *def = chunk->def;
 
       if (def && def->ignore)
+      {
         return;
+      }
 
-      if (def && (def->macroId == ltVERBATIM || def->macroId == ltVERB || def->macroId == ltSPECIAL))
+      if (
+        def && (
+          def->macroId == ltVERBATIM ||
+          def->macroId == ltVERB ||
+          def->macroId == ltSPECIAL))
+      {
         inVerbatim = true;
+      }
 
       for (
         list<TexChunk*>::iterator iNode = chunk->mChildren.begin();
@@ -357,8 +383,10 @@ void Text2HTML(TexChunk *chunk)
     }
     case CHUNK_TYPE_STRING:
     {
-      if (chunk->value)
+      if (!chunk->mValue.empty())
+      {
         ProcessText2HTML(chunk);
+      }
       break;
     }
   }
@@ -371,7 +399,7 @@ void AddBrowseButtons(
   const wxString& previousLabel,
   const wxString& previousFilename,
   const wxString& thisLabel,
-  wxChar *thisFilename)
+  const wxString& thisFilename)
 {
   if (htmlBrowseButtons == HTML_BUTTONS_NONE)
   {
@@ -782,7 +810,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       startedSections = true;
 
       wxString topicName = FindTopicName(GetNextChunk());
-      ReopenFile(&Chapters, &ChaptersName, topicName);
+      ReopenFile(&Chapters, ChaptersName, topicName);
       AddTexRef(topicName, ChaptersName, ChapterNameString);
 
       SetCurrentChapterName(topicName, ChaptersName);
@@ -833,11 +861,18 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
         SetCurrentOutput(FrameContents);
         if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
         {
-          wxFprintf(FrameContents, _T("\n<LI><A HREF=\"%s\" TARGET=\"mainwindow\">"), ConvertCase(ChaptersName));
+          wxFprintf(
+            FrameContents,
+            _T("\n<LI><A HREF=\"%s\" TARGET=\"mainwindow\">"),
+            ConvertCase(ChaptersName));
         }
         else
         {
-          wxFprintf(FrameContents, _T("\n<LI><A HREF=\"%s#%s\" TARGET=\"mainwindow\">"), ConvertCase(ChaptersName), topicName);
+          wxFprintf(
+            FrameContents,
+            _T("\n<LI><A HREF=\"%s#%s\" TARGET=\"mainwindow\">"),
+            ConvertCase(ChaptersName),
+            topicName);
         }
         OutputCurrentSection();
         wxFprintf(FrameContents, _T("</A>\n"));
@@ -881,7 +916,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       startedSections = true;
 
       wxString topicName = FindTopicName(GetNextChunk());
-      ReopenFile(&Sections, &SectionsName, topicName);
+      ReopenFile(&Sections, SectionsName, topicName);
       AddTexRef(topicName, SectionsName, SectionNameString);
 
       SetCurrentSectionName(topicName, SectionsName);
@@ -924,11 +959,18 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       {
         if(PrimaryAnchorOfTheFile(SectionsName, topicName))
         {
-          wxFprintf(jumpFrom, _T("\n<A HREF=\"%s\"><B>"), ConvertCase(SectionsName));
+          wxFprintf(
+            jumpFrom,
+            _T("\n<A HREF=\"%s\"><B>"),
+            ConvertCase(SectionsName));
         }
         else
         {
-          wxFprintf(jumpFrom, _T("\n<A HREF=\"%s#%s\"><B>"), ConvertCase(SectionsName), topicName);
+          wxFprintf(
+            jumpFrom,
+            _T("\n<A HREF=\"%s#%s\"><B>"),
+            ConvertCase(SectionsName),
+            topicName);
         }
       }
 
@@ -1001,7 +1043,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
           if ( !combineSubSections )
           {
             SetCurrentOutput(NULL);
-            ReopenFile(&Subsections, &SubsectionsName, topicName);
+            ReopenFile(&Subsections, SubsectionsName, topicName);
             AddTexRef(topicName, SubsectionsName, SubsectionNameString);
             SetCurrentSubsectionName(topicName, SubsectionsName);
             if (htmlWorkshopFiles)
@@ -1028,11 +1070,18 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             SetCurrentOutputs(Sections, Subsections);
             if (PrimaryAnchorOfTheFile(SubsectionsName, topicName))
             {
-              wxFprintf(Sections, _T("\n<A HREF=\"%s\"><B>"), ConvertCase(SubsectionsName));
+              wxFprintf(
+                Sections,
+                _T("\n<A HREF=\"%s\"><B>"),
+                ConvertCase(SubsectionsName));
             }
             else
             {
-              wxFprintf(Sections, _T("\n<A HREF=\"%s#%s\"><B>"), ConvertCase(SubsectionsName), topicName);
+              wxFprintf(
+                Sections,
+                _T("\n<A HREF=\"%s#%s\"><B>"),
+                ConvertCase(SubsectionsName),
+                topicName);
             }
 
             wxFprintf(Subsections, _T("\n<H3>"));
@@ -1099,7 +1148,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
         if ( !combineSubSections )
         {
             SetCurrentOutput(NULL);
-            ReopenFile(&Subsubsections, &SubsubsectionsName, topicName);
+            ReopenFile(&Subsubsections, SubsubsectionsName, topicName);
             AddTexRef(topicName, SubsubsectionsName, SubsubsectionNameString);
             SetCurrentSubsubsectionName(topicName, SubsubsectionsName);
             if (htmlWorkshopFiles) HTMLWorkshopAddToContents(3, topicName, SubsubsectionsName);
@@ -1122,10 +1171,21 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
               SubsubsectionsName); // This topic
 
             SetCurrentOutputs(Subsections, Subsubsections);
-            if(PrimaryAnchorOfTheFile(SubsubsectionsName, topicName))
-              wxFprintf(Subsections, _T("\n<A HREF=\"%s\"><B>"), ConvertCase(SubsubsectionsName));
+            if (PrimaryAnchorOfTheFile(SubsubsectionsName, topicName))
+            {
+              wxFprintf(
+                Subsections,
+                _T("\n<A HREF=\"%s\"><B>"),
+                ConvertCase(SubsubsectionsName));
+            }
             else
-              wxFprintf(Subsections, _T("\n<A HREF=\"%s#%s\"><B>"), ConvertCase(SubsubsectionsName), topicName);
+            {
+              wxFprintf(
+                Subsections,
+                _T("\n<A HREF=\"%s#%s\"><B>"),
+                ConvertCase(SubsubsectionsName),
+                topicName);
+            }
 
             wxFprintf(Subsubsections, _T("\n<H3>"));
             OutputCurrentSection();
@@ -1149,7 +1209,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             OutputCurrentSection();
             TexOutput(_T("</A><BR>"));
 */
-            if (htmlWorkshopFiles) HTMLWorkshopAddToContents(2, topicName, SectionsName);
+            if (htmlWorkshopFiles)
+            {
+              HTMLWorkshopAddToContents(2, topicName, SectionsName);
+            }
             SetCurrentOutput(Sections);
         }
 
@@ -2980,7 +3043,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   {
     if (start && (arg_no == 1))
     {
-      ReopenFile(&Chapters, &ChaptersName, _T("bibliography"));
+      ReopenFile(&Chapters, ChaptersName, _T("bibliography"));
       AddTexRef(_T("bibliography"), ChaptersName, _T("bibliography"));
       SetCurrentSubsectionName(_T("bibliography"), ChaptersName);
 
@@ -3008,9 +3071,20 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
 
       SetCurrentOutputs(Contents, Chapters);
       if(PrimaryAnchorOfTheFile(ChaptersName, _T("bibliography")))
-        wxFprintf(Contents, _T("\n<LI><A HREF=\"%s\">"), ConvertCase(ChaptersName));
+      {
+        wxFprintf(
+          Contents,
+          _T("\n<LI><A HREF=\"%s\">"),
+          ConvertCase(ChaptersName));
+      }
       else
-        wxFprintf(Contents, _T("\n<LI><A HREF=\"%s#%s\">"), ConvertCase(ChaptersName), _T("bibliography"));
+      {
+        wxFprintf(
+          Contents,
+          _T("\n<LI><A HREF=\"%s#%s\">"),
+          ConvertCase(ChaptersName),
+          _T("bibliography"));
+      }
 
       wxFprintf(Contents, _T("%s</A>\n"), ReferencesNameString);
       wxFprintf(Chapters, _T("</H2>\n</A>\n"));
@@ -3170,13 +3244,12 @@ bool HTMLGo(void)
 
     wxChar buf[300];
     wxSnprintf(buf, sizeof(buf), _T("%s_contents.html"), FileRoot);
-    if (TitlepageName) delete[] TitlepageName;
-    TitlepageName = copystring(buf);
+    TitlepageName = buf;
     Titlepage = wxFopen(buf, _T("w"));
 
     wxSnprintf(buf, sizeof(buf), _T("%s_fcontents.html"), FileRoot);
 
-    contentsFrameName = copystring(buf);
+    contentsFrameName = buf;
 
     Contents = wxFopen(TmpContentsName, _T("w"));
 
@@ -3449,12 +3522,14 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
   }
   else wxFprintf(f, _T("(unknown)"));
 
-  wxFprintf(f, _T("\n\n[WINDOWS]\n")
-          _T("%sHelp=,\"%s.hhc\",\"%s.hhk\",\"%s\",,,,,,0x2420,,0x380e,,,,,0,,,"),
-          wxFileNameFromPath(FileName),
-          wxFileNameFromPath(FileName),
-          wxFileNameFromPath(FileName),
-          wxFileNameFromPath(TitlepageName));
+  wxFprintf(
+    f,
+    _T("\n\n[WINDOWS]\n")
+    _T("%sHelp=,\"%s.hhc\",\"%s.hhk\",\"%s\",,,,,,0x2420,,0x380e,,,,,0,,,"),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(TitlepageName));
 
 
   wxFprintf(f, _T("\n\n[FILES]\n"));
@@ -3562,31 +3637,32 @@ void HTMLWorkshopStartContents()
   HTMLWorkshopLastLevel = 0;
 
   wxFprintf(HTMLWorkshopContents,
-      _T("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n")
-      _T("<HTML>\n"));
+    _T("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n")
+    _T("<HTML>\n"));
   HTMLHeadTo(HTMLWorkshopContents);
   wxFprintf(HTMLWorkshopContents,
-      _T("\n")
-      _T("<meta name=\"GENERATOR\" content=\"tex2rtf\">\n")
-      _T("<!-- Sitemap 1.0 -->\n")
-      _T("</HEAD><BODY>\n")
-      _T("<OBJECT type=\"text/site properties\">\n")
-      _T(" <param name=\"ImageType\" value=\"Folder\">\n")
-      _T("</OBJECT>\n")
-      _T("<UL>\n")
-      _T("<LI> <OBJECT type=\"text/sitemap\">\n")
-      _T("<param name=\"Local\" value=\"%s\">\n")
-      _T("<param name=\"Name\" value=\"Contents\">\n</OBJECT>\n"),
-      wxFileNameFromPath(TitlepageName)
-      );
-
+    _T("\n")
+    _T("<meta name=\"GENERATOR\" content=\"tex2rtf\">\n")
+    _T("<!-- Sitemap 1.0 -->\n")
+    _T("</HEAD><BODY>\n")
+    _T("<OBJECT type=\"text/site properties\">\n")
+    _T(" <param name=\"ImageType\" value=\"Folder\">\n")
+    _T("</OBJECT>\n")
+    _T("<UL>\n")
+    _T("<LI> <OBJECT type=\"text/sitemap\">\n")
+    _T("<param name=\"Local\" value=\"%s\">\n")
+    _T("<param name=\"Name\" value=\"Contents\">\n</OBJECT>\n"),
+    wxFileNameFromPath(TitlepageName)
+    );
 }
 
 void HTMLWorkshopEndContents()
 {
-    for (int i = HTMLWorkshopLastLevel; i >= 0; i--)
-        wxFprintf(HTMLWorkshopContents, _T("</UL>\n"));
-    fclose(HTMLWorkshopContents);
+  for (int i = HTMLWorkshopLastLevel; i >= 0; --i)
+  {
+    wxFprintf(HTMLWorkshopContents, _T("</UL>\n"));
+  }
+  fclose(HTMLWorkshopContents);
 }
 
 bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label)

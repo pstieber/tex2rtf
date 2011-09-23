@@ -65,11 +65,12 @@ bool OkToClose = true;
 int passNumber = 1;
 unsigned long errorCount = 0;
 
+extern wxChar *BigBuffer;
+extern TexChunk *TopLevel;
+
 #ifndef NO_GUI
 
-extern wxChar *BigBuffer;
 extern ColourTableMap ColourTable;
-extern TexChunk *TopLevel;
 
 #if wxUSE_HELP
 wxHelpControllerBase *HelpInstance = NULL;
@@ -115,52 +116,85 @@ int BufSize = 500;
 bool Go(void);
 void ShowOptions(void);
 void ShowVersion(void);
+void CleanupHtmlProcessing();
 
 wxChar wxTex2RTFBuffer[1500];
 
 #ifdef NO_GUI
-  IMPLEMENT_APP_CONSOLE(MyApp)
+  IMPLEMENT_APP_CONSOLE(Tex2RtfApplication)
 #else
   wxMenuBar *menuBar = NULL;
   MyFrame *frame = NULL;
-  // DECLARE_APP(MyApp)
-  IMPLEMENT_APP(MyApp)
+  // DECLARE_APP(Tex2RtfApplication)
+  IMPLEMENT_APP(Tex2RtfApplication)
 #endif
 
-// `Main program' equivalent, creating windows and returning main app frame
-bool MyApp::OnInit()
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+Tex2RtfApplication::Tex2RtfApplication()
+#ifdef NO_GUI
+  : wxAppConsole()
+#else
+  : wxApp()
+#endif
 {
-  // Use default list of macros defined in tex2any.cc
+#ifdef _MSC_VER
+  // When using the Microsoft C++ compiler in debug mode, each heap allocation
+  // (i.e. calling new) is counted. The following line will cause the code to
+  // generate a user defined break point when the passed allocation index is
+  // hit.  To find leaks, run in debug and look for the following type of line
+  // in the Debug output window.
+  //
+  // {5899} normal block at 0x00EDC998, 200000 bytes long.
+  // Data: <    i s   p a n > 0A 00 00 00 69 00 73 00 20 00 70 00 61 00 6E 00
+  //
+  // Then use the following line to cause a break point when this allocation
+  // occurs:
+  //
+  // _CrtSetBreakAlloc(5899);
+#endif // _MSC_VER
+}
+
+//-----------------------------------------------------------------------------
+// Description:
+//   `Main program' equivalent, creating windows and returning the application
+//  main frame.
+//-----------------------------------------------------------------------------
+bool Tex2RtfApplication::OnInit()
+{
+  // Use default list of macros defined in tex2any.cpp.
   DefineDefaultMacros();
   AddMacroDef(ltHARDY, _T("hardy"), 0);
 
-  for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
+  for (
+    ColourTableMap::iterator it = ColourTable.begin();
+    it != ColourTable.end();
+    ++it)
   {
-    ColourTableEntry *entry = it->second;
+    ColourTableEntry* entry = it->second;
     delete entry;
   }
   ColourTable.clear();
-
 
   int n = 1;
 
   // Read input/output files
   if (argc > 1)
   {
-      if (argv[1][0] != _T('-'))
-      {
-          InputFile = argv[1];
-          n ++;
+    if (argv[1][0] != _T('-'))
+    {
+      InputFile = argv[1];
+      n ++;
 
-          if (argc > 2)
-          {
-              if (argv[2][0] != _T('-'))
-              {
-                  OutputFile = argv[2];
-                  n ++;
-              }
-          }
+      if (argc > 2)
+      {
+        if (argv[2][0] != _T('-'))
+        {
+          OutputFile = argv[2];
+          ++n;
+        }
       }
+    }
   }
 
   TexPathList.Add(::wxGetCwd());
@@ -333,7 +367,7 @@ bool MyApp::OnInit()
     if (!InputFile.empty())
     {
         wxString title;
-        title.Printf( _T("Tex2RTF [%s]"), wxFileNameFromPath(InputFile).c_str());
+        title.Printf(_T("Tex2RTF [%s]"), wxFileNameFromPath(InputFile).c_str());
         frame->SetTitle(title);
     }
 
@@ -438,19 +472,17 @@ bool MyApp::OnInit()
   else
 #endif // NO_GUI
   {
-    /*
-     * Read macro/initialisation file
-     *
-     */
-
+    // Read macro/initialization file.
     wxString path = TexPathList.FindValidPath(MacroFile);
     if (!path.empty())
-        ReadCustomMacros(path);
+    {
+      ReadCustomMacros(path);
+    }
 
     bool rc = Go();
-    if ( rc && runTwice )
+    if (rc && runTwice)
     {
-        rc = Go();
+      rc = Go();
     }
 
 #ifdef NO_GUI
@@ -464,7 +496,7 @@ bool MyApp::OnInit()
   }
 }
 
-void MyApp::CleanUp()
+void Tex2RtfApplication::CleanUp()
 {
   for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
   {
@@ -488,19 +520,38 @@ void MyApp::CleanUp()
     mNode = MacroDefs.Next();
   }
   MacroDefs.Clear();
+
+  if (BigBuffer)
+  {
+    delete BigBuffer;
+    BigBuffer = NULL;
+  }
+  if (TopLevel)
+  {
+    delete TopLevel;
+    TopLevel = NULL;
+  }
+
+  CleanupHtmlProcessing();
 }
 
 #ifndef NO_GUI
-int MyApp::OnExit()
+int Tex2RtfApplication::OnExit()
 {
-  for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
+  for (
+    ColourTableMap::iterator it = ColourTable.begin();
+    it != ColourTable.end();
+    ++it)
   {
     ColourTableEntry *entry = it->second;
     delete entry;
   }
   ColourTable.clear();
 
-  for (MacroMap::iterator it = CustomMacroMap.begin(); it != CustomMacroMap.end(); ++it)
+  for (
+    MacroMap::iterator it = CustomMacroMap.begin();
+    it != CustomMacroMap.end();
+    ++it)
   {
     CustomMacro *macro = it->second;
     delete macro;
