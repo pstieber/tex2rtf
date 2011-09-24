@@ -1,14 +1,13 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        xlputils.cpp
-// Purpose:     Converts Latex to obsolete XLP format
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     7.9.93
-// RCS-ID:      $Id: xlputils.cpp 35650 2005-09-23 12:56:45Z MR $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Converts Latex to obsolete XLP format.
+//*****************************************************************************
 
 #include "tex2any.h"
 #include "tex2rtf.h"

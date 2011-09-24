@@ -1,11 +1,10 @@
 //*****************************************************************************
-// Name:        tex2any.h
-// Purpose:     Latex conversion header
-// Author:      Julian Smart
-// Modified by:
-// Created:     7.9.93
 // Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
+// Author:      Julian Smart
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Latex conversion header.
 //*****************************************************************************
 
 #include <wx/utils.h>

@@ -1,13 +1,11 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        table.h
-// Purpose:     Table utilities
-// Author:      Julian Smart
-// Modified by:
-// Created:     7.9.93
-// RCS-ID:      $Id: table.h 27631 2004-06-04 17:58:56Z ABX $
+//*****************************************************************************
 // Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Author:      Julian Smart
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Table utilities.
+//*****************************************************************************
 
 #include <wx/string.h>
 

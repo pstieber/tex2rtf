@@ -1,9 +1,10 @@
-// File:    wxhlpblk.h
-// Purpose: Text blocks used in wxHelp
-// Author:  Julian Smart
-// Created: 1993
-// Updated:
-// Copyright: (c) 1993, AIAI, University of Edinburgh
+//*****************************************************************************
+// Copyright:   (c) 1993, AIAI, University of Edinburgh
+// Author:      Julian Smart
+// Created:     7/9/1993
+// Description:
+///   Text blocks used in wxHelp.
+//*****************************************************************************
 
 #ifndef wxhlpblkh
 #define wxhlpblkh

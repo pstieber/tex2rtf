@@ -1,13 +1,11 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        rtfutils.h
-// Purpose:     RTF-specific code
-// Author:      Julian Smart
-// Modified by:
-// Created:     7.9.93
-// RCS-ID:      $Id: rtfutils.h 25095 2004-01-08 11:54:30Z JS $
+//*****************************************************************************
 // Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Author:      Julian Smart
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   RTF-specific code
+//*****************************************************************************
 
  /*
   * Write a suitable RTF header.

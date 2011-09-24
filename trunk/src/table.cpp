@@ -1,14 +1,13 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        table.cpp
-// Purpose:     Utilities for manipulating tables
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     01/01/99
-// RCS-ID:      $Id: table.cpp 35650 2005-09-23 12:56:45Z MR $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     1/1/1999
+// License:     wxWindows license
+// Description:
+//   Utilities for manipulating tables.
+//*****************************************************************************
 
 #include "table.h"
 #include "tex2any.h"
