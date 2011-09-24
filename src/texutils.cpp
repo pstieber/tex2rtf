@@ -1547,12 +1547,6 @@ wxChar *RegisterSetting(
     {
       winHelp = true; convertMode = TEX_RTF;
     }
-    else if (
-      StringMatch(settingValue, _T("XLP"), false, true) ||
-      StringMatch(settingValue, _T("wxHelp"), false, true))
-    {
-      convertMode = TEX_XLP;
-    }
     else if (StringMatch(settingValue, _T("HTML"), false, true))
     {
       convertMode = TEX_HTML;
@@ -1560,8 +1554,10 @@ wxChar *RegisterSetting(
     else
     {
       if (interactive)
-        OnInform(_T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
-      wxStrcpy(errorCode, _T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, XLP (or wxHelp), HTML."));
+      {
+        OnInform(_T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, HTML."));
+      }
+      wxStrcpy(errorCode, _T("Initialisation file error: conversionMode must be one of\nRTF, WinHelp, HTML."));
     }
   }
   else if (StringMatch(settingName, _T("documentFontSize"), false, true))
