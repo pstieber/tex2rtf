@@ -479,15 +479,11 @@
 				RelativePath="..\src\texutils.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\src\wxhlpblk.h"
-				>
-			</File>
-			<File
-				RelativePath="..\src\xlputils.cpp"
-				>
-			</File>
 		</Filter>
+		<File
+			RelativePath="..\src\Makefile.am"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

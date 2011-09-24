@@ -579,16 +579,35 @@ bool read_a_line(wxChar *buf)
             buf[bufIndex++]='{';
             switch(ch)
             {
-              case 0xf6:buf[bufIndex++]='o';break; // ö
-              case 0xe4:buf[bufIndex++]='a';break; // ä
-              case 0xfc:buf[bufIndex++]='u';break; // ü
-              case 0xd6:buf[bufIndex++]='O';break; // Ö
-              case 0xc4:buf[bufIndex++]='A';break; // Ä
-              case 0xdc:buf[bufIndex++]='U';break; // Ü
+              case 0xf6:
+                // ö
+                buf[bufIndex++]='o';
+                break;
+              case 0xe4:
+                // ä
+                buf[bufIndex++]='a';
+                break;
+              case 0xfc:
+                 // ü
+                buf[bufIndex++]='u';
+                break;
+              case 0xd6:
+                // Ö
+                buf[bufIndex++]='O';
+                break;
+              case 0xc4:
+                // Ä
+                buf[bufIndex++]='A';
+                break;
+              case 0xdc:
+                // Ü
+                buf[bufIndex++]='U';
+                break;
             }
             buf[bufIndex++]='}';
             break;
-        case 0xdf: // ß
+        case 0xdf:
+          // ß
           if (bufIndex+5 >= MAX_LINE_BUFFER_SIZE)
           {
             wxString ErrorMessage;
@@ -2781,8 +2800,6 @@ void DefineDefaultMacros()
 
   AddMacroDef(ltXI,                  _T("xi"), 0);
   AddMacroDef(ltCAP_XI,              _T("Xi"), 0);
-  AddMacroDef(ltXLPIGNORE,           _T("xlpignore"), 1);
-  AddMacroDef(ltXLPONLY,             _T("xlponly"), 1);
 
   AddMacroDef(ltZETA,                _T("zeta"), 0);
 
@@ -3903,10 +3920,6 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     return (start && (arg_no == 1));
   case ltTWOCOLUMN:
     return true;
-  case ltXLPIGNORE:
-    return ((convertMode == TEX_XLP) ? false : true);
-  case ltXLPONLY:
-    return ((convertMode != TEX_XLP) ? false : true);
   case ltHTMLIGNORE:
     return ((convertMode == TEX_HTML) ? false : true);
   case ltHTMLONLY:

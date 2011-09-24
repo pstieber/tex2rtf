@@ -65,7 +65,6 @@ class MyFrame: public wxFrame
     void OnModeRTF(wxCommandEvent& event);
     void OnModeWinHelp(wxCommandEvent& event);
     void OnModeHTML(wxCommandEvent& event);
-    void OnModeXLP(wxCommandEvent& event);
     void OnOptionsCurlyBrace(wxCommandEvent& event);
     void OnOptionsSyntaxChecking(wxCommandEvent& event);
     void OnHelp(wxCommandEvent& event);
@@ -147,7 +146,6 @@ class ItemizeStruc: public wxObject
 #define TEX_MODE_RTF    9
 #define TEX_MODE_WINHELP 10
 #define TEX_MODE_HTML   11
-#define TEX_MODE_XLP    12
 
 #define TEX_OPTIONS_CURLY_BRACE 13
 #define TEX_OPTIONS_SYNTAX_CHECKING 14
@@ -191,11 +189,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start);
 void HTMLOnMacro(int macroId, int no_args, bool start);
 bool HTMLOnArgument(int macroId, int arg_no, bool start);
 
-void XLPOnMacro(int macroId, int no_args, bool start);
-bool XLPOnArgument(int macroId, int arg_no, bool start);
-
 bool RTFGo(void);
 bool HTMLGo(void);
-bool XLPGo(void);
 
 #define ltHARDY         10000

@@ -229,11 +229,6 @@ bool Tex2RtfApplication::OnInit()
       i ++;
       convertMode = TEX_HTML;
     }
-    else if (wxStrcmp(argv[i], _T("-xlp")) == 0)
-    {
-      i ++;
-      convertMode = TEX_XLP;
-    }
     else if (wxStrcmp(argv[i], _T("-twice")) == 0)
     {
       i ++;
@@ -392,7 +387,6 @@ bool Tex2RtfApplication::OnInit()
     mode_menu->Append(TEX_MODE_RTF, _T("Output linear &RTF"), _T("Wordprocessor-compatible RTF"));
     mode_menu->Append(TEX_MODE_WINHELP, _T("Output &WinHelp RTF"), _T("WinHelp-compatible RTF"));
     mode_menu->Append(TEX_MODE_HTML, _T("Output &HTML"), _T("HTML World Wide Web hypertext file"));
-    mode_menu->Append(TEX_MODE_XLP, _T("Output &XLP"), _T("wxHelp hypertext help file"));
 
     wxMenu *options_menu = new wxMenu;
 
@@ -451,10 +445,6 @@ bool Tex2RtfApplication::OnInit()
 
         case TEX_HTML:
             inStr += _T("HTML");
-            break;
-
-        case TEX_XLP:
-            inStr += _T("XLP");
             break;
 
         default:
@@ -622,7 +612,6 @@ void ShowOptions(void)
   OnInform(_T("    -winhelp"));
   OnInform(_T("    -rtf"));
   OnInform(_T("    -html"));
-  OnInform(_T("    -xlp\n"));
 }
 
 #ifndef NO_GUI
@@ -641,7 +630,6 @@ BEGIN_EVENT_TABLE(MyFrame, wxFrame)
     EVT_MENU(TEX_MODE_RTF, MyFrame::OnModeRTF)
     EVT_MENU(TEX_MODE_WINHELP, MyFrame::OnModeWinHelp)
     EVT_MENU(TEX_MODE_HTML, MyFrame::OnModeHTML)
-    EVT_MENU(TEX_MODE_XLP, MyFrame::OnModeXLP)
     EVT_MENU(TEX_OPTIONS_CURLY_BRACE, MyFrame::OnOptionsCurlyBrace)
     EVT_MENU(TEX_OPTIONS_SYNTAX_CHECKING, MyFrame::OnOptionsSyntaxChecking)
     EVT_MENU(TEX_HELP, MyFrame::OnHelp)
@@ -818,16 +806,6 @@ void MyFrame::OnModeHTML(wxCommandEvent& WXUNUSED(event))
 #endif // wxUSE_STATUSBAR
 }
 
-void MyFrame::OnModeXLP(wxCommandEvent& WXUNUSED(event))
-{
-    convertMode = TEX_XLP;
-    InputFile = wxEmptyString;
-    OutputFile = wxEmptyString;
-#if wxUSE_STATUSBAR
-    SetStatusText(_T("In XLP mode."), 1);
-#endif // wxUSE_STATUSBAR
-}
-
 void MyFrame::OnOptionsCurlyBrace(wxCommandEvent& WXUNUSED(event))
 {
     checkCurlyBraces = !checkCurlyBraces;
@@ -924,12 +902,6 @@ void ChooseOutputFile(bool force)
         {
             wxStrcpy(extensionBuf, _T("rtf"));
             wxStrcat(wildBuf, _T("rtf"));
-            break;
-        }
-        case TEX_XLP:
-        {
-            wxStrcpy(extensionBuf, _T("xlp"));
-            wxStrcat(wildBuf, _T("xlp"));
             break;
         }
         case TEX_HTML:
@@ -1041,11 +1013,6 @@ bool Go(void)
       case TEX_RTF:
       {
         success = RTFGo();
-        break;
-      }
-      case TEX_XLP:
-      {
-        success = XLPGo();
         break;
       }
       case TEX_HTML:
@@ -1183,11 +1150,6 @@ void OnMacro(int macroId, int no_args, bool start)
       RTFOnMacro(macroId, no_args, start);
       break;
     }
-    case TEX_XLP:
-    {
-      XLPOnMacro(macroId, no_args, start);
-      break;
-    }
     case TEX_HTML:
     {
       HTMLOnMacro(macroId, no_args, start);
@@ -1203,11 +1165,6 @@ bool OnArgument(int macroId, int arg_no, bool start)
     case TEX_RTF:
     {
       return RTFOnArgument(macroId, arg_no, start);
-      // break;
-    }
-    case TEX_XLP:
-    {
-      return XLPOnArgument(macroId, arg_no, start);
       // break;
     }
     case TEX_HTML:
@@ -1343,12 +1300,18 @@ bool Tex2RTFConnection::OnExecute(const wxString& WXUNUSED(topic), wxChar *data,
         wxStrcpy(buf, _T("In "));
 
         if (winHelp && (convertMode == TEX_RTF))
+        {
           wxStrcat(buf, _T("WinHelp RTF"));
+        }
         else if (!winHelp && (convertMode == TEX_RTF))
+        {
           wxStrcat(buf, _T("linear RTF"));
-        else if (convertMode == TEX_HTML) wxStrcat(buf, _T("HTML"));
-        else if (convertMode == TEX_XLP) wxStrcat(buf, _T("XLP"));
-          wxStrcat(buf, _T(" mode."));
+        }
+        else if (convertMode == TEX_HTML)
+        {
+          wxStrcat(buf, _T("HTML"));
+        }
+        wxStrcat(buf, _T(" mode."));
         frame->SetStatusText(buf, 1);
       }
 #endif

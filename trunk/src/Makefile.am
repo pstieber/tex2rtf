@@ -10,8 +10,7 @@ rtfutils.cpp \
 table.cpp \
 tex2any.cpp \
 tex2rtf.cpp \
-texutils.cpp \
-xlputils.cpp
+texutils.cpp
 
 tex2rtf_SOURCES = \
 htmlutil.cpp \
@@ -21,8 +20,7 @@ rtfutils.cpp \
 table.cpp \
 tex2any.cpp \
 tex2rtf.cpp \
-texutils.cpp \
-xlputils.cpp
+texutils.cpp
 
 tex2rtf_CPPFLAGS=-DNO_GUI
 
@@ -33,5 +31,4 @@ rtfutils.h \
 symbols.h \
 table.h \
 tex2any.h \
-tex2rtf.h \
-wxhlpblk.h
+tex2rtf.h

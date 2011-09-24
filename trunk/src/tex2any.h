@@ -13,15 +13,13 @@
 #include <wx/tokenzr.h>
 #include <wx/wfstream.h>
 #include <wx/txtstrm.h>
-#include "wxhlpblk.h"
 
 #include <cstdio>
 #include <list>
 
 // Conversion modes
 #define TEX_RTF  1
-#define TEX_XLP  2
-#define TEX_HTML 3
+#define TEX_HTML 2
 
 // We have a list of macro definitions which we must define
 // in advance to enable the parsing to recognize macros.
@@ -885,9 +883,6 @@ extern void InitialiseColourTable(void);
 #define ltWXCLIPS           600
 #define ltWINHELPIGNORE     601
 #define ltWINHELPONLY       602
-
-#define ltXLPIGNORE         603
-#define ltXLPONLY           604
 
 #define ltSPACE             620
 #define ltBACKSLASHCHAR     621
