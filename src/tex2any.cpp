@@ -1,13 +1,12 @@
 //*****************************************************************************
-// Name:        tex2any.cpp
-// Purpose:     Utilities for Latex conversion.
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimierz ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     01/01/99
-// RCS-ID:      $Id: tex2any.cpp 39975 2006-07-04 16:08:16Z AVV $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
+// Created:     1/1/1999
+// License:     wxWindows license
+// Description:
+//   Utilities for Latex conversion.
 //*****************************************************************************
 
 #include "tex2any.h"

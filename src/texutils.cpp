@@ -1,14 +1,13 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        texutils.cpp
-// Purpose:     Miscellaneous utilities
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     7.9.93
-// RCS-ID:      $Id: texutils.cpp 47536 2007-07-17 22:47:30Z VZ $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Miscellaneous utilities.
+//*****************************************************************************
 
 #include <wx/app.h>
 #include <wx/filename.h>

@@ -1,15 +1,14 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        bmputils.h
-// Purpose:     Utilities for manipulating bitmap and metafile images for
-//              the purposes of conversion to RTF
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     7.9.93
-// RCS-ID:      $Id: bmputils.h 29660 2004-10-05 15:38:40Z ABX $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Utilities for manipulating bitmap and metafile images for the purposes of
+// conversion to RTF.
+//*****************************************************************************
 
 static char hexArray[] =
 {

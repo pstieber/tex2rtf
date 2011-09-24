@@ -1,16 +1,13 @@
 //*****************************************************************************
-// Name:        readshg.cpp
-// Purpose:     Petr Smilauer's .SHG (Segmented Hypergraphics file) reading
-//              code.
-//              Note: .SHG is undocumented so this is reverse-engineering and
-//              guesswork.
+// Copyright:   (c) Petr Smilauer
 // Author:      Petr Smilauer
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     01/01/99
-// RCS-ID:      $Id: readshg.cpp 35650 2005-09-23 12:56:45Z MR $
-// Copyright:   (c) Petr Smilauer
-// Licence:     wxWindows licence
+// Created:     1/1/1999
+// License:     wxWindows license
+// Description:
+//   Petr Smilauer's .SHG (Segmented Hypergraphics file) reading code.
+// Note: .SHG is undocumented so this is reverse-engineering and guesswork.
 //*****************************************************************************
 
 #include "readshg.h"

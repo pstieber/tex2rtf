@@ -1,14 +1,13 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        htmlutil.cpp
-// Purpose:     Converts Latex to HTML
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimierz ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     7.9.93
-// RCS-ID:      $Id: htmlutil.cpp,v 1.32 2005/08/24 17:56:27 ABX Exp $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Converts Latex to HTML.
+//*****************************************************************************
 
 #include "tex2any.h"
 #include "tex2rtf.h"

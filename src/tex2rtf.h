@@ -1,13 +1,12 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        tex2any.h
-// Purpose:     tex2RTF conversion header
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
-// Created:     7.9.93
-// RCS-ID:      $Id: tex2rtf.h 41020 2006-09-05 20:47:48Z VZ $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   tex2RTF conversion header.
+//*****************************************************************************
 
 #include <wx/app.h>
 

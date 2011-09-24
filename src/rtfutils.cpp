@@ -1,14 +1,13 @@
-/////////////////////////////////////////////////////////////////////////////
-// Name:        rtfutils.cpp
-// Purpose:     Converts Latex to Word RTF/WinHelp RTF
+//*****************************************************************************
+// Copyright:   (c) Julian Smart
 // Author:      Julian Smart
 // Modified by: Wlodzimiez ABX Skiba 2003/2004 Unicode support
 //              Ron Lee
-// Created:     7.9.93
-// RCS-ID:      $Id: rtfutils.cpp 36101 2005-11-07 13:27:09Z ABX $
-// Copyright:   (c) Julian Smart
-// Licence:     wxWindows licence
-/////////////////////////////////////////////////////////////////////////////
+// Created:     7/9/1993
+// License:     wxWindows license
+// Description:
+//   Converts Latex to Word RTF/WinHelp RTF.
+//*****************************************************************************
 
 #include "tex2any.h"
 #include "tex2rtf.h"
