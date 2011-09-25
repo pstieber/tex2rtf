@@ -28,11 +28,7 @@
 #define FORBID_ABSOLUTELY 2
 
 
-#ifdef __WXMSW__
-const unsigned long MAX_LINE_BUFFER_SIZE = 600;
-#else
-const unsigned long MAX_LINE_BUFFER_SIZE = 11000;
-#endif
+const unsigned long MAX_LINE_BUFFER_SIZE = 10 * 1024;
 
 class TexMacroDef : public wxObject
 {
