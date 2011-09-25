@@ -414,9 +414,8 @@ void WriteTexReferences(const wxString& FileName)
     file.AddLine(converter);
 
     if (
-      !pTexRef->sectionNumber || (
-        wxStrcmp(pTexRef->sectionNumber, _T("??")) == 0 &&
-        wxStrcmp(pTexRef->sectionName, _T("??")) == 0))
+      !pTexRef->sectionNumber.empty() || (
+        pTexRef->sectionNumber == "??" && pTexRef->sectionName == "??"))
     {
       wxString WarningMessage;
       WarningMessage
