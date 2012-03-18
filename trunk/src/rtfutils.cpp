@@ -615,11 +615,11 @@ void ProcessText2RTF(TexChunk *chunk)
         if (
           (
             i > 0 &&
-            (len > i + 1 && isascii(chunk->mValue[i + 1])) &&
+            (len > i + 1 && chunk->mValue[i + 1].IsAscii()) &&
             !isspace(chunk->mValue[i + 1])) ||
           (
             (len > i + 1 && chunk->mValue[i + 1] == 13) &&
-            (len > i + 2 && isascii(chunk->mValue[i + 2]) &&
+            (len > i + 2 && chunk->mValue[i + 2].IsAscii() &&
             !isspace(chunk->mValue[i + 2]))))
 //        if (true)
         {
