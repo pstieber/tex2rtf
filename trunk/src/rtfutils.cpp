@@ -1985,7 +1985,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
   {
     if (start)
     {
-      #if 1 // if(inVerbatim)
+      #if 1 // if (inVerbatim)
         TexOutput(_T("~"));
       #else
         TexOutput(_T(" "));
@@ -3569,8 +3569,10 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (arg_no == 3)
       return false;
 
+#ifdef __WXMSW__
     static int imageWidth = 0;
     static int imageHeight = 0;
+#endif
 
     if (start && (arg_no == 1))
     {
@@ -3578,7 +3580,8 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
 
       // imageWidth - Convert points to TWIPS (1 twip = 1/20th of point)
       wxStringTokenizer tok(imageDimensions, _T(";:"), wxTOKEN_STRTOK);
-      if(tok.HasMoreTokens())
+#ifdef __WXMSW__
+      if (tok.HasMoreTokens())
       {
         wxString token = tok.GetNextToken();
         imageWidth = (int)(20 * ParseUnitArgument(token));
@@ -3589,7 +3592,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       }
 
       // imageHeight - Convert points to TWIPS (1 twip = 1/20th of point)
-      if(tok.HasMoreTokens())
+      if (tok.HasMoreTokens())
       {
         wxString token = tok.GetNextToken();
         imageHeight = (int)(20 * ParseUnitArgument(token));
@@ -3598,6 +3601,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         imageHeight = 0;
       }
+#endif
 
       return false;
     }
@@ -3605,7 +3609,9 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     {
       wxString filename = GetArgData();
       wxString f = _T("");
-      if ((winHelp || (wxStrcmp(bitmapMethod, _T("includepicture")) == 0)  || (wxStrcmp(bitmapMethod, _T("import")) == 0)) && useWord)
+      if (
+        (winHelp || (wxStrcmp(bitmapMethod, _T("includepicture")) == 0) ||
+        (wxStrcmp(bitmapMethod, _T("import")) == 0)) && useWord)
       {
         if (f == _T("")) // Try for a .shg (segmented hypergraphics file)
         {
