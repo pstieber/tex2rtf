@@ -730,7 +730,7 @@ bool ReadBib(const wxString& FileName)
     return false;
   }
 
-  ifstream Is(FileName.wx_str(), ios::in);
+  ifstream Is(FileName.mb_str(), ios::in);
   if (Is.bad())
   {
     return false;
