@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tex2rtf_gui", "tex2rtf_gui.vcxproj", "{8E4A596D-58AE-4870-B03D-29C76274D2C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Unicode Debug GUI|Win32 = Unicode Debug GUI|Win32
+		Unicode Debug GUI|x64 = Unicode Debug GUI|x64
+		Unicode Release GUI|Win32 = Unicode Release GUI|Win32
+		Unicode Release GUI|x64 = Unicode Release GUI|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Debug GUI|Win32.ActiveCfg = Unicode Debug GUI|Win32
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Debug GUI|Win32.Build.0 = Unicode Debug GUI|Win32
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Debug GUI|x64.ActiveCfg = Unicode Debug GUI|x64
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Debug GUI|x64.Build.0 = Unicode Debug GUI|x64
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Release GUI|Win32.ActiveCfg = Unicode Release GUI|Win32
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Release GUI|Win32.Build.0 = Unicode Release GUI|Win32
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Release GUI|x64.ActiveCfg = Unicode Release GUI|x64
+		{8E4A596D-58AE-4870-B03D-29C76274D2C9}.Unicode Release GUI|x64.Build.0 = Unicode Release GUI|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
