@@ -14,6 +14,7 @@
 #include "table.h"
 
 #include <wx/arrstr.h>
+#include <wx/wxcrtvararg.h>
 #include <wx/filename.h>
 
 #include <cstdio>

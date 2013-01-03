@@ -111,7 +111,7 @@ fi
 dnl Check for wxWidgets
 AM_OPTIONS_WXCONFIG
 
-AM_PATH_WXCONFIG(2.9.2, wxWin=1)
+AM_PATH_WXCONFIG(2.9.4, wxWin=1)
 
 if test "$wxWin" != 1; then
   AC_MSG_ERROR([
@@ -122,7 +122,7 @@ if test "$wxWin" != 1; then
     directory where wxWidgets libraries are installed
     (returned by 'wx-config --libs' command) is in
     LD_LIBRARY_PATH or equivalent variable, and the
-    wxWidgets version is 2.9.2 or above.
+    wxWidgets version is 2.9.4 or above.
   ])
 fi
 

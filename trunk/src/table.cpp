@@ -13,6 +13,7 @@
 #include "tex2any.h"
 
 #include <wx/hash.h>
+#include <wx/wxcrtvararg.h>
 
 #include <iostream>
 #include <fstream>

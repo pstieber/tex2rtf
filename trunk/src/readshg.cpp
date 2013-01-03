@@ -13,6 +13,7 @@
 #include "readshg.h"
 #include "tex2any.h"
 
+#include <wx/wxcrtvararg.h>
 #include <cstdio>
 #include <cstdlib>
 #include <vector>
