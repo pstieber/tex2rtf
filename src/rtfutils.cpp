@@ -12,6 +12,7 @@
 #include "tex2any.h"
 #include "tex2rtf.h"
 
+#include <wx/wxcrtvararg.h>
 #include <ctype.h>
 #include <cstdlib>
 #include <cstdio>

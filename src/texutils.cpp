@@ -14,6 +14,7 @@
 #include <wx/hash.h>
 #include <wx/hashmap.h>
 #include <wx/textfile.h>
+#include <wx/wxcrtvararg.h>
 
 #include <fstream>
 #include <iostream>

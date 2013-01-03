@@ -38,7 +38,7 @@
 #endif // !NO_GUI
 
 #include <wx/utils.h>
-
+#include <wx/wxcrtvararg.h>
 
 #include <ctype.h>
 #include "tex2any.h"
