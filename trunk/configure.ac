@@ -103,28 +103,24 @@ case "${host}" in
     AC_MSG_ERROR(unknown system type ${host}.)
 esac
 
-wx_config_args="--static=no"
-if test x$ac_arg_debug = xyes ; then
-  wx_config_args="$wx_config_args --debug"
-fi
-
 dnl Check for wxWidgets
 AM_OPTIONS_WXCONFIG
-
-AM_PATH_WXCONFIG(2.9.4, wxWin=1)
-
-if test "$wxWin" != 1; then
-  AC_MSG_ERROR([
+MIN_WX_VERSION="2.9.4"
+AM_PATH_WXCONFIG(
+  [$MIN_WX_VERSION],
+  [],
+  [AC_MSG_ERROR([
     wxWidgets must be installed on your system, but the
     wx-config script couldn't be found.
-     
+
     Please check that wx-config is in your PATH, the
     directory where wxWidgets libraries are installed
     (returned by 'wx-config --libs' command) is in
-    LD_LIBRARY_PATH or equivalent variable, and the
-    wxWidgets version is 2.9.4 or above.
-  ])
-fi
+    LIBRARY_PATH or the equivalent variable, and the
+    wxWidgets version is $MIN_WX_VERSION or above.
+  ])],
+  [std],
+  [--debug=$ac_arg_debug])
 
 TEX2RTF_PATH=\${top_srcdir}
 AC_SUBST(TEX2RTF_PATH)
