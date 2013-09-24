@@ -104,9 +104,9 @@ case "${host}" in
 esac
 
 dnl Check for wxWidgets
-AM_OPTIONS_WXCONFIG
+WX_CONFIG_OPTIONS
 MIN_WX_VERSION="2.9.4"
-AM_PATH_WXCONFIG(
+WX_CONFIG_CHECK(
   [$MIN_WX_VERSION],
   [],
   [AC_MSG_ERROR([
