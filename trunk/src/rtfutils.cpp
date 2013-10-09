@@ -238,12 +238,18 @@ void WriteWinHelpContentsFileLine(
       wxChar ch2=wxChar(xitle[s+2]&0xff);
       wxChar ch3=wxChar(xitle[s+3]&0xff);
       s+=4; // next character
-      if ((ch1==0x27)&&(ch2==0x66)&&(ch3==0x36)) { title[d++]=wxChar('ö');  }
-      if ((ch1==0x27)&&(ch2==0x65)&&(ch3==0x34)) { title[d++]=wxChar('ä');  }
-      if ((ch1==0x27)&&(ch2==0x66)&&(ch3==0x63)) { title[d++]=wxChar('ü');  }
-      if ((ch1==0x27)&&(ch2==0x64)&&(ch3==0x36)) { title[d++]=wxChar('Ö');  }
-      if ((ch1==0x27)&&(ch2==0x63)&&(ch3==0x34)) { title[d++]=wxChar('Ä');  }
-      if ((ch1==0x27)&&(ch2==0x64)&&(ch3==0x63)) { title[d++]=wxChar('Ü');  }
+      // ö = U+00F6
+      if ((ch1==0x27)&&(ch2==0x66)&&(ch3==0x36)) { title[d++]=wxChar(L'\u00F6');  }
+      // ä = U+00E4
+      if ((ch1==0x27)&&(ch2==0x65)&&(ch3==0x34)) { title[d++]=wxChar(L'\u00E4');  }
+      // ü = U+00FC
+      if ((ch1==0x27)&&(ch2==0x66)&&(ch3==0x63)) { title[d++]=wxChar(L'\u00FC');  }
+      // Ö = U+00D6
+      if ((ch1==0x27)&&(ch2==0x64)&&(ch3==0x36)) { title[d++]=wxChar(L'\u00D6');  }
+      // Ä = U+00C4
+      if ((ch1==0x27)&&(ch2==0x63)&&(ch3==0x34)) { title[d++]=wxChar(L'\u00C4');  }
+      // Ü = U+00DC
+      if ((ch1==0x27)&&(ch2==0x64)&&(ch3==0x63)) { title[d++]=wxChar(L'\u00DC');  }
     } else {
       title[d++]=ch;
       s++;
