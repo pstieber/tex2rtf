@@ -796,9 +796,12 @@ void PopEnvironmentStyle(void)
 // Write out the styles, most recent first.
 void WriteEnvironmentStyles(void)
 {
-  for (size_t index = environmentStack.GetCount() - 1; index >= 0; --index)
+  for (
+    size_t IndexPlusOne = environmentStack.GetCount();
+    IndexPlusOne > 0;
+    --IndexPlusOne)
   {
-    TexOutput(environmentStack[index].c_str());
+    TexOutput(environmentStack[IndexPlusOne - 1]);
   }
   if (!inTabular && (ParIndent > 0) && (forbidParindent == 0))
   {
