@@ -3014,8 +3014,8 @@ void DefaultOnMacro(int macroId, int no_args, bool start)
       break;
     case ltPOUNDS:
       if (start)
-        // FIXME: this is valid only if the output is iso-8859-1
-        TexOutput(wxString::FromAscii("£"), true);
+        // The pound sign has Unicode code point U+00A3.
+        TexOutput(wxString(L"\u00A3"), true);
       break;
     case ltSPECIALDOUBLEDOLLAR:  // Interpret as center
       OnMacro(ltCENTER, no_args, start);
