@@ -610,7 +610,7 @@ void ShowOptions(void)
   OnInform(_T("    -version"));
   OnInform(_T("    -macros <filename>"));
   OnInform(_T("    -winhelp"));
-  OnInform(_T("    -rtf"));
+  OnInform(_T("    -rtf (default)"));
   OnInform(_T("    -html"));
 }
 
