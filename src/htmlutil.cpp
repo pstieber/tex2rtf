@@ -3239,17 +3239,13 @@ bool HTMLGo(void)
   if (!InputFile.empty() && !OutputFile.empty())
   {
     // Do some HTML-specific transformations on all the strings,
-    // recursively
+    // recursively.
     Text2HTML(GetTopLevelChunk());
 
-    wxChar buf[300];
-    wxSnprintf(buf, sizeof(buf), _T("%s_contents.html"), FileRoot);
-    TitlepageName = buf;
-    Titlepage = wxFopen(buf, _T("w"));
+    TitlepageName << FileRoot << "_contents.html";
+    Titlepage = wxFopen(TitlepageName, _T("w"));
 
-    wxSnprintf(buf, sizeof(buf), _T("%s_fcontents.html"), FileRoot);
-
-    contentsFrameName = buf;
+    contentsFrameName << FileRoot << "_fcontents.html";
 
     Contents = wxFopen(TmpContentsName, _T("w"));
 
