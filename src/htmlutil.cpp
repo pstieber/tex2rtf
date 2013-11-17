@@ -144,11 +144,15 @@ static wxString CurrentSubsubsectionName;
 static wxString CurrentSubsubsectionFile;
 static wxString CurrentTopic;
 
+//*****************************************************************************
+//*****************************************************************************
 static void SetCurrentTopic(const wxString& s)
 {
   CurrentTopic = s;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void SetCurrentChapterName(const wxString& s, const wxString& File)
 {
   CurrentChapterName = s;
@@ -159,6 +163,8 @@ void SetCurrentChapterName(const wxString& s, const wxString& File)
   SetCurrentTopic(s);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void SetCurrentSectionName(const wxString& s, const wxString& File)
 {
   CurrentSectionName = s;
@@ -169,6 +175,8 @@ void SetCurrentSectionName(const wxString& s, const wxString& File)
   SetCurrentTopic(s);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void SetCurrentSubsectionName(const wxString& s, const wxString& File)
 {
   CurrentSubsectionName = s;
@@ -179,6 +187,8 @@ void SetCurrentSubsectionName(const wxString& s, const wxString& File)
   SetCurrentTopic(s);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void SetCurrentSubsubsectionName(const wxString& s, const wxString& File)
 {
   CurrentSubsubsectionName = s;
@@ -194,11 +204,9 @@ void SetCurrentSubsubsectionName(const wxString& s, const wxString& File)
 static wxArrayString gs_filenames;
 
 
-/*
- * Close former filedescriptor and reopen using another filename.
- *
- */
-
+//*****************************************************************************
+// Close former filedescriptor and reopen using another filename.
+//*****************************************************************************
 void ReopenFile(FILE **fd, wxString& FileName, const wxString& label)
 {
   if (*fd)
@@ -219,14 +227,13 @@ void ReopenFile(FILE **fd, wxString& FileName, const wxString& label)
   wxFprintf(*fd, _T("<HTML>\n"));
 }
 
-/*
- * Reopen section contents file, i.e. the index appended to each section
- * in subsectionCombine mode
- */
-
 static wxFileName SectionContentsFilename;
 static FILE *SectionContentsFD = NULL;
 
+//*****************************************************************************
+//   Reopen section contents file, i.e.the index appended to each section in
+// subsectionCombine mode
+//*****************************************************************************
 void ReopenSectionContentsFile(void)
 {
   if (SectionContentsFD)
@@ -245,13 +252,10 @@ void ReopenSectionContentsFile(void)
   }
 }
 
-
-/*
- * Given a TexChunk with a string value, scans through the string
- * converting Latex-isms into HTML-isms, such as 2 newlines -> <P>.
- *
- */
-
+//*****************************************************************************
+//   Given a TexChunk with a string value, scans through the string converting
+// Latex-isms into HTML-isms, such as 2 newlines -> <P>.
+//*****************************************************************************
 void ProcessText2HTML(TexChunk *chunk)
 {
   bool changed = false;
@@ -321,12 +325,12 @@ void ProcessText2HTML(TexChunk *chunk)
   }
 }
 
+//*****************************************************************************
 //   Scan through all chunks starting from the given one, calling
-// ProcessText2HTML to convert Latex-isms to RTF-isms.
-// This should be called after Tex2Any has parsed the file, and before
-// TraverseDocument is called.
-
-void Text2HTML(TexChunk *chunk)
+// ProcessText2HTML to convert Latex-isms to RTF-isms.  This should be called
+// after Tex2Any has parsed the file, and before TraverseDocument is called.
+//*****************************************************************************
+void Text2HTML(TexChunk* chunk)
 {
   Tex2RTFYield();
   if (stopRunning)
@@ -392,7 +396,9 @@ void Text2HTML(TexChunk *chunk)
   }
 }
 
-// Add the appropriate browse buttons to this page.
+//*****************************************************************************
+//   Add the appropriate browse buttons to this page.
+//*****************************************************************************
 void AddBrowseButtons(
   const wxString& upLabel,
   const wxString& upFilename,
@@ -462,10 +468,7 @@ void AddBrowseButtons(
 
   wxChar buf[200];
 
-  /*
-   * Contents button
-   *
-   */
+  // Contents button
 
   wxChar buf1[80];
   wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
@@ -481,10 +484,7 @@ void AddBrowseButtons(
   TexOutput(buf);
 //  TexOutput(_T("</NOFRAMES>"));
 
-  /*
-   * Up button
-   *
-   */
+   // Up button
 
   if (!upFilename.empty())
   {
@@ -519,10 +519,7 @@ void AddBrowseButtons(
     }
   }
 
-  /*
-   * << button
-   *
-   */
+  // << button
 
   if (!previousLabel.empty() && !previousFilename.empty())
   {
@@ -586,10 +583,7 @@ void AddBrowseButtons(
     TexNextPages.Put(previousLabel, newNextPage);
   }
 
-  /*
-   * >> button
-   *
-   */
+  // >> button
 
   if (!nextLabel.empty() && !nextFilename.empty())
   {
@@ -621,10 +615,8 @@ void AddBrowseButtons(
     TexOutput(buf);
   }
 
-  /*
-   * Horizontal rule to finish it off nicely.
-   *
-   */
+  // Horizontal rule to finish it off nicely.
+
   TexOutput(_T("</CENTER>"));
   TexOutput(_T("<HR>\n"));
 
@@ -633,8 +625,10 @@ void AddBrowseButtons(
   lastTopic = thisLabel;
 }
 
-// A colour string is either 3 numbers separated by semicolons (RGB),
-// or a reference to a GIF. Return the filename or a hex string like #934CE8
+//*****************************************************************************
+//   A colour string is either 3 numbers separated by semicolons (RGB), or a
+// reference to a GIF. Return the filename or a hex string like #934CE8
+//*****************************************************************************
 wxString ParseColourString(const wxString& bkStr, bool *isPicture)
 {
   static wxString resStr;
@@ -684,6 +678,8 @@ wxString ParseColourString(const wxString& bkStr, bool *isPicture)
   }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void OutputFont(void)
 {
   // Only output <font face> if explicitly requested by htmlFaceName= directive in
@@ -698,7 +694,9 @@ void OutputFont(void)
   }
 }
 
-// Output start of <BODY> block
+//*****************************************************************************
+//   Output start of <BODY> block
+//*****************************************************************************
 void OutputBodyStart(void)
 {
   TexOutput(_T("\n<BODY"));
@@ -762,6 +760,8 @@ void OutputBodyStart(void)
   OutputFont();
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void HTMLHead()
 {
   TexOutput(_T("<head>"));
@@ -773,6 +773,8 @@ void HTMLHead()
   }
 };
 
+//*****************************************************************************
+//*****************************************************************************
 void HTMLHeadTo(FILE* f)
 {
   if (!htmlStylesheet.empty())
@@ -788,7 +790,9 @@ void HTMLHeadTo(FILE* f)
   }
 }
 
-// Called on start/end of macro examination
+//*****************************************************************************
+//   Called on start/end of macro examination
+//*****************************************************************************
 void HTMLOnMacro(int macroId, int no_args, bool start)
 {
   switch (macroId)
@@ -1203,12 +1207,11 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             wxFprintf(Sections, _T("\n<H3>"));
             OutputCurrentSection();
             wxFprintf(Sections, _T("</H3>\n"));
-/* TODO: where do we put subsubsection contents entry - indented, with subsection entries?
-            SetCurrentOutput(SectionContentsFD);
-            wxFprintf(SectionContentsFD, "<A HREF=\"#%s\">", topicName);
-            OutputCurrentSection();
-            TexOutput(_T("</A><BR>"));
-*/
+// TODO: where do we put subsubsection contents entry - indented, with subsection entries?
+//            SetCurrentOutput(SectionContentsFD);
+//            wxFprintf(SectionContentsFD, "<A HREF=\"#%s\">", topicName);
+//            OutputCurrentSection();
+//            TexOutput(_T("</A><BR>"));
             if (htmlWorkshopFiles)
             {
               HTMLWorkshopAddToContents(2, topicName, SectionsName);
@@ -1486,19 +1489,19 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       TexOutput(_T("<P>\n"));
     break;
   }
-/* For footnotes we need to output the text at the bottom of the page and
- * insert a reference to it. Is it worth the trouble...
-  case ltFOOTNOTE:
-  case ltFOOTNOTEPOPUP:
-  {
-    if (start)
-    {
-      TexOutput(_T("<FN>"));
-    }
-    else TexOutput(_T("</FN>"));
-    break;
-  }
-*/
+// For footnotes we need to output the text at the bottom of the page and
+// insert a reference to it. Is it worth the trouble...
+//  case ltFOOTNOTE:
+//  case ltFOOTNOTEPOPUP:
+//  {
+//    if (start)
+//    {
+//      TexOutput(_T("<FN>"));
+//    }
+//    else TexOutput(_T("</FN>"));
+//    break;
+//  }
+
   case ltVERB:
   {
     if (start)
@@ -1529,24 +1532,26 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   }
   case ltFLUSHLEFT:
   {
-/*
-    if (start)
-    {
-      TexOutput(_T("{\\ql "));
-    }
-    else TexOutput(_T("}\\par\\pard\n"));
-*/
+//    if (start)
+//    {
+//      TexOutput(_T("{\\ql "));
+//    }
+//    else
+//    {
+//      TexOutput(_T("}\\par\\pard\n"));
+//    }
     break;
   }
   case ltFLUSHRIGHT:
   {
-/*
-    if (start)
-    {
-      TexOutput(_T("{\\qr "));
-    }
-    else TexOutput(_T("}\\par\\pard\n"));
-*/
+//    if (start)
+//    {
+//      TexOutput(_T("{\\qr "));
+//    }
+//    else
+//    {
+//      TexOutput(_T("}\\par\\pard\n"));
+//    }
     break;
   }
   case ltSMALL:
@@ -1720,12 +1725,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
     if (start) TexOutput(_T("&lt;==&gt;"));
     break;
   }
-/*
-  case ltSC:
-  {
-    break;
-  }
-*/
+//  case ltSC:
+//  {
+//    break;
+//  }
   case ltITEM:
   {
     if (!start)
@@ -1777,35 +1780,33 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
 //      TexOutput(_T("\n</CENTER>\n"));
       TexOutput(_T("\n<P><HR><P>\n"));
 
-/*
-      // Now do optional frame contents page
-      if (htmlFrameContents && FrameContents)
-      {
-        SetCurrentOutput(FrameContents);
-
-        // Add a special label for the contents page.
-        TexOutput(_T("<CENTER>\n"));
-        TexOutput(_T("<H3>\n"));
-        TraverseChildrenFromChunk(DocumentTitle);
-        TexOutput(_T("</H3>"));
-        TexOutput(_T("<P>"));
-        TexOutput(_T("</A>\n"));
-        TexOutput(_T("<P>\n\n"));
-        TexOutput(_T("<H3>"));
-        TraverseChildrenFromChunk(DocumentAuthor);
-        TexOutput(_T("</H3><P>\n\n"));
-        if (DocumentDate)
-        {
-          TexOutput(_T("<H4>"));
-          TraverseChildrenFromChunk(DocumentDate);
-          TexOutput(_T("</H4><P>\n\n"));
-        }
-        TexOutput(_T("\n</CENTER>\n"));
-        TexOutput(_T("<P><HR><P>\n"));
-
-        SetCurrentOutput(Titlepage);
-      }
-*/
+//      // Now do optional frame contents page
+//      if (htmlFrameContents && FrameContents)
+//      {
+//        SetCurrentOutput(FrameContents);
+//
+//        // Add a special label for the contents page.
+//        TexOutput(_T("<CENTER>\n"));
+//        TexOutput(_T("<H3>\n"));
+//        TraverseChildrenFromChunk(DocumentTitle);
+//        TexOutput(_T("</H3>"));
+//        TexOutput(_T("<P>"));
+//        TexOutput(_T("</A>\n"));
+//        TexOutput(_T("<P>\n\n"));
+//        TexOutput(_T("<H3>"));
+//        TraverseChildrenFromChunk(DocumentAuthor);
+//        TexOutput(_T("</H3><P>\n\n"));
+//        if (DocumentDate)
+//        {
+//          TexOutput(_T("<H4>"));
+//          TraverseChildrenFromChunk(DocumentDate);
+//          TexOutput(_T("</H4><P>\n\n"));
+//        }
+//        TexOutput(_T("\n</CENTER>\n"));
+//        TexOutput(_T("<P><HR><P>\n"));
+//
+//        SetCurrentOutput(Titlepage);
+//      }
     }
     break;
   }
@@ -1972,6 +1973,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   }
 }
 
+//*****************************************************************************
 // Description:
 //   Should be called at of argument which usually is type declaration which
 // propably contains name of documented class.
@@ -1992,6 +1994,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
 //   returns:
 //     false   - if no reference was found
 //     true    - if reference was found and HREF printed
+//*****************************************************************************
 static bool CheckTypeRef()
 {
   wxString typeDecl = GetArgData();
@@ -2031,7 +2034,9 @@ static bool CheckTypeRef()
       TexOutput(wxT("</A>"));
       TexOutput(after);
       return true;
-    } else {
+    }
+    else
+    {
       //wxFprintf(stderr,wxT("'%s' from (%s) -> label %s NOT FOUND\n"),
        //      typeName.c_str(),
        //      typeDecl.c_str(),
@@ -2041,7 +2046,10 @@ static bool CheckTypeRef()
   }
   return false;
 }
+
+//*****************************************************************************
 // Called on start/end of argument examination
+//*****************************************************************************
 bool HTMLOnArgument(int macroId, int arg_no, bool start)
 {
   switch (macroId)
@@ -2066,7 +2074,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   }
   case ltFUNC:
   {
-    if (start && (arg_no == 1)) {
+    if (start && (arg_no == 1))
+    {
       TexOutput(_T("<B>"));
       if( CheckTypeRef() ) {
        TexOutput(_T("</B> "));
@@ -2075,7 +2084,9 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     }
 
     if (!start && (arg_no == 1))
+    {
       TexOutput(_T("</B> "));
+    }
 
     if (start && (arg_no == 2))
     {
@@ -2483,12 +2494,10 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   case ltTWOCOLITEM:
   case ltTWOCOLITEMRULED:
   {
-/*
-    if (start && (arg_no == 1))
-      TexOutput(_T("\n<DT> "));
-    if (start && (arg_no == 2))
-      TexOutput(_T("<DD> "));
-*/
+//    if (start && (arg_no == 1))
+//      TexOutput(_T("\n<DT> "));
+//    if (start && (arg_no == 2))
+//      TexOutput(_T("<DD> "));
     if (arg_no == 1)
     {
       if ( start ) {
@@ -2601,10 +2610,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     }
     return false;
   }
-  /*
-   * Accents
-   *
-   */
+
+  // Accents
   case ltACCENT_GRAVE:
   {
     if (start)
@@ -2983,17 +2990,15 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     }
     return false;
   }
-/*
-  case ltFOOTNOTE:
-  case ltFOOTNOTEPOPUP:
-  {
-    if (arg_no == 1)
-      return true;
-    else
-      return false;
-    break;
-  }
-*/
+//  case ltFOOTNOTE:
+//  case ltFOOTNOTEPOPUP:
+//  {
+//    if (arg_no == 1)
+//      return true;
+//    else
+//      return false;
+//    break;
+//  }
   case ltTABULAR:
   case ltSUPERTABULAR:
   {
@@ -3018,15 +3023,13 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         {
           TexOutput(_T("<TR>\n<TD>"));
           OutputFont();
-/*
-          for (int i = 0; i < noColumns; i++)
-          {
-            currentWidth += TableData[i].width;
-            wxSnprintf(buf, sizeof(buf), _T("\\cellx%d"), currentWidth);
-            TexOutput(buf);
-          }
-          TexOutput(_T("\\pard\\intbl\n"));
-*/
+//          for (int i = 0; i < noColumns; i++)
+//          {
+//            currentWidth += TableData[i].width;
+//            wxSnprintf(buf, sizeof(buf), _T("\\cellx%d"), currentWidth);
+//            TexOutput(buf);
+//          }
+//          TexOutput(_T("\\pard\\intbl\n"));
         }
 
         return false;
@@ -3099,7 +3102,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   }
   case ltINDEX:
   {
-    /* Build up list of keywords associated with topics */
+    // Build up list of keywords associated with topics
     if (start)
     {
 //      wxChar *entry = GetArgData();
@@ -3225,6 +3228,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   return true;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 bool HTMLGo(void)
 {
   fileId = 0;
@@ -3442,7 +3447,9 @@ bool HTMLGo(void)
   return false;
 }
 
-// Output .htx index file
+//*****************************************************************************
+//   Output .htx index file
+//*****************************************************************************
 void GenerateHTMLIndexFile(const wxString& FileName)
 {
   FILE *fd = wxFopen(FileName, _T("w"));
@@ -3477,46 +3484,44 @@ void GenerateHTMLIndexFile(const wxString& FileName)
   fclose(fd);
 }
 
-
-
-
-
-
-
-// output .hpp, .hhc and .hhk files:
-
-
+//*****************************************************************************
+//   output .hpp, .hhc and .hhk files:
+//*****************************************************************************
 void GenerateHTMLWorkshopFiles(const wxString& FileName)
 {
-  FILE *f;
+  FILE* f;
   wxChar buf[300];
 
-  /* Generate project file : */
+  // Generate project file :
 
   wxSnprintf(buf, sizeof(buf), _T("%s.hhp"), FileName);
   f = wxFopen(buf, _T("wt"));
-  wxFprintf(f,
-      _T("[OPTIONS]\n")
-      _T("Compatibility=1.1\n")
-      _T("Full-text search=Yes\n")
-      _T("Contents file=%s.hhc\n")
-      _T("Compiled file=%s.chm\n")
-      _T("Default Window=%sHelp\n")
-      _T("Default topic=%s\n")
-      _T("Index file=%s.hhk\n")
-      _T("Title="),
-      wxFileNameFromPath(FileName),
-      wxFileNameFromPath(FileName),
-      wxFileNameFromPath(FileName),
-      wxFileNameFromPath(TitlepageName),
-      wxFileNameFromPath(FileName)
-      );
+  wxFprintf(
+    f,
+    _T("[OPTIONS]\n")
+    _T("Compatibility=1.1\n")
+    _T("Full-text search=Yes\n")
+    _T("Contents file=%s.hhc\n")
+    _T("Compiled file=%s.chm\n")
+    _T("Default Window=%sHelp\n")
+    _T("Default topic=%s\n")
+    _T("Index file=%s.hhk\n")
+    _T("Title="),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(FileName),
+    wxFileNameFromPath(TitlepageName),
+    wxFileNameFromPath(FileName));
 
-  if (DocumentTitle) {
+  if (DocumentTitle)
+  {
     SetCurrentOutput(f);
     TraverseChildrenFromChunk(DocumentTitle);
   }
-  else wxFprintf(f, _T("(unknown)"));
+  else
+  {
+    wxFprintf(f, _T("(unknown)"));
+  }
 
   wxFprintf(
     f,
@@ -3527,8 +3532,7 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
     wxFileNameFromPath(FileName),
     wxFileNameFromPath(TitlepageName));
 
-
-  wxFprintf(f, _T("\n\n[FILES]\n"));
+    wxFprintf(f, _T("\n\n[FILES]\n"));
   wxFprintf(f, _T("%s\n"), wxFileNameFromPath(TitlepageName));
   for (int i = 1; i <= fileId; i++)
   {
@@ -3537,24 +3541,26 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
   }
   fclose(f);
 
-  /* Generate index file : */
+  // Generate index file :
 
   wxSnprintf(buf, sizeof(buf), _T("%s.hhk"), FileName);
   f = wxFopen(buf, _T("wt"));
 
-  wxFprintf(f,
-      _T("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n")
-      _T("<HTML>\n"));
+  wxFprintf(
+    f,
+    _T("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">\n")
+    _T("<HTML>\n"));
   HTMLHeadTo(f);
-  wxFprintf(f,
-      _T("\n")
-      _T("<meta name=\"GENERATOR\" content=\"tex2rtf\">\n")
-      _T("<!-- Sitemap 1.0 -->\n")
-      _T("</HEAD><BODY>\n")
-      _T("<OBJECT type=\"text/site properties\">\n")
-      _T(" <param name=\"ImageType\" value=\"Folder\">\n")
-      _T("</OBJECT>\n")
-      _T("<UL>\n"));
+  wxFprintf(
+    f,
+    _T("\n")
+    _T("<meta name=\"GENERATOR\" content=\"tex2rtf\">\n")
+    _T("<!-- Sitemap 1.0 -->\n")
+    _T("</HEAD><BODY>\n")
+    _T("<OBJECT type=\"text/site properties\">\n")
+    _T(" <param name=\"ImageType\" value=\"Folder\">\n")
+    _T("</OBJECT>\n")
+    _T("<UL>\n"));
 
   TopicTable.BeginFind();
   wxHashTable::Node *node = TopicTable.Next();
@@ -3590,10 +3596,11 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
 }
 
 
-
 static FILE *HTMLWorkshopContents = NULL;
 static int HTMLWorkshopLastLevel = 0;
 
+//*****************************************************************************
+//*****************************************************************************
 void HTMLWorkshopAddToContents(
   int level,
   const wxString& s,
@@ -3624,7 +3631,8 @@ void HTMLWorkshopAddToContents(
   HTMLWorkshopLastLevel = level;
 }
 
-
+//*****************************************************************************
+//*****************************************************************************
 void HTMLWorkshopStartContents()
 {
   wxChar buf[300];
@@ -3652,6 +3660,8 @@ void HTMLWorkshopStartContents()
     );
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void HTMLWorkshopEndContents()
 {
   for (int i = HTMLWorkshopLastLevel; i >= 0; --i)
@@ -3661,6 +3671,8 @@ void HTMLWorkshopEndContents()
   fclose(HTMLWorkshopContents);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 bool PrimaryAnchorOfTheFile(const wxString& file, const wxString& label)
 {
   wxString file_label;
