@@ -18,7 +18,10 @@
 #endif //__WXMSW__
 #endif // NO_GUI
 
-// Define a new application type
+//*****************************************************************************
+// Description:
+//   Define the application.
+//*****************************************************************************
 #ifdef NO_GUI
 class Tex2RtfApplication : public wxAppConsole
 #else
@@ -28,6 +31,8 @@ class Tex2RtfApplication : public wxApp
   public:
 
     Tex2RtfApplication();
+
+  private:
 
     bool OnInit();
 
@@ -45,7 +50,9 @@ class Tex2RtfApplication : public wxApp
 
 #ifndef NO_GUI
 
+//*****************************************************************************
 // Define a new frame type
+//*****************************************************************************
 class MyFrame: public wxFrame
 {
   public:
@@ -75,6 +82,8 @@ class MyFrame: public wxFrame
 
 #ifdef __WXMSW__
 
+//*****************************************************************************
+//*****************************************************************************
 class Tex2RTFConnection: public wxDDEConnection
 {
   public:
@@ -92,6 +101,8 @@ class Tex2RTFConnection: public wxDDEConnection
       wxIPCFormat format);
 };
 
+//*****************************************************************************
+//*****************************************************************************
 class Tex2RTFServer: public wxDDEServer
 {
   public:
@@ -102,11 +113,10 @@ class Tex2RTFServer: public wxDDEServer
 
 #endif // NO_GUI
 
-/*
- * Itemize/enumerate structure: put on a stack for
- * getting the indentation right
- *
- */
+//*****************************************************************************
+// Itemize/enumerate structure: put on a stack for getting the indentation
+// right.
+//*****************************************************************************
 
 #define LATEX_ENUMERATE   1
 #define LATEX_ITEMIZE     2
@@ -114,7 +124,9 @@ class Tex2RTFServer: public wxDDEServer
 #define LATEX_TWOCOL      5
 #define LATEX_INDENT      6
 
-class ItemizeStruc: public wxObject
+//*****************************************************************************
+//*****************************************************************************
+class ItemizeStruc : public wxObject
 {
   public:
     int listType;
