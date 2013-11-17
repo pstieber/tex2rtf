@@ -36,7 +36,7 @@ class TexMacroDef : public wxObject
 
     TexMacroDef(
       int the_id,
-      const wxChar *the_name,
+      const wxChar* the_name,
       int n,
       bool ig,
       bool forbidLevel = FORBID_OK);
@@ -99,8 +99,8 @@ class TexChunk
 {
  public:
   int type;
-//  char *name;
-  TexMacroDef *def;
+//  char* name;
+  TexMacroDef* def;
   wxString mValue;
   int macroId;
   int no_args;
@@ -108,7 +108,7 @@ class TexChunk
   bool optional;      // Is an optional argument
 
   std::list<TexChunk*> mChildren;
-  TexChunk(int the_type, TexMacroDef *the_def = NULL);
+  TexChunk(int the_type, TexMacroDef* the_def = NULL);
   TexChunk(TexChunk& toCopy);
   virtual ~TexChunk(void);
 };
@@ -128,7 +128,7 @@ class TexTopic: public wxObject
     // a top-level topic has no children (?)
     bool hasChildren;
     wxString filename;
-    StringSet *keywords;
+    StringSet* keywords;
     TexTopic(const wxString& f = wxEmptyString);
     virtual ~TexTopic();
 };
@@ -143,32 +143,32 @@ void AddKeyWordForTopic(
 void ClearKeyWordTable(void);
 
 extern wxChar wxTex2RTFBuffer[];
-extern TexChunk     *TopLevel;
-extern wxHashTable  MacroDefs;
+extern TexChunk* TopLevel;
+extern wxHashTable MacroDefs;
 extern wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 
-bool read_a_line(wxChar *buf);
+bool read_a_line(wxChar* buf);
 bool TexLoadFile(const wxString& filename);
 size_t ParseArg(
-  TexChunk *thisArg,
+  TexChunk* thisArg,
   std::list<TexChunk*>& children,
-  wxChar *buffer,
+  wxChar* buffer,
   size_t pos,
   const wxString& environment,
   bool parseArgToBrace = true,
-  TexChunk *customMacroArgs = NULL);
+  TexChunk* customMacroArgs = NULL);
 size_t ParseMacroBody(
-  TexChunk *parent,
+  TexChunk* parent,
   int no_args,
-  wxChar *buffer,
+  wxChar* buffer,
   size_t pos,
   const wxString& environment,
   bool parseArgToBrace,
-  TexChunk *customMacroArgs = NULL);
+  TexChunk* customMacroArgs = NULL);
 void TraverseDocument(void);
 
 void TraverseFromChunk(
-  TexChunk *chunk,
+  TexChunk* chunk,
   std::list<TexChunk*>::iterator thisNode,
   std::list<TexChunk*>::iterator iEnd,
   bool childrenOnly = false);
@@ -180,26 +180,26 @@ void TraverseFromChunk(
     pTexChunk->mChildren.end(), \
     true)
 
-void SetCurrentOutput(FILE *fd);
-void SetCurrentOutputs(FILE *fd1, FILE *fd2);
-extern FILE *CurrentOutput1;
-extern FILE *CurrentOutput2;
+void SetCurrentOutput(FILE* fd);
+void SetCurrentOutputs(FILE* fd1, FILE* fd2);
+extern FILE* CurrentOutput1;
+extern FILE* CurrentOutput2;
 extern wxString currentArgData;
 void AddMacroDef(
   int the_id,
-  const wxChar *name,
+  const wxChar* name,
   int n,
   bool ignore = false,
   bool forbidden = false);
 void TexInitialize(int bufSize);
 void TexCleanUp();
 void TexOutput(const wxString& s, bool ordinaryText = false);
-wxString GetArgData(TexChunk *chunk);
+wxString GetArgData(TexChunk* chunk);
 wxString GetArgData();           // Get the string for the current argument
 int GetNoArgs(void);                // Get the number of arguments for the current macro
-TexChunk *GetArgChunk(void);        // Get the chunk for the current argument
-TexChunk *GetTopLevelChunk(void);   // Get the chunk for the top level
-TexChunk *GetNextChunk(void);       // Look ahead to the next chunk
+TexChunk* GetArgChunk(void);        // Get the chunk for the current argument
+TexChunk* GetTopLevelChunk(void);   // Get the chunk for the top level
+TexChunk* GetNextChunk(void);       // Look ahead to the next chunk
 bool IsArgOptional(void);           // Is this argument an optional argument?
 void DefineDefaultMacros(void);     // Optional set of default macros
 int GetCurrentColumn(void);         // number of characters on current line
@@ -217,7 +217,7 @@ extern bool StringMatch(
   bool exact = false);
 
 // Define a variable value from the .ini file
-wxChar *RegisterSetting(
+wxChar* RegisterSetting(
   const wxString& settingName,
   const wxString& settingValue,
   bool interactive = true);
@@ -229,9 +229,9 @@ wxChar *RegisterSetting(
 #define LATEX_BOOK      4
 #define LATEX_SLIDES    5
 
-extern TexChunk *DocumentTitle;
-extern TexChunk *DocumentAuthor;
-extern TexChunk *DocumentDate;
+extern TexChunk* DocumentTitle;
+extern TexChunk* DocumentAuthor;
+extern TexChunk* DocumentDate;
 extern int DocumentStyle;
 extern int MinorDocumentStyle;
 extern wxString BibliographyStyleString;
@@ -342,27 +342,27 @@ extern int ParIndent;
 extern bool isSync;
 
 // Set by client and by Tex2Any
-extern TexChunk *currentSection;
+extern TexChunk* currentSection;
 
 // Header/footers/pagestyle
-extern TexChunk *      LeftHeaderOdd;
-extern TexChunk *      LeftFooterOdd;
-extern TexChunk *      CentreHeaderOdd;
-extern TexChunk *      CentreFooterOdd;
-extern TexChunk *      RightHeaderOdd;
-extern TexChunk *      RightFooterOdd;
-extern TexChunk *      LeftHeaderEven;
-extern TexChunk *      LeftFooterEven;
-extern TexChunk *      CentreHeaderEven;
-extern TexChunk *      CentreFooterEven;
-extern TexChunk *      RightHeaderEven;
-extern TexChunk *      RightFooterEven;
-extern wxString        PageStyle;
+extern TexChunk* LeftHeaderOdd;
+extern TexChunk* LeftFooterOdd;
+extern TexChunk* CentreHeaderOdd;
+extern TexChunk* CentreFooterOdd;
+extern TexChunk* RightHeaderOdd;
+extern TexChunk* RightFooterOdd;
+extern TexChunk* LeftHeaderEven;
+extern TexChunk* LeftFooterEven;
+extern TexChunk* CentreHeaderEven;
+extern TexChunk* CentreFooterEven;
+extern TexChunk* RightHeaderEven;
+extern TexChunk* RightFooterEven;
+extern wxString PageStyle;
 
 // Repeat the currentSection, either real (Chapter) or simulated (References)
 extern void OutputCurrentSection(void);
-extern void OutputCurrentSectionToString(wxChar *buf);
-extern void OutputChunkToString(TexChunk *chunk, wxChar *buf);
+extern void OutputCurrentSectionToString(wxChar* buf);
+extern void OutputChunkToString(TexChunk* chunk, wxChar* buf);
 
 // Called by Tex2Any to simulate a section
 extern void FakeCurrentSection(
@@ -375,7 +375,7 @@ extern void FakeCurrentSection(
  */
 
 extern bool haveArgData; // If true, we're simulating the data.
-void StartSimulateArgument(wxChar *data);
+void StartSimulateArgument(wxChar* data);
 void EndSimulateArgument(void);
 
 /*
@@ -408,12 +408,11 @@ void Tex2RTFYield(bool force = false);
 
 /*
  * Useful utilities
- *
  */
 
 // Look for \label macro, use this ref name if found or make up a topic name
 // otherwise.
-wxString FindTopicName(TexChunk *chunk);
+wxString FindTopicName(TexChunk* chunk);
 
 // Force the current topic to be this (e.g. force 'references' label).
 void ForceTopicName(const wxString& name);
@@ -433,7 +432,6 @@ void StripExtension(wxString& FileName);
 
 /*
  * Reference structure
- *
  */
 
 class TexRef : public wxObject
@@ -468,7 +466,6 @@ void AddTexRef(
 
 /*
  * Read and write reference file (.ref), to resolve refs for second pass.
- *
  */
 void WriteTexReferences(const wxString& FileName);
 void ReadTexReferences(const wxString& FileName);
@@ -541,12 +538,11 @@ extern BibMap BibList;
 
 bool ReadCustomMacros(const wxString& filename);
 void ShowCustomMacros(void);
-CustomMacro *FindCustomMacro(const wxString& Name);
-wxChar* ParseMultifieldString(const wxString& s, size_t *pos);
+CustomMacro* FindCustomMacro(const wxString& Name);
+wxChar* ParseMultifieldString(const wxString& s, size_t* pos);
 
 /*
  * Colour table stuff
- *
  */
 
 class ColourTableEntry: public wxObject
