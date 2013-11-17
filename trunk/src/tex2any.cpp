@@ -16,7 +16,6 @@
 #include <ctype.h>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 
 using namespace std;
 
@@ -24,24 +23,24 @@ using namespace std;
 // Variables accessible from clients.
 //*****************************************************************************
 
-TexChunk * DocumentTitle = NULL;
-TexChunk * DocumentAuthor = NULL;
-TexChunk * DocumentDate = NULL;
+TexChunk* DocumentTitle = NULL;
+TexChunk* DocumentAuthor = NULL;
+TexChunk* DocumentDate = NULL;
 
 // Header/footers/pagestyle
-TexChunk * LeftHeaderEven = NULL;
-TexChunk * LeftFooterEven = NULL;
-TexChunk * CentreHeaderEven = NULL;
-TexChunk * CentreFooterEven = NULL;
-TexChunk * RightHeaderEven = NULL;
-TexChunk * RightFooterEven = NULL;
-TexChunk * LeftHeaderOdd = NULL;
-TexChunk * LeftFooterOdd = NULL;
-TexChunk * CentreHeaderOdd = NULL;
-TexChunk * CentreFooterOdd = NULL;
-TexChunk * RightHeaderOdd = NULL;
-TexChunk * RightFooterOdd = NULL;
-wxString   PageStyle("plain");
+TexChunk* LeftHeaderEven = NULL;
+TexChunk* LeftFooterEven = NULL;
+TexChunk* CentreHeaderEven = NULL;
+TexChunk* CentreFooterEven = NULL;
+TexChunk* RightHeaderEven = NULL;
+TexChunk* RightFooterEven = NULL;
+TexChunk* LeftHeaderOdd = NULL;
+TexChunk* LeftFooterOdd = NULL;
+TexChunk* CentreHeaderOdd = NULL;
+TexChunk* CentreFooterOdd = NULL;
+TexChunk* RightHeaderOdd = NULL;
+TexChunk* RightFooterOdd = NULL;
+wxString PageStyle("plain");
 
 int        DocumentStyle = LATEX_REPORT;
 int        MinorDocumentStyle = 0;
@@ -175,10 +174,10 @@ int tableNo = 0;
 // Other variables
 //*****************************************************************************
 
-FILE *CurrentOutput1 = NULL;
-FILE *CurrentOutput2 = NULL;
+FILE* CurrentOutput1 = NULL;
+FILE* CurrentOutput2 = NULL;
 const int NestingLimit = 15;
-FILE *Inputs[NestingLimit];
+FILE* Inputs[NestingLimit];
 unsigned long LineNumbers[NestingLimit];
 wxString FileNames[NestingLimit];
 int CurrentInputIndex = 0;
@@ -192,17 +191,17 @@ bool stopRunning = false;        // If true, should abort.
 static int currentColumn = 0;
 wxString currentArgData;
 bool haveArgData = false; // If true, we're simulating the data.
-TexChunk *currentArgument = NULL;
-TexChunk *nextChunk = NULL;
+TexChunk* currentArgument = NULL;
+TexChunk* pNextChunk = NULL;
 bool isArgOptional = false;
 int noArgs = 0;
 
-TexChunk *TopLevel = NULL;
+TexChunk* TopLevel = NULL;
 wxHashTable MacroDefs(wxKEY_STRING);
 wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
-wxChar *BigBuffer = NULL;  // For reading in large chunks of text
+wxChar* BigBuffer = NULL;  // For reading in large chunks of text
 TexMacroDef SoloBlockDef(ltSOLO_BLOCK, _T("solo block"), 1, false);
-TexMacroDef *VerbatimMacroDef = NULL;
+TexMacroDef* VerbatimMacroDef = NULL;
 
 //*****************************************************************************
 //*****************************************************************************
@@ -274,7 +273,7 @@ void TexOutput(const wxString& s, bool ordinaryText)
 // (2) \macroname{arg1}...{argn}
 // (3) {\bf arg1}
 //*****************************************************************************
-void ForbidWarning(TexMacroDef *def)
+void ForbidWarning(TexMacroDef* def)
 {
   wxString informBuf;
   switch (def->forbidden)
@@ -302,15 +301,15 @@ void ForbidWarning(TexMacroDef *def)
 
 //*****************************************************************************
 //*****************************************************************************
-TexMacroDef *MatchMacro(
-  wxChar *buffer,
-  size_t *pos,
+TexMacroDef* MatchMacro(
+  wxChar* buffer,
+  size_t* pos,
   wxString& env,
-  bool *parseToBrace)
+  bool* parseToBrace)
 {
   *parseToBrace = true;
   size_t i = *pos;
-  TexMacroDef *def = NULL;
+  TexMacroDef* def = NULL;
   wxChar macroBuf[40];
 
   // First, try to find begin{thing}
@@ -397,7 +396,7 @@ TexMacroDef *MatchMacro(
 
 //*****************************************************************************
 //*****************************************************************************
-void EatWhiteSpace(wxChar *buffer, size_t *pos)
+void EatWhiteSpace(wxChar* buffer, size_t* pos)
 {
   size_t len = wxStrlen(buffer);
   size_t j = *pos;
@@ -427,7 +426,7 @@ void EatWhiteSpace(wxChar *buffer, size_t *pos)
 
 //*****************************************************************************
 //*****************************************************************************
-bool FindEndEnvironment(wxChar *buffer, size_t& pos, const wxString& env)
+bool FindEndEnvironment(wxChar* buffer, size_t& pos, const wxString& env)
 {
   size_t i = pos;
 
@@ -486,7 +485,7 @@ void ReportCurlyBraceError()
 
 //*****************************************************************************
 //*****************************************************************************
-bool read_a_line(wxChar *buf)
+bool read_a_line(wxChar* buf)
 {
   if (CurrentInputIndex < 0)
   {
@@ -749,7 +748,7 @@ bool read_a_line(wxChar *buf)
   else if (wxStrncmp(buf, _T("\\verbatiminput"), 14) == 0)
   {
     int wordLen = 14;
-    wxChar *fileName = buf + wordLen + 1;
+    wxChar* fileName = buf + wordLen + 1;
 
     int j = BufferIndex - 1;
     buf[j] = 0;
@@ -835,7 +834,7 @@ bool read_a_line(wxChar *buf)
       }
     }
 
-    wxChar *fileName = buf + wordLen + 1;
+    wxChar* fileName = buf + wordLen + 1;
 
     int j = BufferIndex - 1;
     buf[j] = 0;
@@ -987,7 +986,7 @@ bool read_a_line(wxChar *buf)
 //*****************************************************************************
 // Parse newcommand
 //*****************************************************************************
-bool ParseNewCommand(wxChar *buffer, size_t *pos)
+bool ParseNewCommand(wxChar* buffer, size_t* pos)
 {
   if (
     wxStrncmp((buffer+(*pos)), _T("newcommand"), 10) == 0 ||
@@ -1067,7 +1066,7 @@ bool ParseNewCommand(wxChar *buffer, size_t *pos)
 
 //*****************************************************************************
 //*****************************************************************************
-void MacroError(wxChar *buffer)
+void MacroError(wxChar* buffer)
 {
   wxString ErrorMessage;
   wxChar macroBuf[200];
@@ -1105,13 +1104,13 @@ void MacroError(wxChar *buffer)
 // brace, e.g. in {\bf an argument} as opposed to \vskip 30pt
 //*****************************************************************************
 size_t ParseArg(
-  TexChunk *thisArg,
+  TexChunk* thisArg,
   list<TexChunk*>& children,
-  wxChar *buffer,
+  wxChar* buffer,
   size_t pos,
   const wxString& environment,
   bool parseToBrace,
-  TexChunk *customMacroArgs)
+  TexChunk* customMacroArgs)
 {
   Tex2RTFYield();
   if (stopRunning)
@@ -1124,32 +1123,29 @@ size_t ParseArg(
   size_t buf_ptr = 0;
   size_t len;
 
-/*
-
   // Consume leading brace or square bracket, but ONLY if not following
   // a space, because this could be e.g. {\large {\bf thing}} where {\bf thing}
   // is the argument of \large AS WELL as being a block in its
   // own right.
-  if (environment.empty())
-  {
-    if ((pos > 0) && (buffer[pos-1] != ' ') && buffer[pos] == '{')
-    {
-      ++pos;
-    }
-    else
-
-    if ((pos > 0) && (buffer[pos-1] != ' ') && (buffer[pos] == '[' || buffer[pos] == '('))
-    {
-      isOptional = true;
-      ++pos;
-    }
-    else if ((pos > 1) && (buffer[pos-1] != ' ') && (buffer[pos+1] == '[' || buffer[pos+1] == '('))
-    {
-      isOptional = true;
-      pos += 2;
-    }
-  }
-*/
+//  if (environment.empty())
+//  {
+//    if ((pos > 0) && (buffer[pos-1] != ' ') && buffer[pos] == '{')
+//    {
+//      ++pos;
+//    }
+//    else
+//
+//    if ((pos > 0) && (buffer[pos-1] != ' ') && (buffer[pos] == '[' || buffer[pos] == '('))
+//    {
+//      isOptional = true;
+//      ++pos;
+//    }
+//    else if ((pos > 1) && (buffer[pos-1] != ' ') && (buffer[pos+1] == '[' || buffer[pos+1] == '('))
+//    {
+//      isOptional = true;
+//      pos += 2;
+//    }
+//  }
 
   // If not parsing to brace, just read the next word
   // (e.g. \vskip 20pt)
@@ -1165,7 +1161,7 @@ size_t ParseArg(
     }
     if (buf_ptr > 0)
     {
-      TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+      TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
       BigBuffer[buf_ptr] = 0;
       chunk->mValue = BigBuffer;
       children.push_back(chunk);
@@ -1192,7 +1188,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           chunk->mValue = BigBuffer;
           children.push_back(chunk);
@@ -1212,13 +1208,13 @@ size_t ParseArg(
         eof = read_a_line(buffer);
         buf_ptr = 0;
 
-        TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, VerbatimMacroDef);
+        TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO, VerbatimMacroDef);
         chunk->no_args = 1;
         chunk->macroId = ltVERBATIM;
-        TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, VerbatimMacroDef);
+        TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, VerbatimMacroDef);
         arg->argn = 1;
         arg->macroId = ltVERBATIM;
-        TexChunk *str = new TexChunk(CHUNK_TYPE_STRING);
+        TexChunk* str = new TexChunk(CHUNK_TYPE_STRING);
         str->mValue = BigBuffer;
 
         children.push_back(chunk);
@@ -1229,8 +1225,8 @@ size_t ParseArg(
         // after a verbatim): EXCEPT in HTML
         if (convertMode != TEX_HTML)
         {
-          TexMacroDef *parDef = (TexMacroDef *)MacroDefs.Get(_T("\\"));
-          TexChunk *parChunk = new TexChunk(CHUNK_TYPE_MACRO, parDef);
+          TexMacroDef* parDef = (TexMacroDef *)MacroDefs.Get(_T("\\"));
+          TexChunk* parChunk = new TexChunk(CHUNK_TYPE_MACRO, parDef);
           parChunk->no_args = 0;
           parChunk->macroId = ltBACKSLASHCHAR;
           children.push_back(parChunk);
@@ -1250,7 +1246,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           chunk->mValue = BigBuffer;
           children.push_back(chunk);
@@ -1265,7 +1261,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)  // Finish off the string we've read so far
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->mValue = BigBuffer;
@@ -1351,18 +1347,18 @@ size_t ParseArg(
               }
             }
           }
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 1;
           chunk->macroId = ltSPECIAL;
-          TexMacroDef *specialDef = (TexMacroDef *)MacroDefs.Get(_T("special"));
+          TexMacroDef* specialDef = (TexMacroDef *)MacroDefs.Get(_T("special"));
           chunk->def = specialDef;
-          TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, specialDef);
+          TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, specialDef);
           chunk->mChildren.push_back(arg);
           arg->argn = 1;
           arg->macroId = chunk->macroId;
 
           // The value in the first argument.
-          TexChunk *argValue = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* argValue = new TexChunk(CHUNK_TYPE_STRING);
           arg->mChildren.push_back(argValue);
           argValue->argn = 1;
           argValue->mValue = wxTex2RTFBuffer;
@@ -1387,7 +1383,7 @@ size_t ParseArg(
           {
             ++pos;
           }
-          wxChar *val = new wxChar[pos - j + 1];
+          wxChar* val = new wxChar[pos - j + 1];
           size_t i;
           for (i = j; i < pos; ++i)
           {
@@ -1397,18 +1393,18 @@ size_t ParseArg(
 
           ++pos;
 
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 1;
           chunk->macroId = ltVERB;
-          TexMacroDef *verbDef = (TexMacroDef *)MacroDefs.Get(_T("verb"));
+          TexMacroDef* verbDef = (TexMacroDef *)MacroDefs.Get(_T("verb"));
           chunk->def = verbDef;
-          TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, verbDef);
+          TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, verbDef);
           chunk->mChildren.push_back(arg);
           arg->argn = 1;
           arg->macroId = chunk->macroId;
 
           // The value in the first argument.
-          TexChunk *argValue = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* argValue = new TexChunk(CHUNK_TYPE_STRING);
           arg->mChildren.push_back(argValue);
           argValue->argn = 1;
           argValue->mValue = val;
@@ -1419,12 +1415,12 @@ size_t ParseArg(
         {
           wxString env;
           bool tmpParseToBrace = true;
-          TexMacroDef *def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
+          TexMacroDef* def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
           if (def)
           {
-            CustomMacro *customMacro = FindCustomMacro(def->mName);
+            CustomMacro* customMacro = FindCustomMacro(def->mName);
 
-            TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
+            TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
 
             chunk->no_args = def->no_args;
             chunk->macroId = def->macroId;
@@ -1494,7 +1490,7 @@ size_t ParseArg(
         {
           if (buf_ptr > 0)
           {
-            TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+            TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
             BigBuffer[buf_ptr] = 0;
             buf_ptr = 0;
             chunk->mValue = BigBuffer;
@@ -1504,12 +1500,12 @@ size_t ParseArg(
 
           wxString env;
           bool tmpParseToBrace;
-          TexMacroDef *def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
+          TexMacroDef* def = MatchMacro(buffer, &pos, env, &tmpParseToBrace);
           if (def)
           {
-            CustomMacro *customMacro = FindCustomMacro(def->mName);
+            CustomMacro* customMacro = FindCustomMacro(def->mName);
 
-            TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
+            TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO, def);
             chunk->no_args = def->no_args;
             chunk->macroId = def->macroId;
             if (!customMacro)
@@ -1560,18 +1556,18 @@ size_t ParseArg(
           // Save the text so far.
           if (buf_ptr > 0)
           {
-            TexChunk *chunk1 = new TexChunk(CHUNK_TYPE_STRING);
+            TexChunk* chunk1 = new TexChunk(CHUNK_TYPE_STRING);
             BigBuffer[buf_ptr] = 0;
             buf_ptr = 0;
             chunk1->mValue = BigBuffer;
             children.push_back(chunk1);
           }
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO, &SoloBlockDef);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO, &SoloBlockDef);
           chunk->no_args = SoloBlockDef.no_args;
           chunk->macroId = SoloBlockDef.macroId;
           children.push_back(chunk);
 
-          TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, &SoloBlockDef);
+          TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, &SoloBlockDef);
 
           chunk->mChildren.push_back(arg);
           arg->argn = 1;
@@ -1592,7 +1588,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->mValue = BigBuffer;
@@ -1603,7 +1599,7 @@ size_t ParseArg(
 
         if (buffer[pos] == _T('$'))
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
           chunk->macroId = ltSPECIALDOUBLEDOLLAR;
           children.push_back(chunk);
@@ -1611,7 +1607,7 @@ size_t ParseArg(
         }
         else
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
           chunk->macroId = ltSPECIALDOLLAR;
           children.push_back(chunk);
@@ -1622,7 +1618,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->mValue = BigBuffer;
@@ -1630,7 +1626,7 @@ size_t ParseArg(
         }
 
         ++pos;
-        TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+        TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
         chunk->no_args = 0;
         chunk->macroId = ltSPECIALTILDE;
         children.push_back(chunk);
@@ -1640,7 +1636,7 @@ size_t ParseArg(
       {
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->mValue = BigBuffer;
@@ -1650,7 +1646,7 @@ size_t ParseArg(
         ++pos;
         if (!customMacroArgs)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 0;
           chunk->macroId = ltSPECIALHASH;
           children.push_back(chunk);
@@ -1694,7 +1690,7 @@ size_t ParseArg(
 
         if (buf_ptr > 0)
         {
-          TexChunk *chunk = new TexChunk(CHUNK_TYPE_STRING);
+          TexChunk* chunk = new TexChunk(CHUNK_TYPE_STRING);
           BigBuffer[buf_ptr] = 0;
           buf_ptr = 0;
           chunk->mValue = BigBuffer;
@@ -1708,7 +1704,7 @@ size_t ParseArg(
           ++pos;
         }
 
-        TexChunk *chunk = new TexChunk(CHUNK_TYPE_MACRO);
+        TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
         chunk->no_args = 0;
         chunk->macroId = ltSPECIALAMPERSAND;
         children.push_back(chunk);
@@ -1760,14 +1756,13 @@ size_t ParseArg(
 // Consume as many arguments as the macro definition specifies
 //*****************************************************************************
 size_t ParseMacroBody(
-  TexChunk *parent,
+  TexChunk* parent,
   int no_args,
-  wxChar
-  *buffer,
+  wxChar* buffer,
   size_t pos,
   const wxString& environment,
   bool parseToBrace,
-  TexChunk *customMacroArgs)
+  TexChunk* customMacroArgs)
 {
   Tex2RTFYield();
   if (stopRunning)
@@ -1799,7 +1794,7 @@ size_t ParseMacroBody(
   for (i = 0; i < no_args; ++i)
   {
     ++maxArgs;
-    TexChunk *arg = new TexChunk(CHUNK_TYPE_ARG, parent->def);
+    TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, parent->def);
 
     parent->mChildren.push_back(arg);
     arg->argn = maxArgs;
@@ -1944,7 +1939,7 @@ TexMacroDef::TexMacroDef(
 //*****************************************************************************
 //-----------------------------------------------------------------------------
 //-----------------------------------------------------------------------------
-TexChunk::TexChunk(int the_type, TexMacroDef *the_def)
+TexChunk::TexChunk(int the_type, TexMacroDef* the_def)
 {
   type = the_type;
   no_args = 0;
@@ -2011,13 +2006,13 @@ int GetNoArgs() // Number of args for this macro
 //*****************************************************************************
 // Gets the text of a chunk on request (must be for small arguments only!)
 //*****************************************************************************
-void GetArgData1(TexChunk *chunk)
+void GetArgData1(TexChunk* chunk)
 {
   switch (chunk->type)
   {
     case CHUNK_TYPE_MACRO:
     {
-      TexMacroDef *def = chunk->def;
+      TexMacroDef* def = chunk->def;
       if (def && def->ignore)
         return;
 
@@ -2064,7 +2059,7 @@ void GetArgData1(TexChunk *chunk)
 
 //*****************************************************************************
 //*****************************************************************************
-wxString GetArgData(TexChunk *WXUNUSED(chunk))
+wxString GetArgData(TexChunk* WXUNUSED(chunk))
 {
   currentArgData.clear();
   GetArgData1(currentArgument);
@@ -2086,21 +2081,21 @@ wxString GetArgData()
 
 //*****************************************************************************
 //*****************************************************************************
-TexChunk *GetArgChunk()
+TexChunk* GetArgChunk()
 {
   return currentArgument;
 }
 
 //*****************************************************************************
 //*****************************************************************************
-TexChunk *GetNextChunk()     // Look ahead to the next chunk
+TexChunk* GetNextChunk()     // Look ahead to the next chunk
 {
-  return nextChunk;
+  return pNextChunk;
 }
 
 //*****************************************************************************
 //*****************************************************************************
-TexChunk *GetTopLevelChunk()
+TexChunk* GetTopLevelChunk()
 {
   return TopLevel;
 }
@@ -2132,7 +2127,7 @@ void TraverseFromChunk(
   {
     case CHUNK_TYPE_MACRO:
     {
-      TexMacroDef *def = chunk->def;
+      TexMacroDef* def = chunk->def;
       if (def && def->ignore)
       {
         return;
@@ -2157,7 +2152,11 @@ void TraverseFromChunk(
         ++iThisNode;
         if (iThisNode != iEnd)
         {
-          nextChunk = *iThisNode;
+          pNextChunk = *iThisNode;
+        }
+        else
+        {
+          pNextChunk = NULL;
         }
       }
 
@@ -2195,7 +2194,11 @@ void TraverseFromChunk(
         ++iThisNode;
         if (iThisNode != iEnd)
         {
-          nextChunk = *iThisNode;
+          pNextChunk = *iThisNode;
+        }
+        else
+        {
+          pNextChunk = NULL;
         }
       }
 
@@ -2240,7 +2243,7 @@ void TraverseDocument()
 
 //*****************************************************************************
 //*****************************************************************************
-void SetCurrentOutput(FILE *fd)
+void SetCurrentOutput(FILE* fd)
 {
   CurrentOutput1 = fd;
   CurrentOutput2 = NULL;
@@ -2248,7 +2251,7 @@ void SetCurrentOutput(FILE *fd)
 
 //*****************************************************************************
 //*****************************************************************************
-void SetCurrentOutputs(FILE *fd1, FILE *fd2)
+void SetCurrentOutputs(FILE* fd1, FILE* fd2)
 {
   CurrentOutput1 = fd1;
   CurrentOutput2 = fd2;
@@ -2258,7 +2261,7 @@ void SetCurrentOutputs(FILE *fd1, FILE *fd2)
 //*****************************************************************************
 void AddMacroDef(
   int the_id,
-  const wxChar *name,
+  const wxChar* name,
   int n,
   bool ignore,
   bool forbid)
@@ -2357,14 +2360,14 @@ void TexCleanUp()
     iTexRef != TexReferences.end();
     ++iTexRef)
   {
-    TexRef *ref = iTexRef->second;
+    TexRef* ref = iTexRef->second;
     delete ref;
   }
   TexReferences.clear();
 
   for (BibMap::iterator it = BibList.begin(); it != BibList.end(); ++it)
   {
-    BibEntry *entry = it->second;
+    BibEntry* entry = it->second;
     delete entry;
   }
   BibList.clear();
@@ -3658,50 +3661,48 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     }
     return false;
   }
-/*
-  case ltLHEAD:
-  {
-    if (start && !IsArgOptional())
-      LeftHeader = GetArgChunk();
-    return false;
-    break;
-  }
-  case ltLFOOT:
-  {
-    if (start && !IsArgOptional())
-      LeftFooter = GetArgChunk();
-    return false;
-    break;
-  }
-  case ltCHEAD:
-  {
-    if (start && !IsArgOptional())
-      CentreHeader = GetArgChunk();
-    return false;
-    break;
-  }
-  case ltCFOOT:
-  {
-    if (start && !IsArgOptional())
-      CentreFooter = GetArgChunk();
-    return false;
-    break;
-  }
-  case ltRHEAD:
-  {
-    if (start && !IsArgOptional())
-      RightHeader = GetArgChunk();
-    return false;
-    break;
-  }
-  case ltRFOOT:
-  {
-    if (start && !IsArgOptional())
-      RightFooter = GetArgChunk();
-    return false;
-    break;
-  }
-*/
+//  case ltLHEAD:
+//  {
+//    if (start && !IsArgOptional())
+//      LeftHeader = GetArgChunk();
+//    return false;
+//    break;
+//  }
+//  case ltLFOOT:
+//  {
+//    if (start && !IsArgOptional())
+//      LeftFooter = GetArgChunk();
+//    return false;
+//    break;
+//  }
+//  case ltCHEAD:
+//  {
+//    if (start && !IsArgOptional())
+//      CentreHeader = GetArgChunk();
+//    return false;
+//    break;
+//  }
+//  case ltCFOOT:
+//  {
+//    if (start && !IsArgOptional())
+//      CentreFooter = GetArgChunk();
+//    return false;
+//    break;
+//  }
+//  case ltRHEAD:
+//  {
+//    if (start && !IsArgOptional())
+//      RightHeader = GetArgChunk();
+//    return false;
+//    break;
+//  }
+//  case ltRFOOT:
+//  {
+//    if (start && !IsArgOptional())
+//      RightFooter = GetArgChunk();
+//    return false;
+//    break;
+//  }
   case ltCITE:
   case ltSHORTCITE:
   {
@@ -3709,11 +3710,11 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
     {
       wxString citeKeys = GetArgData();
       size_t pos = 0;
-      wxChar *citeKey = ParseMultifieldString(citeKeys, &pos);
+      wxChar* citeKey = ParseMultifieldString(citeKeys, &pos);
       while (citeKey)
       {
         AddCitation(citeKey);
-        TexRef *ref = FindReference(citeKey);
+        TexRef* ref = FindReference(citeKey);
         if (ref)
         {
           TexOutput(ref->sectionNumber, true);
@@ -3824,7 +3825,7 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       int ch;
       wxChar smallBuf[2];
       smallBuf[1] = 0;
-      FILE *fd = wxFopen(TexBibName, _T("r"));
+      FILE* fd = wxFopen(TexBibName, _T("r"));
       if (fd)
       {
         ch = getc(fd);
@@ -3845,7 +3846,7 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       // Read in the .bib file, resolve all known references, write out the RTF.
       wxString allFiles = GetArgData();
       size_t pos = 0;
-      wxChar *bibFile = ParseMultifieldString(allFiles, &pos);
+      wxChar* bibFile = ParseMultifieldString(allFiles, &pos);
       while (bibFile)
       {
         wxChar fileBuf[300];
@@ -3878,9 +3879,9 @@ bool DefaultOnArgument(int macroId, int arg_no, bool start)
       ResolveBibReferences();
 
       // Write it a new bib section in the appropriate format.
-      FILE *save1 = CurrentOutput1;
-      FILE *save2 = CurrentOutput2;
-      FILE *Biblio = wxFopen(TexTmpBibName, _T("w"));
+      FILE* save1 = CurrentOutput1;
+      FILE* save2 = CurrentOutput2;
+      FILE* Biblio = wxFopen(TexTmpBibName, _T("w"));
       SetCurrentOutput(Biblio);
       OutputBib();
       fclose(Biblio);
