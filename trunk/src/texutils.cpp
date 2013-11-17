@@ -36,6 +36,8 @@ wxString fakeCurrentSection;
 
 static long BibLine = 1;
 
+//*****************************************************************************
+//*****************************************************************************
 void OutputCurrentSection(void)
 {
   if (!fakeCurrentSection.empty())
@@ -48,8 +50,10 @@ void OutputCurrentSection(void)
   }
 }
 
-// Nasty but the way things are done now, necessary,
-// in order to output a chunk properly to a string (macros and all).
+//*****************************************************************************
+//   Nasty but the way things are done now, necessary, in order to output a
+// chunk properly to a string (macros and all).
+//*****************************************************************************
 void OutputCurrentSectionToString(wxChar *buf)
 {
   if (!fakeCurrentSection.empty())
@@ -62,6 +66,8 @@ void OutputCurrentSectionToString(wxChar *buf)
   }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void OutputChunkToString(TexChunk *chunk, wxChar *buf)
 {
   FILE *tempfd = wxFopen(_T("tmp.tmp"), _T("w"));
@@ -93,18 +99,22 @@ void OutputChunkToString(TexChunk *chunk, wxChar *buf)
   {
     ch = getc(tempfd);
     if (ch == EOF)
+    {
       buf[i] = 0;
+    }
     else
     {
       buf[i] = (wxChar)ch;
-      i ++;
+      ++i;
     }
   }
   fclose(tempfd);
   wxRemoveFile(_T("tmp.tmp"));
 }
 
+//*****************************************************************************
 // Called by Tex2Any to simulate a section
+//*****************************************************************************
 void FakeCurrentSection(const wxString& fakeSection, bool addToContents)
 {
   currentSection = NULL;
@@ -128,10 +138,14 @@ void FakeCurrentSection(const wxString& fakeSection, bool addToContents)
   }
 }
 
-// Look for \label macro, use this ref name if found or
-// make up a topic name otherwise.
+//*****************************************************************************
+//   Look for \label macro, use this ref name if found or make up a topic name
+// otherwise.
+//*****************************************************************************
 static long topicCounter = 0;
 
+//*****************************************************************************
+//*****************************************************************************
 void ResetTopicCounter()
 {
   topicCounter = 0;
@@ -139,11 +153,15 @@ void ResetTopicCounter()
 
 static wxString forceTopicName;
 
+//*****************************************************************************
+//*****************************************************************************
 void ForceTopicName(const wxString& name)
 {
   forceTopicName = name;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 wxString FindTopicName(TexChunk *chunk)
 {
   if (!forceTopicName.empty())
@@ -189,39 +207,47 @@ wxString FindTopicName(TexChunk *chunk)
   }
 }
 
-/*
- * Simulate argument data, so we can 'drive' clients which implement
- * certain basic formatting behaviour.
- * Snag is that some save a TexChunk, so don't use yet...
- *
- */
+//*****************************************************************************
+//  Simulate argument data, so we can 'drive' clients which implement certain
+// basic formatting behaviour.  Snag is that some save a TexChunk, so don't use
+// yet...
+//*****************************************************************************
 
-void StartSimulateArgument(wxChar *data)
+//*****************************************************************************
+//*****************************************************************************
+void StartSimulateArgument(wxChar* data)
 {
   currentArgData = data;
   haveArgData = true;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void EndSimulateArgument(void)
 {
   haveArgData = false;
 }
 
-/*
- * Parse and convert unit arguments to points
- *
- */
+//*****************************************************************************
+//   Parse and convert unit arguments to points
+//*****************************************************************************
 
+//*****************************************************************************
+//*****************************************************************************
 int ParseUnitArgument(wxString& unitArg)
 {
-  float conversionFactor = 1.0;
-  float unitValue = 0.0;
+  float conversionFactor = 1.0f;
+  float unitValue = 0.0f;
   size_t len = unitArg.length();
 
   // Get rid of any accidentally embedded commands
-  for (size_t i = 0; i < len; i++)
+  for (size_t i = 0; i < len; ++i)
+  {
     if (unitArg[i] == '\\')
+    {
       unitArg[i] = 0;
+    }
+  }
   len = unitArg.length();
 
   if ((len > 0) && (isdigit(unitArg[0]) || unitArg[0] == '-'))
@@ -234,21 +260,31 @@ int ParseUnitArgument(wxString& unitArg)
       units[1] = unitArg[len-1];
       units[2] = 0;
       if (wxStrcmp(units, _T("in")) == 0)
-        conversionFactor = 72.0;
+      {
+        conversionFactor = 72.0f;
+      }
       else if (wxStrcmp(units, _T("cm")) == 0)
-        conversionFactor = (float)72.0/(float)2.51;
+      {
+        conversionFactor = 72.0f / 2.51f;
+      }
       else if (wxStrcmp(units, _T("mm")) == 0)
-        conversionFactor = (float)72.0/(float)25.1;
+      {
+        conversionFactor = 72.0f / 25.1f;
+      }
       else if (wxStrcmp(units, _T("pt")) == 0)
-        conversionFactor = 1;
+      {
+        conversionFactor = 1.0f;
+      }
     }
-    return (int)(unitValue*conversionFactor);
+    return (int)(unitValue * conversionFactor);
   }
-  else return 0;
+  return 0;
 }
 
-// Strip off any extension (dot something) from end of file, if one exists.
+//*****************************************************************************
+//   Strip off any extension (dot something) from end of file, if one exists.
 // Inserts zero into pFileName.
+//*****************************************************************************
 void StripExtension(wxChar* pFileName)
 {
   size_t len = wxStrlen(pFileName);
@@ -264,6 +300,8 @@ void StripExtension(wxChar* pFileName)
   }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void StripExtension(wxString& String)
 {
   wxFileName FileName(String);
@@ -271,11 +309,12 @@ void StripExtension(wxString& String)
   String = FileName.GetFullPath();
 }
 
-/*
- * Latex font setting
- *
- */
+//*****************************************************************************
+// Latex font setting
+//*****************************************************************************
 
+//*****************************************************************************
+//*****************************************************************************
 void SetFontSizes(int pointSize)
 {
   switch (pointSize)
@@ -323,11 +362,12 @@ void SetFontSizes(int pointSize)
 }
 
 
-/*
- * Latex references
- *
- */
+//*****************************************************************************
+// Latex references
+//*****************************************************************************
 
+//*****************************************************************************
+//*****************************************************************************
 void AddTexRef(
   const wxString& name,
   const wxString& file,
@@ -339,13 +379,11 @@ void AddTexRef(
 {
   wxChar buf[100];
   buf[0] = 0;
-/*
-  if (sectionName)
-  {
-    wxStrcat(buf, sectionName);
-    wxStrcat(buf, " ");
-  }
-*/
+//  if (sectionName)
+//  {
+//    wxStrcat(buf, sectionName);
+//    wxStrcat(buf, " ");
+//  }
   if (chapter)
   {
     wxChar buf2[10];
@@ -387,6 +425,8 @@ void AddTexRef(
   TexReferences[name] = new TexRef(name, file, tmp, sectionName);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void WriteTexReferences(const wxString& FileName)
 {
   wxTextFile file;
@@ -429,6 +469,8 @@ void WriteTexReferences(const wxString& FileName)
   file.Close();
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void ReadTexReferences(const wxString& FileName)
 {
   if (!wxFileExists(FileName))
@@ -468,37 +510,53 @@ void ReadTexReferences(const wxString& FileName)
 }
 
 
-/*
- * Bibliography-handling code
- *
- */
+//*****************************************************************************
+// Bibliography - handling code
+//*****************************************************************************
 
+//*****************************************************************************
+//*****************************************************************************
 void BibEatWhiteSpace(wxString& line)
 {
-    while(!line.empty() && (line[0] == _T(' ') || line[0] == _T('\t') || line[0] == (wxChar)EOF))
+  while (
+    !line.empty() &&
+    (line[0] == _T(' ') || line[0] == _T('\t') || line[0] == (wxChar)EOF))
+  {
+    if (line[0] == 10)
     {
-        if (line[0] == 10)
-            BibLine ++;
-        line = line.substr(1);
+      ++BibLine;
     }
+    line = line.substr(1);
+  }
 
-    // Ignore end-of-line comments
-    if ( !line.empty() && (line[0] == _T('%') || line[0] == _T(';') || line[0] == _T('#')))
-    {
-        line.clear();
-    }
+  // Ignore end-of-line comments
+  if (
+    !line.empty() &&
+    (line[0] == _T('%') || line[0] == _T(';') || line[0] == _T('#')))
+  {
+    line.clear();
+  }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void BibEatWhiteSpace(istream& str)
 {
   char ch = (char)str.peek();
 
-  while (!str.eof() && (ch == ' ' || ch == '\t' || ch == 13 || ch == 10 || ch == (char)EOF))
+  while (
+    !str.eof() &&
+    (ch == ' ' || ch == '\t' || ch == 13 || ch == 10 || ch == (char)EOF))
   {
     if (ch == 10)
-      BibLine ++;
+    {
+      ++BibLine;
+    }
     str.get(ch);
-    if ((ch == (char)EOF) || str.eof()) return;
+    if ((ch == (char)EOF) || str.eof())
+    {
+      return;
+    }
     ch = (char)str.peek();
   }
 
@@ -516,7 +574,9 @@ void BibEatWhiteSpace(istream& str)
   }
 }
 
+//*****************************************************************************
 // Read word up to { or , or space
+//*****************************************************************************
 wxString BibReadWord(wxString& line)
 {
     wxString val;
@@ -535,50 +595,72 @@ wxString BibReadWord(wxString& line)
     return val;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void BibReadWord(istream& Is, wxChar *buffer)
 {
   int i = 0;
   buffer[i] = 0;
   char ch = (char)Is.peek();
-  while (!Is.eof() && ch != ' ' && ch != '{' && ch != '(' && ch != 13 && ch != 10 && ch != '\t' &&
-         ch != ',' && ch != '=')
+  while (
+    !Is.eof() &&
+    ch != ' ' &&
+    ch != '{' &&
+    ch != '(' &&
+    ch != 13 &&
+    ch != 10 &&
+    ch != '\t' &&
+    ch != ',' &&
+    ch != '=')
   {
     Is.get(ch);
     buffer[i] = ch;
-    i ++;
+    ++i;
     ch = (char)Is.peek();
   }
   buffer[i] = 0;
 }
 
+//*****************************************************************************
 // Read string (double-quoted or not) to end quote or EOL
+//*****************************************************************************
 wxString BibReadToEOL(wxString& line)
 {
-    if(line.empty())
-        return wxEmptyString;
+  if (line.empty())
+  {
+    return wxEmptyString;
+  }
 
-    wxString val;
-    bool inQuotes = false;
-    if (line[0] == _T('"'))
-    {
-        line = line.substr(1);
-        inQuotes = true;
-    }
-    // If in quotes, read white space too. If not,
-    // stop at white space or comment.
-    while (!line.empty() && line[0] != _T('"') &&
-           (inQuotes || ((line[0] != _T(' ')) && (line[0] != 9) &&
-                          (line[0] != _T(';')) && (line[0] != _T('%')) && (line[0] != _T('#')))))
-    {
-        val << line[0];
-        line = line.substr(1);
-    }
-    if (!line.empty() && line[0] == '"')
-        line = line.substr(1);
+  wxString val;
+  bool inQuotes = false;
+  if (line[0] == _T('"'))
+  {
+    line = line.substr(1);
+    inQuotes = true;
+  }
 
-    return val;
+  // If in quotes, read white space too.  If not, stop at white space or
+  // comment.
+  while (
+    !line.empty() &&
+    line[0] != _T('"') &&
+    (inQuotes ||
+      ((line[0] != _T(' ')) && (line[0] != 9) && (line[0] != _T(';')) &&
+      (line[0] != _T('%')) && (line[0] != _T('#')))))
+  {
+    val << line[0];
+    line = line.substr(1);
+  }
+  if (!line.empty() && line[0] == '"')
+  {
+    line = line.substr(1);
+  }
+
+  return val;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void BibReadToEOL(istream& Is, wxChar *buffer)
 {
   int i = 0;
@@ -591,15 +673,21 @@ void BibReadToEOL(istream& Is, wxChar *buffer)
     ch = (char)Is.peek();
     inQuotes = true;
   }
-  // If in quotes, read white space too. If not,
-  // stop at white space or comment.
-  while (!Is.eof() && ch != 13 && ch != 10 && ch != _T('"') &&
-         (inQuotes || ((ch != _T(' ')) && (ch != 9) &&
-                        (ch != _T(';')) && (ch != _T('%')) && (ch != _T('#')))))
+
+  // If in quotes, read white space too. If not, stop at white space or
+  // comment.
+  while (
+    !Is.eof() &&
+    ch != 13 &&
+    ch != 10 &&
+    ch != _T('"') &&
+    (inQuotes ||
+      ((ch != _T(' ')) && (ch != 9) && (ch != _T(';')) && (ch != _T('%')) &&
+      (ch != _T('#')))))
   {
     Is.get(ch);
     buffer[i] = ch;
-    i ++;
+    ++i;
     ch = (char)Is.peek();
   }
   if (ch == '"')
@@ -609,58 +697,69 @@ void BibReadToEOL(istream& Is, wxChar *buffer)
   buffer[i] = 0;
 }
 
+//*****************************************************************************
 // Read }-terminated value, taking nested braces into account.
-wxString BibReadValue(wxString& line,
-                      bool ignoreBraces = true,
-                      bool quotesMayTerminate = true)
+//*****************************************************************************
+wxString BibReadValue(
+  wxString& line,
+  bool ignoreBraces = true,
+  bool quotesMayTerminate = true)
 {
-    wxString val;
-    int braceCount = 1;
-    bool stopping = false;
+  wxString val;
+  int braceCount = 1;
+  bool stopping = false;
 
-    if (line.length() >= 4000)
+  if (line.length() >= 4000)
+  {
+    wxChar buf[100];
+    wxSnprintf(
+      buf,
+      sizeof(buf),
+      _T("Sorry, value > 4000 chars in bib file at line %ld."),
+      BibLine);
+    wxLogError(buf, "Tex2RTF Fatal Error");
+    return wxEmptyString;
+  }
+
+  while (!line.empty() && !stopping)
+  {
+    wxChar ch = line[0];
+    line = line.substr(1);
+
+    if (ch == _T('{'))
     {
-        wxChar buf[100];
-        wxSnprintf(buf, sizeof(buf), _T("Sorry, value > 4000 chars in bib file at line %ld."), BibLine);
-        wxLogError(buf, "Tex2RTF Fatal Error");
-        return wxEmptyString;
+      ++braceCount;
     }
 
-    while (!line.empty() && !stopping)
+    if (ch == _T('}'))
     {
-        wxChar ch = line[0];
-        line = line.substr(1);
-
-        if (ch == _T('{'))
-            braceCount ++;
-
-        if (ch == _T('}'))
-        {
-            braceCount --;
-            if (braceCount == 0)
-            {
-                stopping = true;
-                break;
-            }
-        }
-        else if (quotesMayTerminate && ch == _T('"'))
-        {
-            stopping = true;
-            break;
-        }
-
-        if (!stopping)
-        {
-            if (!ignoreBraces || (ch != _T('{') && ch != _T('}')))
-            {
-                val << ch;
-            }
-        }
+      --braceCount;
+      if (braceCount == 0)
+      {
+        stopping = true;
+        break;
+      }
+    }
+    else if (quotesMayTerminate && ch == _T('"'))
+    {
+      stopping = true;
+      break;
     }
 
-    return val;
+    if (!stopping)
+    {
+      if (!ignoreBraces || (ch != _T('{') && ch != _T('}')))
+      {
+        val << ch;
+      }
+    }
+  }
+
+  return val;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void BibReadValue(
   istream& Is,
   wxChar *buffer,
@@ -674,7 +773,7 @@ void BibReadValue(
   bool stopping = false;
   while (!Is.eof() && !stopping)
   {
-//    i ++;
+//    ++i;
     if (i >= 4000)
     {
       wxChar buf[100];
@@ -690,7 +789,7 @@ void BibReadValue(
 
     if (ch == '{')
     {
-      braceCount ++;
+      ++braceCount;
     }
 
     if (ch == '}')
@@ -712,18 +811,20 @@ void BibReadValue(
       if (!ignoreBraces || (ch != '{' && ch != '}'))
       {
         buffer[i] = ch;
-        i ++;
+        ++i;
       }
     }
     if (ch == 10)
     {
-      BibLine ++;
+      ++BibLine;
     }
   }
   buffer[i] = 0;
   wxUnusedVar(stopping);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 bool ReadBib(const wxString& FileName)
 {
   if (!wxFileExists(FileName))
@@ -868,7 +969,9 @@ bool ReadBib(const wxString& FileName)
 
           // Now we can add a field
           if (StringMatch(recordField, _T("author"), false, true))
+          {
             bibEntry->mAuthor = fieldValue;
+          }
           else if (StringMatch(recordField, _T("key"), false, true))
           {
           }
@@ -884,7 +987,9 @@ bool ReadBib(const wxString& FileName)
           else if (StringMatch(recordField, _T("howpublished"), false, true))
           {
           }
-          else if (StringMatch(recordField, _T("note"), false, true) || StringMatch(recordField, _T("notes"), false, true))
+          else if (
+            StringMatch(recordField, _T("note"), false, true) ||
+            StringMatch(recordField, _T("notes"), false, true))
           {
           }
           else if (StringMatch(recordField, _T("series"), false, true))
@@ -896,7 +1001,9 @@ bool ReadBib(const wxString& FileName)
           else if (StringMatch(recordField, _T("keywords"), false, true))
           {
           }
-          else if (StringMatch(recordField, _T("editor"), false, true) || StringMatch(recordField, _T("editors"), false, true))
+          else if (
+            StringMatch(recordField, _T("editor"), false, true) ||
+            StringMatch(recordField, _T("editors"), false, true))
           {
             bibEntry->mEditor = fieldValue;
           }
@@ -983,6 +1090,8 @@ bool ReadBib(const wxString& FileName)
   return true;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void OutputBibItem(TexRef *ref, BibEntry *bib)
 {
   Tex2RTFYield();
@@ -1213,6 +1322,8 @@ void OutputBibItem(TexRef *ref, BibEntry *bib)
   OnMacro(ltNUMBEREDBIBITEM, 2, false);
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void OutputBib(void)
 {
   // Write the heading
@@ -1251,6 +1362,8 @@ void OutputBib(void)
 
 static int citeCount = 1;
 
+//*****************************************************************************
+//*****************************************************************************
 void ResolveBibReferences(void)
 {
   if (CitationList.size() > 0)
@@ -1280,18 +1393,24 @@ void ResolveBibReferences(void)
         }
         wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
         ref->sectionNumber = buf;
-        citeCount ++;
+        ++citeCount;
       }
       else
       {
-        wxSnprintf(buf, sizeof(buf), _T("Warning: bib ref %s not resolved."), citeKey.c_str());
+        wxSnprintf(
+          buf,
+          sizeof(buf),
+          _T("Warning: bib ref %s not resolved."),
+          citeKey.c_str());
         OnInform(buf);
       }
     }
   }
 }
 
+//*****************************************************************************
 // Remember we need to resolve this citation
+//*****************************************************************************
 void AddCitation(const wxString& citeKey)
 {
   StringSet::iterator iCitation = CitationList.find(citeKey);
@@ -1307,6 +1426,8 @@ void AddCitation(const wxString& citeKey)
   }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 TexRef* FindReference(const wxString& key)
 {
   TexReferenceMap::iterator iTexRef = TexReferences.find(key);
@@ -1317,37 +1438,45 @@ TexRef* FindReference(const wxString& key)
   return 0;
 }
 
-/*
- * Custom macro stuff
- *
- */
+//*****************************************************************************
+// Custom macro stuff
+//*****************************************************************************
 
+//*****************************************************************************
+//*****************************************************************************
 bool StringTobool(const wxString& val)
 {
-    wxString up(val);
-    up.MakeUpper();
+  wxString up(val);
+  up.MakeUpper();
 
-    if (up.IsSameAs(_T("YES")) ||
-        up.IsSameAs(_T("TRUE")) ||
-        up.IsSameAs(_T("ON")) ||
-        up.IsSameAs(_T("OK")) |
-        up.IsSameAs(_T("1")))
-        return true;
+  if (
+    up.IsSameAs(_T("YES")) ||
+    up.IsSameAs(_T("TRUE")) ||
+    up.IsSameAs(_T("ON")) ||
+    up.IsSameAs(_T("OK")) |
+    up.IsSameAs(_T("1")))
+  {
+    return true;
+  }
 
-    return false;
+  return false;
 }
 
-void RegisterIntSetting (const wxString& s, int *number)
+//*****************************************************************************
+//*****************************************************************************
+void RegisterIntSetting(const wxString& s, int *number)
 {
-    if (number)
-    {
-        long val;
-        s.ToLong(&val);
-        *number = (int)val;
-    }
+  if (number)
+  {
+    long val;
+    s.ToLong(&val);
+    *number = (int)val;
+  }
 }
 
+//*****************************************************************************
 // Define a variable value from the .ini file
+//*****************************************************************************
 wxChar *RegisterSetting(
   const wxString& settingName,
   const wxString& settingValue,
@@ -1410,53 +1539,101 @@ wxChar *RegisterSetting(
     AbstractNameString = settingValue;
   }
   else if (StringMatch(settingName, _T("chapterFontSize"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &chapterFont);
+  }
   else if (StringMatch(settingName, _T("sectionFontSize"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &sectionFont);
+  }
   else if (StringMatch(settingName, _T("subsectionFontSize"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &subsectionFont);
+  }
   else if (StringMatch(settingName, _T("titleFontSize"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &titleFont);
+  }
   else if (StringMatch(settingName, _T("authorFontSize"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &authorFont);
+  }
   else if (StringMatch(settingName, _T("ignoreInput"), false, true))
+  {
     IgnorableInputFiles.push_back(wxFileNameFromPath(settingValue));
+  }
   else if (StringMatch(settingName, _T("mirrorMargins"), false, true))
+  {
     mirrorMargins = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("runTwice"), false, true))
+  {
     runTwice = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("isInteractive"), false, true))
+  {
     isInteractive = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("headerRule"), false, true))
+  {
     headerRule = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("footerRule"), false, true))
+  {
     footerRule = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("combineSubSections"), false, true))
+  {
     combineSubSections = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("listLabelIndent"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &labelIndentTab);
+  }
   else if (StringMatch(settingName, _T("listItemIndent"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &itemIndentTab);
+  }
   else if (StringMatch(settingName, _T("useUpButton"), false, true))
+  {
     useUpButton = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("useHeadingStyles"), false, true))
+  {
     useHeadingStyles = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("useWord"), false, true))
+  {
     useWord = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("contentsDepth"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &contentsDepth);
+  }
   else if (StringMatch(settingName, _T("generateHPJ"), false, true))
+  {
     generateHPJ = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("winHelpVersion"), false, true))
+  {
     RegisterIntSetting(settingValueStr, &winHelpVersion);
+  }
   else if (StringMatch(settingName, _T("winHelpContents"), false, true))
+  {
     winHelpContents = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("htmlIndex"), false, true))
+  {
     htmlIndex = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("htmlWorkshopFiles"), false, true))
+  {
     htmlWorkshopFiles = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("htmlFrameContents"), false, true))
+  {
     htmlFrameContents = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("htmlStylesheet"), false, true))
   {
     htmlStylesheet = settingValue;
@@ -1478,9 +1655,13 @@ wxChar *RegisterSetting(
     winHelpTitle = settingValue;
   }
   else if (StringMatch(settingName, _T("indexSubsections"), false, true))
+  {
     indexSubsections = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("compatibility"), false, true))
+  {
     compatibilityMode = StringTobool(settingValue);
+  }
   else if (StringMatch(settingName, _T("defaultColumnWidth"), false, true))
   {
     RegisterIntSetting(settingValueStr, &defaultTableColumnWidth);
@@ -1505,15 +1686,23 @@ wxChar *RegisterSetting(
   else if (StringMatch(settingName, _T("htmlBrowseButtons"), false, true))
   {
     if (wxStrcmp(settingValue, _T("none")) == 0)
+    {
       htmlBrowseButtons = HTML_BUTTONS_NONE;
+    }
     else if (wxStrcmp(settingValue, _T("bitmap")) == 0)
+    {
       htmlBrowseButtons = HTML_BUTTONS_BITMAP;
+    }
     else if (wxStrcmp(settingValue, _T("text")) == 0)
+    {
       htmlBrowseButtons = HTML_BUTTONS_TEXT;
+    }
     else
     {
       if (interactive)
+      {
         OnInform(_T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
+      }
       wxStrcpy(errorCode, _T("Initialisation file error: htmlBrowseButtons must be one of none, bitmap, or text."));
     }
   }
@@ -1562,30 +1751,38 @@ wxChar *RegisterSetting(
   }
   else if (StringMatch(settingName, _T("documentFontSize"), false, true))
   {
-      int n;
-      RegisterIntSetting(settingValueStr, &n);
-      if (n == 10 || n == 11 || n == 12)
-          SetFontSizes(n);
-      else
+    int n;
+    RegisterIntSetting(settingValueStr, &n);
+    if (n == 10 || n == 11 || n == 12)
+    {
+      SetFontSizes(n);
+    }
+    else
+    {
+      wxChar buf[200];
+      wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: nonstandard document font size %d."), n);
+      if (interactive)
       {
-          wxChar buf[200];
-          wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: nonstandard document font size %d."), n);
-          if (interactive)
-              OnInform(buf);
-          wxStrcpy(errorCode, buf);
+        OnInform(buf);
       }
+      wxStrcpy(errorCode, buf);
+    }
   }
   else
   {
-      wxChar buf[200];
-      wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
-      if (interactive)
-          OnInform(buf);
-      wxStrcpy(errorCode, buf);
+    wxChar buf[200];
+    wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
+    if (interactive)
+    {
+      OnInform(buf);
+    }
+    wxStrcpy(errorCode, buf);
   }
   return errorCode;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 bool ReadCustomMacros(const wxString& FileName)
 {
   if (!wxFileExists(FileName))
@@ -1673,6 +1870,8 @@ bool ReadCustomMacros(const wxString& FileName)
   return true;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 CustomMacro* FindCustomMacro(const wxString& Name)
 {
   MacroMap::iterator it = CustomMacroMap.find(Name);
@@ -1685,7 +1884,9 @@ CustomMacro* FindCustomMacro(const wxString& Name)
   return 0;
 }
 
+//*****************************************************************************
 // Display custom macros
+//*****************************************************************************
 void ShowCustomMacros(void)
 {
   MacroMap::iterator it = CustomMacroMap.begin();
@@ -1714,8 +1915,10 @@ void ShowCustomMacros(void)
   }
 }
 
+//*****************************************************************************
 // Parse a string into several comma-separated fields
-wxChar *ParseMultifieldString(const wxString& allFields, size_t *pos)
+//*****************************************************************************
+wxChar* ParseMultifieldString(const wxString& allFields, size_t *pos)
 {
   static wxChar buffer[300];
   int i = 0;
@@ -1728,7 +1931,7 @@ wxChar *ParseMultifieldString(const wxString& allFields, size_t *pos)
     if (allFields[fieldIndex] == _T(' '))
     {
       // Skip
-      fieldIndex ++;
+      ++fieldIndex;
     }
     else if (allFields[fieldIndex] == _T(','))
     {
@@ -1743,25 +1946,28 @@ wxChar *ParseMultifieldString(const wxString& allFields, size_t *pos)
     else
     {
       buffer[i] = allFields[fieldIndex];
-      fieldIndex ++;
-      i++;
+      ++fieldIndex;
+      ++i;
     }
   }
   buffer[i] = 0;
   if (oldPos == *pos)
+  {
     *pos = len + 1;
+  }
 
   if (i == 0)
+  {
     return NULL;
-  else
-    return buffer;
+  }
+  return buffer;
 }
 
-/*
- * Colour tables
- *
- */
-
+//*****************************************************************************
+// Colour table entry class.
+//*****************************************************************************
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
 ColourTableEntry::ColourTableEntry(
   const wxString& theName,
   unsigned int r,
@@ -1774,10 +1980,14 @@ ColourTableEntry::ColourTableEntry(
   blue = b;
 }
 
-ColourTableEntry::~ColourTableEntry(void)
+//-----------------------------------------------------------------------------
+//-----------------------------------------------------------------------------
+ColourTableEntry::~ColourTableEntry()
 {
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void AddColour(
   const wxString& theName,
   unsigned int r,
@@ -1789,7 +1999,9 @@ void AddColour(
   {
     ColourTableEntry *entry = it->second;
     if (entry->red == r || entry->green == g || entry->blue == b)
+    {
       return;
+    }
     else
     {
       delete entry;
@@ -1800,6 +2012,8 @@ void AddColour(
   ColourTable[theName] = entry;
 }
 
+//*****************************************************************************
+//*****************************************************************************
 int FindColourPosition(const wxString& theName)
 {
   int i = 0;
@@ -1821,6 +2035,8 @@ int FindColourPosition(const wxString& theName)
 // Converts e.g. "red" -> "#FF0000"
 extern void DecToHex(int, wxChar *);
 
+//*****************************************************************************
+//*****************************************************************************
 bool FindColourHTMLString(const wxString& theName, wxString& buf)
 {
   for (
@@ -1846,7 +2062,8 @@ bool FindColourHTMLString(const wxString& theName, wxString& buf)
   return false;
 }
 
-
+//*****************************************************************************
+//*****************************************************************************
 void InitialiseColourTable(void)
 {
   // \\red0\\green0\\blue0;
@@ -1871,11 +2088,11 @@ void InitialiseColourTable(void)
   AddColour(_T("white"), 255,255,255);
 }
 
-/*
- * The purpose of this is to reduce the number of times wxYield is
- * called, since under Windows this can slow things down.
- */
-
+//*****************************************************************************
+// Description:
+//   Reduce the number of times wxYield iscalled, since under Windows this can
+// slow things down.
+//*****************************************************************************
 void Tex2RTFYield(bool force)
 {
 #ifdef __WINDOWS__
@@ -1901,7 +2118,9 @@ void Tex2RTFYield(bool force)
 // In both RTF generation and HTML generation for wxHelp version 2,
 // we need to associate \indexed keywords with the current filename/topics.
 
+//*****************************************************************************
 // Hash table for lists of keywords for topics (WinHelp).
+//*****************************************************************************
 wxHashTable TopicTable(wxKEY_STRING);
 void AddKeyWordForTopic(
   const wxString& topic,
@@ -1923,6 +2142,8 @@ void AddKeyWordForTopic(
   }
 }
 
+//*****************************************************************************
+//*****************************************************************************
 void ClearKeyWordTable(void)
 {
   TopicTable.BeginFind();
@@ -1937,10 +2158,9 @@ void ClearKeyWordTable(void)
 }
 
 
-/*
- * TexTopic structure
- */
-
+//*****************************************************************************
+// TexTopic class.
+//*****************************************************************************
 TexTopic::TexTopic(const wxString& f)
   : filename(f)
 {
@@ -1954,7 +2174,9 @@ TexTopic::~TexTopic(void)
     delete keywords;
 }
 
+//*****************************************************************************
 // Convert case, according to upperCaseNames setting.
+//*****************************************************************************
 wxString ConvertCase(const wxString& String)
 {
   wxString buf;
@@ -1975,7 +2197,9 @@ wxString ConvertCase(const wxString& String)
   return buf;
 }
 
+//*****************************************************************************
 // if substring is true, search for str1 in str2
+//*****************************************************************************
 bool StringMatch(
   const wxString& str1,
   const wxString& str2,
