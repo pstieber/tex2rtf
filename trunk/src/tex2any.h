@@ -30,6 +30,8 @@
 
 const unsigned long MAX_LINE_BUFFER_SIZE = 10 * 1024;
 
+//*****************************************************************************
+//*****************************************************************************
 class TexMacroDef : public wxObject
 {
   public:
@@ -53,48 +55,48 @@ class TexMacroDef : public wxObject
 #define CHUNK_TYPE_ARG      2
 #define CHUNK_TYPE_STRING   3
 
-/*
- We have nested lists to represent the Tex document.
- Each element of a list of chunks can be one of:
-  - a plain string
-  - a macro with/without arguments. Arguments are lists of TexChunks.
+// We have nested lists to represent the Tex document.
+// Each element of a list of chunks can be one of:
+//  - a plain string
+//  - a macro with/without arguments.  Arguments are lists of TexChunks.
+//
+// Example (\toplevel is implicit but made explicit here):
+//
+// AddMacroDef(ltMYMAT, "mymat", 2);
+//
+// \toplevel{The cat sat on the \mymat{very coarse and {\it cheap}}{mat}}.
+//
+// Parsed as:
+//
+// TexChunk: type = macro, name = toplevel, no_args = 1
+//   Children:
+//
+//     TexChunk: type = argument
+//
+//       Children:
+//         TexChunk: type = string, value = "The cat sat on the "
+//         TexChunk: type = macro, name = mymat, no_args = 2
+//
+//           Children:
+//             TexChunk: type = argument
+//
+//               Children:
+//                 TexChunk: type = string, value = "very coarse and "
+//                 TexChunk: type = macro, name = it, no_args = 1
+//
+//                   Children:
+//                     TexChunk: type = argument
+//
+//                       Children:
+//                         TexChunk: type = string, value = "cheap"
+//
+//             TexChunk: type = argument
+//
+//               Children:
+//                 TexChunk: type = string, value = mat
 
-Example (\toplevel is implicit but made explicit here):
-
-AddMacroDef(ltMYMAT, "mymat", 2);
-
-\toplevel{The cat sat on the \mymat{very coarse and {\it cheap}}{mat}}.
-
-Parsed as:
-
-TexChunk: type = macro, name = toplevel, no_args = 1
-  Children:
-
-    TexChunk: type = argument
-
-      Children:
-        TexChunk: type = string, value = "The cat sat on the "
-        TexChunk: type = macro, name = mymat, no_args = 2
-
-          Children:
-            TexChunk: type = argument
-
-              Children:
-                TexChunk: type = string, value = "very coarse and "
-                TexChunk: type = macro, name = it, no_args = 1
-
-                  Children:
-                    TexChunk: type = argument
-
-                      Children:
-                        TexChunk: type = string, value = "cheap"
-
-            TexChunk: type = argument
-
-              Children:
-                TexChunk: type = string, value = mat
- */
-
+//*****************************************************************************
+//*****************************************************************************
 class TexChunk
 {
  public:
@@ -115,10 +117,12 @@ class TexChunk
 
 WX_DECLARE_HASH_SET(wxString, wxStringHash, wxStringEqual, StringSet);
 
-// Represents a topic, used for generating a table of contents file (.cnt).
+//*****************************************************************************
+//   Represents a topic, used for generating a table of contents file (.cnt).
 // Also for storing keywords found in a topic, a list of which is then inserted
 // into the topic in the next pass.
-class TexTopic: public wxObject
+//*****************************************************************************
+class TexTopic : public wxObject
 {
   public:
     // This flag is set to indicate that the topic has children.
@@ -248,10 +252,9 @@ extern int hugeFont1;
 extern int HugeFont2;
 extern int HUGEFont3;
 
-/*
- * USER-ADJUSTABLE SETTINGS
- *
- */
+//=============================================================================
+// USER-ADJUSTABLE SETTINGS
+//=============================================================================
 
 // Section font sizes
 extern int chapterFont;
@@ -314,20 +317,18 @@ extern wxString SubsectionNameString;
 extern wxString SubsubsectionNameString;
 extern wxString UpNameString;
 
-/*
- * HTML button identifiers: what kind of browse buttons
- * are placed in HTML files, if any.
- *
- */
+//=============================================================================
+// HTML button identifiers : what kind of browse buttons
+// are placed in HTML files, if any.
+//=============================================================================
 
 #define HTML_BUTTONS_NONE       0
 #define HTML_BUTTONS_BITMAP     1
 #define HTML_BUTTONS_TEXT       2
 
-/*
- * Section numbering
- *
- */
+//=============================================================================
+// Section numbering
+//=============================================================================
 
 extern int chapterNo;
 extern int sectionNo;
@@ -369,19 +370,17 @@ extern void FakeCurrentSection(
   const wxString& fakeSection,
   bool addToContents = true);
 
-/*
- * Local to Tex2Any library
- *
- */
+//=============================================================================
+// Local to Tex2Any library
+//=============================================================================
 
 extern bool haveArgData; // If true, we're simulating the data.
 void StartSimulateArgument(wxChar* data);
 void EndSimulateArgument(void);
 
-/*
- * Client-defined
- *
- */
+//=============================================================================
+// Client - defined
+//=============================================================================
 
 // Called on start/end of macro examination
 void OnMacro(int macroId, int no_args, bool start);
@@ -406,9 +405,9 @@ void OnInform(const wxString& msg);
 // Special yield wrapper
 void Tex2RTFYield(bool force = false);
 
-/*
- * Useful utilities
- */
+//=============================================================================
+// Useful utilities
+//=============================================================================
 
 // Look for \label macro, use this ref name if found or make up a topic name
 // otherwise.
@@ -430,10 +429,9 @@ void StripExtension(wxChar* pFileName);
 
 void StripExtension(wxString& FileName);
 
-/*
- * Reference structure
- */
-
+//*****************************************************************************
+// Reference class
+//*****************************************************************************
 class TexRef : public wxObject
 {
   public:
@@ -464,16 +462,15 @@ void AddTexRef(
   int subsection = 0,
   int subsubsection = 0);
 
-/*
- * Read and write reference file (.ref), to resolve refs for second pass.
- */
+//=============================================================================
+// Read and write reference file(.ref), to resolve refs for second pass.
+//=============================================================================
 void WriteTexReferences(const wxString& FileName);
 void ReadTexReferences(const wxString& FileName);
 
 //*****************************************************************************
-// Bibliography stuff
+// Bibliography entry class
 //*****************************************************************************
-
 class BibEntry : public wxObject
 {
  public:
@@ -541,11 +538,10 @@ void ShowCustomMacros(void);
 CustomMacro* FindCustomMacro(const wxString& Name);
 wxChar* ParseMultifieldString(const wxString& s, size_t* pos);
 
-/*
- * Colour table stuff
- */
-
-class ColourTableEntry: public wxObject
+//*****************************************************************************
+// Colour table entry class
+//*****************************************************************************
+class ColourTableEntry : public wxObject
 {
   public:
     wxString mName;
