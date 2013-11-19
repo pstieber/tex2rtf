@@ -791,6 +791,487 @@ void HTMLHeadTo(FILE* f)
 }
 
 //*****************************************************************************
+//*****************************************************************************
+void HandleChapterMacro(int macroId, bool start)
+{
+  if (!start)
+  {
+    sectionNo = 0;
+    figureNo = 0;
+    subsectionNo = 0;
+    subsubsectionNo = 0;
+    if (macroId != ltCHAPTERSTAR)
+      chapterNo ++;
+
+    SetCurrentOutput(NULL);
+    startedSections = true;
+
+    wxString topicName = FindTopicName(GetNextChunk());
+    ReopenFile(&Chapters, ChaptersName, topicName);
+    AddTexRef(topicName, ChaptersName, ChapterNameString);
+
+    SetCurrentChapterName(topicName, ChaptersName);
+    if (htmlWorkshopFiles)
+    {
+      HTMLWorkshopAddToContents(0, topicName, ChaptersName);
+    }
+
+    SetCurrentOutput(Chapters);
+
+    HTMLHead();
+    TexOutput(_T("<title>"));
+    OutputCurrentSection(); // Repeat section header
+    TexOutput(_T("</title></head>\n"));
+    OutputBodyStart();
+
+    wxString titleBuf(wxFileNameFromPath(FileRoot));
+    titleBuf.append("_contents.html");
+
+    wxFprintf(Chapters, _T("<A NAME=\"%s\"></A>"), topicName);
+
+    AddBrowseButtons(
+      _T(""),
+      titleBuf,      // Up
+      lastTopic,
+      lastFileName,  // Last topic
+      topicName,
+      ChaptersName); // This topic
+
+    if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
+    {
+      wxFprintf(
+        Contents,
+        _T("\n<LI><A HREF=\"%s\">"),
+        ConvertCase(ChaptersName));
+    }
+    else
+    {
+      wxFprintf(
+        Contents,
+        _T("\n<LI><A HREF=\"%s#%s\">"),
+        ConvertCase(ChaptersName),
+        topicName);
+    }
+
+    if (htmlFrameContents && FrameContents)
+    {
+      SetCurrentOutput(FrameContents);
+      if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
+      {
+        wxFprintf(
+          FrameContents,
+          _T("\n<LI><A HREF=\"%s\" TARGET=\"mainwindow\">"),
+          ConvertCase(ChaptersName));
+      }
+      else
+      {
+        wxFprintf(
+          FrameContents,
+          _T("\n<LI><A HREF=\"%s#%s\" TARGET=\"mainwindow\">"),
+          ConvertCase(ChaptersName),
+          topicName);
+      }
+      OutputCurrentSection();
+      wxFprintf(FrameContents, _T("</A>\n"));
+    }
+
+    SetCurrentOutputs(Contents, Chapters);
+    wxFprintf(Chapters, _T("\n<H2>"));
+    OutputCurrentSection();
+    wxFprintf(Contents, _T("</A>\n"));
+    wxFprintf(Chapters, _T("</H2>\n"));
+
+    SetCurrentOutput(Chapters);
+
+    // Add this section title to the list of keywords
+    if (htmlIndex)
+    {
+      OutputCurrentSectionToString(wxTex2RTFBuffer);
+      AddKeyWordForTopic(
+        topicName,
+        wxTex2RTFBuffer,
+        ConvertCase(currentFileName));
+    }
+  }
+}
+
+//*****************************************************************************
+//*****************************************************************************
+void HandleSectionMacro(int macroId, bool start)
+{
+  if (!start)
+  {
+    subsectionNo = 0;
+    subsubsectionNo = 0;
+    subsectionStarted = false;
+
+    if (macroId != ltSECTIONSTAR)
+      sectionNo ++;
+
+    SetCurrentOutput(NULL);
+    startedSections = true;
+
+    wxString topicName = FindTopicName(GetNextChunk());
+    ReopenFile(&Sections, SectionsName, topicName);
+    AddTexRef(topicName, SectionsName, SectionNameString);
+
+    SetCurrentSectionName(topicName, SectionsName);
+    if (htmlWorkshopFiles)
+    {
+      HTMLWorkshopAddToContents(1, topicName, SectionsName);
+    }
+
+    SetCurrentOutput(Sections);
+    HTMLHead();
+    TexOutput(_T("<title>"));
+    OutputCurrentSection();
+    TexOutput(_T("</title></head>\n"));
+    OutputBodyStart();
+
+    wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
+    AddBrowseButtons(
+      CurrentChapterName,
+      CurrentChapterFile, // Up
+      lastTopic,
+      lastFileName,  // Last topic
+      topicName,
+      SectionsName); // This topic
+
+    FILE *jumpFrom = ((DocumentStyle == LATEX_ARTICLE) ? Contents : Chapters);
+
+    SetCurrentOutputs(jumpFrom, Sections);
+    if (DocumentStyle == LATEX_ARTICLE)
+    {
+      if (PrimaryAnchorOfTheFile(SectionsName, topicName))
+      {
+        wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s\">"), ConvertCase(SectionsName));
+      }
+      else
+      {
+        wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s#%s\">"), ConvertCase(SectionsName), topicName);
+      }
+    }
+    else
+    {
+      if(PrimaryAnchorOfTheFile(SectionsName, topicName))
+      {
+        wxFprintf(
+          jumpFrom,
+          _T("\n<A HREF=\"%s\"><B>"),
+          ConvertCase(SectionsName));
+      }
+      else
+      {
+        wxFprintf(
+          jumpFrom,
+          _T("\n<A HREF=\"%s#%s\"><B>"),
+          ConvertCase(SectionsName),
+          topicName);
+      }
+    }
+
+    wxFprintf(Sections, _T("\n<H2>"));
+    OutputCurrentSection();
+
+    if (DocumentStyle == LATEX_ARTICLE)
+      wxFprintf(jumpFrom, _T("</A>\n"));
+    else
+      wxFprintf(jumpFrom, _T("</B></A><BR>\n"));
+    wxFprintf(Sections, _T("</H2>\n"));
+
+    SetCurrentOutput(Sections);
+    // Add this section title to the list of keywords
+    if (htmlIndex)
+    {
+      OutputCurrentSectionToString(wxTex2RTFBuffer);
+      AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
+    }
+  }
+}
+
+//*****************************************************************************
+//*****************************************************************************
+void HandleFunctionMacro(int macroId, bool start)
+{
+  if (!start)
+  {
+    if (!Sections)
+    {
+      OnError(_T("You cannot have a subsection before a section!"));
+    }
+    else
+    {
+        subsubsectionNo = 0;
+
+        if (macroId != ltSUBSECTIONSTAR)
+          subsectionNo ++;
+
+        if ( combineSubSections && !subsectionStarted )
+        {
+          fflush(Sections);
+
+          // Read old .con file in at this point
+          wxFileName FileName = CurrentSectionFile;
+          FileName.SetExt("con");
+          FILE* fd = wxFopen(FileName.GetFullName(), _T("r"));
+          if ( fd )
+          {
+              int ch = getc(fd);
+              while (ch != EOF)
+              {
+                  wxPutc(ch, Sections);
+                  ch = getc(fd);
+              }
+              fclose(fd);
+          }
+          wxFprintf(Sections, _T("<P>\n"));
+
+          // Close old file, create a new file for the sub(sub)section contents entries
+          ReopenSectionContentsFile();
+        }
+
+        startedSections = true;
+        subsectionStarted = true;
+
+        wxString topicName = FindTopicName(GetNextChunk());
+
+        if ( !combineSubSections )
+        {
+          SetCurrentOutput(NULL);
+          ReopenFile(&Subsections, SubsectionsName, topicName);
+          AddTexRef(topicName, SubsectionsName, SubsectionNameString);
+          SetCurrentSubsectionName(topicName, SubsectionsName);
+          if (htmlWorkshopFiles)
+          {
+            HTMLWorkshopAddToContents(2, topicName, SubsectionsName);
+          }
+          SetCurrentOutput(Subsections);
+
+          HTMLHead();
+          TexOutput(_T("<title>"));
+          OutputCurrentSection();
+          TexOutput(_T("</title></head>\n"));
+          OutputBodyStart();
+
+          wxFprintf(Subsections, _T("<A NAME=\"%s\"></A>"), topicName);
+          AddBrowseButtons(
+            CurrentSectionName,
+            CurrentSectionFile, // Up
+            lastTopic,
+            lastFileName,       // Last topic
+            topicName,
+            SubsectionsName);   // This topic
+
+          SetCurrentOutputs(Sections, Subsections);
+          if (PrimaryAnchorOfTheFile(SubsectionsName, topicName))
+          {
+            wxFprintf(
+              Sections,
+              _T("\n<A HREF=\"%s\"><B>"),
+              ConvertCase(SubsectionsName));
+          }
+          else
+          {
+            wxFprintf(
+              Sections,
+              _T("\n<A HREF=\"%s#%s\"><B>"),
+              ConvertCase(SubsectionsName),
+              topicName);
+          }
+
+          wxFprintf(Subsections, _T("\n<H3>"));
+          OutputCurrentSection();
+          wxFprintf(Sections, _T("</B></A><BR>\n"));
+          wxFprintf(Subsections, _T("</H3>\n"));
+
+          SetCurrentOutput(Subsections);
+        }
+        else
+        {
+          AddTexRef(topicName, SectionsName, SubsectionNameString);
+          SetCurrentSubsectionName(topicName, SectionsName);
+
+//          if ( subsectionNo != 0 )
+          wxFprintf(Sections, _T("\n<HR>\n"));
+
+          // We're putting everything into the section file
+          wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
+          wxFprintf(Sections, _T("\n<H3>"));
+          OutputCurrentSection();
+          wxFprintf(Sections, _T("</H3>\n"));
+
+          SetCurrentOutput(SectionContentsFD);
+          wxFprintf(SectionContentsFD, _T("<A HREF=\"#%s\">"), topicName);
+          OutputCurrentSection();
+          TexOutput(_T("</A><BR>\n"));
+
+          if (htmlWorkshopFiles)
+          {
+            HTMLWorkshopAddToContents(2, topicName, SectionsName);
+          }
+          SetCurrentOutput(Sections);
+        }
+        // Add this section title to the list of keywords
+        if (htmlIndex)
+        {
+          OutputCurrentSectionToString(wxTex2RTFBuffer);
+          AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
+        }
+
+    }
+  }
+}
+
+//*****************************************************************************
+//*****************************************************************************
+void HandleSubsectionMacro(int macroId, bool start)
+{
+  if (!start)
+  {
+    if (!Subsections && !combineSubSections)
+    {
+      OnError(_T("You cannot have a subsubsection before a subsection!"));
+    }
+    else
+    {
+      if (macroId != ltSUBSUBSECTIONSTAR)
+        subsubsectionNo ++;
+
+      startedSections = true;
+
+      wxString topicName = FindTopicName(GetNextChunk());
+
+      if ( !combineSubSections )
+      {
+          SetCurrentOutput(NULL);
+          ReopenFile(&Subsubsections, SubsubsectionsName, topicName);
+          AddTexRef(topicName, SubsubsectionsName, SubsubsectionNameString);
+          SetCurrentSubsubsectionName(topicName, SubsubsectionsName);
+          if (htmlWorkshopFiles) HTMLWorkshopAddToContents(3, topicName, SubsubsectionsName);
+
+          SetCurrentOutput(Subsubsections);
+          HTMLHead();
+          TexOutput(_T("<title>"));
+          OutputCurrentSection();
+          TexOutput(_T("</title></head>\n"));
+          OutputBodyStart();
+
+          wxFprintf(Subsubsections, _T("<A NAME=\"%s\"></A>"), topicName);
+
+          AddBrowseButtons(
+            CurrentSubsectionName,
+            CurrentSubsectionFile, // Up
+            lastTopic,
+            lastFileName,  // Last topic
+            topicName,
+            SubsubsectionsName); // This topic
+
+          SetCurrentOutputs(Subsections, Subsubsections);
+          if (PrimaryAnchorOfTheFile(SubsubsectionsName, topicName))
+          {
+            wxFprintf(
+              Subsections,
+            _T("\n<A HREF=\"%s\"><B>"),
+            ConvertCase(SubsubsectionsName));
+          }
+          else
+          {
+            wxFprintf(
+              Subsections,
+              _T("\n<A HREF=\"%s#%s\"><B>"),
+              ConvertCase(SubsubsectionsName),
+              topicName);
+          }
+
+          wxFprintf(Subsubsections, _T("\n<H3>"));
+          OutputCurrentSection();
+          wxFprintf(Subsections, _T("</B></A><BR>\n"));
+          wxFprintf(Subsubsections, _T("</H3>\n"));
+      }
+      else
+      {
+          AddTexRef(topicName, SectionsName, SubsubsectionNameString);
+          SetCurrentSubsectionName(topicName, SectionsName);
+          wxFprintf(Sections, _T("\n<HR>\n"));
+
+          // We're putting everything into the section file
+          wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
+          wxFprintf(Sections, _T("\n<H3>"));
+          OutputCurrentSection();
+          wxFprintf(Sections, _T("</H3>\n"));
+// TODO: where do we put subsubsection contents entry - indented, with subsection entries?
+//          SetCurrentOutput(SectionContentsFD);
+//          wxFprintf(SectionContentsFD, "<A HREF=\"#%s\">", topicName);
+//          OutputCurrentSection();
+//          TexOutput(_T("</A><BR>"));
+          if (htmlWorkshopFiles)
+          {
+            HTMLWorkshopAddToContents(2, topicName, SectionsName);
+          }
+          SetCurrentOutput(Sections);
+      }
+
+      // Add this section title to the list of keywords
+      if (htmlIndex)
+      {
+        OutputCurrentSectionToString(wxTex2RTFBuffer);
+        AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
+      }
+    }
+  }
+}
+
+//*****************************************************************************
+//*****************************************************************************
+void HandleCaptionMacro(bool start)
+{
+  if (start)
+  {
+    if (inTabular)
+      TexOutput(_T("\n<CAPTION>"));
+
+    wxChar figBuf[40];
+
+    if ( inFigure )
+    {
+        figureNo ++;
+
+        if (DocumentStyle != LATEX_ARTICLE)
+          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), FigureNameString, chapterNo, figureNo);
+        else
+          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), FigureNameString, figureNo);
+    }
+    else
+    {
+        tableNo ++;
+
+        if (DocumentStyle != LATEX_ARTICLE)
+          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), TableNameString, chapterNo, tableNo);
+        else
+          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), TableNameString, tableNo);
+    }
+
+    TexOutput(figBuf);
+  }
+  else
+  {
+    if (inTabular)
+      TexOutput(_T("\n</CAPTION>\n"));
+
+    wxString topicName = FindTopicName(GetNextChunk());
+
+    int n = inFigure ? figureNo : tableNo;
+
+    AddTexRef(
+      topicName,
+      wxEmptyString,
+      wxEmptyString,
+      ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
+      ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
+  }
+}
+
+//*****************************************************************************
 //   Called on start/end of macro examination
 //*****************************************************************************
 void HTMLOnMacro(int macroId, int no_args, bool start)
@@ -801,105 +1282,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   case ltCHAPTERSTAR:
   case ltCHAPTERHEADING:
   {
-    if (!start)
-    {
-      sectionNo = 0;
-      figureNo = 0;
-      subsectionNo = 0;
-      subsubsectionNo = 0;
-      if (macroId != ltCHAPTERSTAR)
-        chapterNo ++;
-
-      SetCurrentOutput(NULL);
-      startedSections = true;
-
-      wxString topicName = FindTopicName(GetNextChunk());
-      ReopenFile(&Chapters, ChaptersName, topicName);
-      AddTexRef(topicName, ChaptersName, ChapterNameString);
-
-      SetCurrentChapterName(topicName, ChaptersName);
-      if (htmlWorkshopFiles)
-      {
-        HTMLWorkshopAddToContents(0, topicName, ChaptersName);
-      }
-
-      SetCurrentOutput(Chapters);
-
-      HTMLHead();
-      TexOutput(_T("<title>"));
-      OutputCurrentSection(); // Repeat section header
-      TexOutput(_T("</title></head>\n"));
-      OutputBodyStart();
-
-      wxString titleBuf(wxFileNameFromPath(FileRoot));
-      titleBuf.append("_contents.html");
-
-      wxFprintf(Chapters, _T("<A NAME=\"%s\"></A>"), topicName);
-
-      AddBrowseButtons(
-        _T(""),
-        titleBuf,      // Up
-        lastTopic,
-        lastFileName,  // Last topic
-        topicName,
-        ChaptersName); // This topic
-
-      if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
-      {
-        wxFprintf(
-          Contents,
-          _T("\n<LI><A HREF=\"%s\">"),
-          ConvertCase(ChaptersName));
-      }
-      else
-      {
-        wxFprintf(
-          Contents,
-          _T("\n<LI><A HREF=\"%s#%s\">"),
-          ConvertCase(ChaptersName),
-          topicName);
-      }
-
-      if (htmlFrameContents && FrameContents)
-      {
-        SetCurrentOutput(FrameContents);
-        if (PrimaryAnchorOfTheFile(ChaptersName, topicName))
-        {
-          wxFprintf(
-            FrameContents,
-            _T("\n<LI><A HREF=\"%s\" TARGET=\"mainwindow\">"),
-            ConvertCase(ChaptersName));
-        }
-        else
-        {
-          wxFprintf(
-            FrameContents,
-            _T("\n<LI><A HREF=\"%s#%s\" TARGET=\"mainwindow\">"),
-            ConvertCase(ChaptersName),
-            topicName);
-        }
-        OutputCurrentSection();
-        wxFprintf(FrameContents, _T("</A>\n"));
-      }
-
-      SetCurrentOutputs(Contents, Chapters);
-      wxFprintf(Chapters, _T("\n<H2>"));
-      OutputCurrentSection();
-      wxFprintf(Contents, _T("</A>\n"));
-      wxFprintf(Chapters, _T("</H2>\n"));
-
-      SetCurrentOutput(Chapters);
-
-      // Add this section title to the list of keywords
-      if (htmlIndex)
-      {
-        OutputCurrentSectionToString(wxTex2RTFBuffer);
-        AddKeyWordForTopic(
-          topicName,
-          wxTex2RTFBuffer,
-          ConvertCase(currentFileName));
-      }
-    }
+    HandleChapterMacro(macroId, start);
     break;
   }
   case ltSECTION:
@@ -907,94 +1290,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   case ltSECTIONHEADING:
   case ltGLOSS:
   {
-    if (!start)
-    {
-      subsectionNo = 0;
-      subsubsectionNo = 0;
-      subsectionStarted = false;
-
-      if (macroId != ltSECTIONSTAR)
-        sectionNo ++;
-
-      SetCurrentOutput(NULL);
-      startedSections = true;
-
-      wxString topicName = FindTopicName(GetNextChunk());
-      ReopenFile(&Sections, SectionsName, topicName);
-      AddTexRef(topicName, SectionsName, SectionNameString);
-
-      SetCurrentSectionName(topicName, SectionsName);
-      if (htmlWorkshopFiles)
-      {
-        HTMLWorkshopAddToContents(1, topicName, SectionsName);
-      }
-
-      SetCurrentOutput(Sections);
-      HTMLHead();
-      TexOutput(_T("<title>"));
-      OutputCurrentSection();
-      TexOutput(_T("</title></head>\n"));
-      OutputBodyStart();
-
-      wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
-      AddBrowseButtons(
-        CurrentChapterName,
-        CurrentChapterFile, // Up
-        lastTopic,
-        lastFileName,  // Last topic
-        topicName,
-        SectionsName); // This topic
-
-      FILE *jumpFrom = ((DocumentStyle == LATEX_ARTICLE) ? Contents : Chapters);
-
-      SetCurrentOutputs(jumpFrom, Sections);
-      if (DocumentStyle == LATEX_ARTICLE)
-      {
-        if (PrimaryAnchorOfTheFile(SectionsName, topicName))
-        {
-          wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s\">"), ConvertCase(SectionsName));
-        }
-        else
-        {
-          wxFprintf(jumpFrom, _T("\n<LI><A HREF=\"%s#%s\">"), ConvertCase(SectionsName), topicName);
-        }
-      }
-      else
-      {
-        if(PrimaryAnchorOfTheFile(SectionsName, topicName))
-        {
-          wxFprintf(
-            jumpFrom,
-            _T("\n<A HREF=\"%s\"><B>"),
-            ConvertCase(SectionsName));
-        }
-        else
-        {
-          wxFprintf(
-            jumpFrom,
-            _T("\n<A HREF=\"%s#%s\"><B>"),
-            ConvertCase(SectionsName),
-            topicName);
-        }
-      }
-
-      wxFprintf(Sections, _T("\n<H2>"));
-      OutputCurrentSection();
-
-      if (DocumentStyle == LATEX_ARTICLE)
-        wxFprintf(jumpFrom, _T("</A>\n"));
-      else
-        wxFprintf(jumpFrom, _T("</B></A><BR>\n"));
-      wxFprintf(Sections, _T("</H2>\n"));
-
-      SetCurrentOutput(Sections);
-      // Add this section title to the list of keywords
-      if (htmlIndex)
-      {
-        OutputCurrentSectionToString(wxTex2RTFBuffer);
-        AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
-      }
-    }
+    HandleSectionMacro(macroId, start);
     break;
   }
   case ltSUBSECTION:
@@ -1002,231 +1298,13 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   case ltMEMBERSECTION:
   case ltFUNCTIONSECTION:
   {
-    if (!start)
-    {
-      if (!Sections)
-      {
-        OnError(_T("You cannot have a subsection before a section!"));
-      }
-      else
-      {
-          subsubsectionNo = 0;
-
-          if (macroId != ltSUBSECTIONSTAR)
-            subsectionNo ++;
-
-          if ( combineSubSections && !subsectionStarted )
-          {
-            fflush(Sections);
-
-            // Read old .con file in at this point
-            wxFileName FileName = CurrentSectionFile;
-            FileName.SetExt("con");
-            FILE* fd = wxFopen(FileName.GetFullName(), _T("r"));
-            if ( fd )
-            {
-                int ch = getc(fd);
-                while (ch != EOF)
-                {
-                    wxPutc(ch, Sections);
-                    ch = getc(fd);
-                }
-                fclose(fd);
-            }
-            wxFprintf(Sections, _T("<P>\n"));
-
-            // Close old file, create a new file for the sub(sub)section contents entries
-            ReopenSectionContentsFile();
-          }
-
-          startedSections = true;
-          subsectionStarted = true;
-
-          wxString topicName = FindTopicName(GetNextChunk());
-
-          if ( !combineSubSections )
-          {
-            SetCurrentOutput(NULL);
-            ReopenFile(&Subsections, SubsectionsName, topicName);
-            AddTexRef(topicName, SubsectionsName, SubsectionNameString);
-            SetCurrentSubsectionName(topicName, SubsectionsName);
-            if (htmlWorkshopFiles)
-            {
-              HTMLWorkshopAddToContents(2, topicName, SubsectionsName);
-            }
-            SetCurrentOutput(Subsections);
-
-            HTMLHead();
-            TexOutput(_T("<title>"));
-            OutputCurrentSection();
-            TexOutput(_T("</title></head>\n"));
-            OutputBodyStart();
-
-            wxFprintf(Subsections, _T("<A NAME=\"%s\"></A>"), topicName);
-            AddBrowseButtons(
-              CurrentSectionName,
-              CurrentSectionFile, // Up
-              lastTopic,
-              lastFileName,       // Last topic
-              topicName,
-              SubsectionsName);   // This topic
-
-            SetCurrentOutputs(Sections, Subsections);
-            if (PrimaryAnchorOfTheFile(SubsectionsName, topicName))
-            {
-              wxFprintf(
-                Sections,
-                _T("\n<A HREF=\"%s\"><B>"),
-                ConvertCase(SubsectionsName));
-            }
-            else
-            {
-              wxFprintf(
-                Sections,
-                _T("\n<A HREF=\"%s#%s\"><B>"),
-                ConvertCase(SubsectionsName),
-                topicName);
-            }
-
-            wxFprintf(Subsections, _T("\n<H3>"));
-            OutputCurrentSection();
-            wxFprintf(Sections, _T("</B></A><BR>\n"));
-            wxFprintf(Subsections, _T("</H3>\n"));
-
-            SetCurrentOutput(Subsections);
-          }
-          else
-          {
-            AddTexRef(topicName, SectionsName, SubsectionNameString);
-            SetCurrentSubsectionName(topicName, SectionsName);
-
-//            if ( subsectionNo != 0 )
-            wxFprintf(Sections, _T("\n<HR>\n"));
-
-            // We're putting everything into the section file
-            wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
-            wxFprintf(Sections, _T("\n<H3>"));
-            OutputCurrentSection();
-            wxFprintf(Sections, _T("</H3>\n"));
-
-            SetCurrentOutput(SectionContentsFD);
-            wxFprintf(SectionContentsFD, _T("<A HREF=\"#%s\">"), topicName);
-            OutputCurrentSection();
-            TexOutput(_T("</A><BR>\n"));
-
-            if (htmlWorkshopFiles)
-            {
-              HTMLWorkshopAddToContents(2, topicName, SectionsName);
-            }
-            SetCurrentOutput(Sections);
-          }
-          // Add this section title to the list of keywords
-          if (htmlIndex)
-          {
-            OutputCurrentSectionToString(wxTex2RTFBuffer);
-            AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
-          }
-
-      }
-    }
+    HandleFunctionMacro(macroId, start);
     break;
   }
   case ltSUBSUBSECTION:
   case ltSUBSUBSECTIONSTAR:
   {
-    if (!start)
-    {
-      if (!Subsections && !combineSubSections)
-      {
-        OnError(_T("You cannot have a subsubsection before a subsection!"));
-      }
-      else
-      {
-        if (macroId != ltSUBSUBSECTIONSTAR)
-          subsubsectionNo ++;
-
-        startedSections = true;
-
-        wxString topicName = FindTopicName(GetNextChunk());
-
-        if ( !combineSubSections )
-        {
-            SetCurrentOutput(NULL);
-            ReopenFile(&Subsubsections, SubsubsectionsName, topicName);
-            AddTexRef(topicName, SubsubsectionsName, SubsubsectionNameString);
-            SetCurrentSubsubsectionName(topicName, SubsubsectionsName);
-            if (htmlWorkshopFiles) HTMLWorkshopAddToContents(3, topicName, SubsubsectionsName);
-
-            SetCurrentOutput(Subsubsections);
-            HTMLHead();
-            TexOutput(_T("<title>"));
-            OutputCurrentSection();
-            TexOutput(_T("</title></head>\n"));
-            OutputBodyStart();
-
-            wxFprintf(Subsubsections, _T("<A NAME=\"%s\"></A>"), topicName);
-
-            AddBrowseButtons(
-              CurrentSubsectionName,
-              CurrentSubsectionFile, // Up
-              lastTopic,
-              lastFileName,  // Last topic
-              topicName,
-              SubsubsectionsName); // This topic
-
-            SetCurrentOutputs(Subsections, Subsubsections);
-            if (PrimaryAnchorOfTheFile(SubsubsectionsName, topicName))
-            {
-              wxFprintf(
-                Subsections,
-                _T("\n<A HREF=\"%s\"><B>"),
-                ConvertCase(SubsubsectionsName));
-            }
-            else
-            {
-              wxFprintf(
-                Subsections,
-                _T("\n<A HREF=\"%s#%s\"><B>"),
-                ConvertCase(SubsubsectionsName),
-                topicName);
-            }
-
-            wxFprintf(Subsubsections, _T("\n<H3>"));
-            OutputCurrentSection();
-            wxFprintf(Subsections, _T("</B></A><BR>\n"));
-            wxFprintf(Subsubsections, _T("</H3>\n"));
-        }
-        else
-        {
-            AddTexRef(topicName, SectionsName, SubsubsectionNameString);
-            SetCurrentSubsectionName(topicName, SectionsName);
-            wxFprintf(Sections, _T("\n<HR>\n"));
-
-            // We're putting everything into the section file
-            wxFprintf(Sections, _T("<A NAME=\"%s\"></A>"), topicName);
-            wxFprintf(Sections, _T("\n<H3>"));
-            OutputCurrentSection();
-            wxFprintf(Sections, _T("</H3>\n"));
-// TODO: where do we put subsubsection contents entry - indented, with subsection entries?
-//            SetCurrentOutput(SectionContentsFD);
-//            wxFprintf(SectionContentsFD, "<A HREF=\"#%s\">", topicName);
-//            OutputCurrentSection();
-//            TexOutput(_T("</A><BR>"));
-            if (htmlWorkshopFiles)
-            {
-              HTMLWorkshopAddToContents(2, topicName, SectionsName);
-            }
-            SetCurrentOutput(Sections);
-        }
-
-        // Add this section title to the list of keywords
-        if (htmlIndex)
-        {
-          OutputCurrentSectionToString(wxTex2RTFBuffer);
-          AddKeyWordForTopic(topicName, wxTex2RTFBuffer, currentFileName);
-        }
-      }
-    }
+    HandleSubsectionMacro(macroId, start);
     break;
   }
   case ltFUNC:
@@ -1904,50 +1982,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   case ltCAPTION:
   case ltCAPTIONSTAR:
   {
-    if (start)
-    {
-      if (inTabular)
-        TexOutput(_T("\n<CAPTION>"));
-
-      wxChar figBuf[40];
-
-      if ( inFigure )
-      {
-          figureNo ++;
-
-          if (DocumentStyle != LATEX_ARTICLE)
-            wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), FigureNameString, chapterNo, figureNo);
-          else
-            wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), FigureNameString, figureNo);
-      }
-      else
-      {
-          tableNo ++;
-
-          if (DocumentStyle != LATEX_ARTICLE)
-            wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), TableNameString, chapterNo, tableNo);
-          else
-            wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), TableNameString, tableNo);
-      }
-
-      TexOutput(figBuf);
-    }
-    else
-    {
-      if (inTabular)
-        TexOutput(_T("\n</CAPTION>\n"));
-
-      wxString topicName = FindTopicName(GetNextChunk());
-
-      int n = inFigure ? figureNo : tableNo;
-
-      AddTexRef(
-        topicName,
-        wxEmptyString,
-        wxEmptyString,
-        ((DocumentStyle != LATEX_ARTICLE) ? chapterNo : n),
-        ((DocumentStyle != LATEX_ARTICLE) ? n : 0));
-    }
+    HandleCaptionMacro(start);
     break;
   }
   case ltSS:
@@ -2077,9 +2112,9 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 1))
     {
       TexOutput(_T("<B>"));
-      if( CheckTypeRef() ) {
-       TexOutput(_T("</B> "));
-       return false;
+      if (CheckTypeRef()) {
+        TexOutput(_T("</B> "));
+        return false;
       }
     }
 
@@ -2091,7 +2126,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 2))
     {
       if (!suppressNameDecoration) TexOutput(_T("<B>"));
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
     }
     if (!start && (arg_no == 2))
     {
@@ -2101,8 +2136,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 3))
       TexOutput(_T("("));
     if (!start && (arg_no == 3))
-     TexOutput(_T(")"));
-   break;
+      TexOutput(_T(")"));
+    break;
   }
   case ltCLIPSFUNC:
   {
@@ -2114,14 +2149,14 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 2))
     {
       if (!suppressNameDecoration) TexOutput(_T("( "));
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
     }
     if (!start && (arg_no == 2))
     {
     }
 
     if (!start && (arg_no == 3))
-     TexOutput(_T(")"));
+      TexOutput(_T(")"));
     break;
   }
   case ltPFUNC:
@@ -2135,7 +2170,9 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       TexOutput(_T(")"));
 
     if (start && (arg_no == 2))
-      currentMember = GetArgChunk();
+    {
+      pCurrentMember = GetArgChunk();
+    }
 
     if (start && (arg_no == 3))
       TexOutput(_T("("));
@@ -2147,16 +2184,17 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   case ltCPARAM:
   {
     const wxChar* pend = macroId == ltCPARAM ?
-       _T("</B> ") : _T("</B>");
-    if( arg_no == 1) {
-      if( start ) {
-       TexOutput(_T("<B>"));
-       if( CheckTypeRef() ) {
-         TexOutput(pend);
-         return false;
-       }
-      } else {
-       TexOutput(pend);
+      _T("</B> ") : _T("</B>");
+    if (arg_no == 1) {
+      if (start) {
+        TexOutput(_T("<B>"));
+        if (CheckTypeRef()) {
+          TexOutput(pend);
+          return false;
+        }
+      }
+      else {
+        TexOutput(pend);
       }
     }
     if (start && (arg_no == 2))
@@ -2172,10 +2210,14 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   case ltMEMBER:
   {
     if (!start && (arg_no == 1))
+    {
       TexOutput(_T(" "));
+    }
 
     if (start && (arg_no == 2))
-      currentMember = GetArgChunk();
+    {
+      pCurrentMember = GetArgChunk();
+    }
     break;
   }
   case ltREF:
