@@ -1843,7 +1843,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       {
         TexOutput(_T("K{\\footnote {K} "));
         suppressNameDecoration = true;
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         suppressNameDecoration = false;
         TexOutput(_T("}\n"));
       }
@@ -1852,7 +1852,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         // Insert index entry for this function
         TexOutput(_T("{\\xe\\v {"));
         suppressNameDecoration = true;  // Necessary so don't print "(\\bf" etc.
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         suppressNameDecoration = false;
         TexOutput(_T("}}"));
       }
@@ -1873,7 +1873,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       {
         TexOutput(_T("K{\\footnote {K} "));
         suppressNameDecoration = true;  // Necessary so don't print "(\\bf" etc.
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         suppressNameDecoration = false;
         TexOutput(_T("}\n"));
       }
@@ -1882,7 +1882,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         // Insert index entry for this function
         TexOutput(_T("{\\xe\\v {"));
         suppressNameDecoration = true;  // Necessary so don't print "(\\bf" etc.
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         suppressNameDecoration = false;
         TexOutput(_T("}}"));
       }
@@ -1902,7 +1902,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       if (winHelp)
       {
         TexOutput(_T("K{\\footnote {K} "));
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         TexOutput(_T("}\n"));
       }
       if (!winHelp && useWord)
@@ -1910,7 +1910,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
         // Insert index entry for this function
         TexOutput(_T("{\\xe\\v {"));
         suppressNameDecoration = true;  // Necessary so don't print "(\\bf" etc.
-        TraverseChildrenFromChunk(currentMember);
+        TraverseChildrenFromChunk(pCurrentMember);
         suppressNameDecoration = false;
         TexOutput(_T("}}"));
       }
@@ -3254,7 +3254,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 2))
     {
       if (!suppressNameDecoration) TexOutput(_T("{\\b "));
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
     }
     if (!start && (arg_no == 2))
     {
@@ -3283,7 +3283,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (start && (arg_no == 2))
     {
       if (!suppressNameDecoration) TexOutput(_T("({\\b "));
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
     }
     if (!start && (arg_no == 2))
     {
@@ -3311,7 +3311,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       TexOutput(_T(")"));
 
     if (start && (arg_no == 2))
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
 
     if (start && (arg_no == 3))
       TexOutput(_T("("));
@@ -3360,7 +3360,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       TexOutput(_T(" "));
 
     if (start && (arg_no == 2))
-      currentMember = GetArgChunk();
+      pCurrentMember = GetArgChunk();
     break;
   }
   case ltREF:

@@ -166,17 +166,17 @@ class ItemizeStruc : public wxObject
 #define TEX_ABOUT       wxID_ABOUT
 #define TEX_SAVE_FILE   17
 
-extern TexChunk *currentMember;
+extern TexChunk* pCurrentMember;
 extern bool startedSections;
-extern wxChar *contentsString;
+extern wxChar* contentsString;
 extern bool suppressNameDecoration;
 extern wxList itemizeStack;
 
-extern FILE *Contents;
-extern FILE *Chapters;
-extern FILE *Sections;
-extern FILE *Subsections;
-extern FILE *Subsubsections;
+extern FILE* Contents;
+extern FILE* Chapters;
+extern FILE* Sections;
+extern FILE* Subsections;
+extern FILE* Subsubsections;
 
 extern wxString InputFile;
 extern wxString OutputFile;
