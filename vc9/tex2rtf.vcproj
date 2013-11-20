@@ -19,7 +19,7 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Unicode Debug|Win32"
+			Name="Debug|Win32"
 			OutputDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -48,7 +48,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHsc "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;_DEBUG;__WXMSW__;__WXDEBUG__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -61,7 +61,7 @@
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
+				DisableSpecificWarnings="4428;4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -70,18 +70,18 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,__WXMSW__,__WXDEBUG__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw29ud_core.lib wxbase29ud.lib wxzlibd.lib wxregexud.lib wxexpatd.lib wxpngd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
+				AdditionalDependencies="wxmsw30ud_core.lib wxbase30ud.lib wxzlibd.lib wxregexud.lib wxexpatd.lib wxpngd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
@@ -115,7 +115,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Unicode Debug|x64"
+			Name="Debug|x64"
 			OutputDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -145,7 +145,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/EHsc "
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_amd64_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_x64_lib\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;_DEBUG;__WXMSW__;__WXDEBUG__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -158,7 +158,7 @@
 				WarningLevel="4"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="3"
-				DisableSpecificWarnings="4996"
+				DisableSpecificWarnings="4428;4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -167,18 +167,18 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="_DEBUG,__WXMSW__,__WXDEBUG__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib_x64\mswud&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib_x64\mswud&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxbase29ud.lib wxmsw29ud_core.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
+				AdditionalDependencies="wxbase30ud.lib wxmsw30ud_core.lib wxpngd.lib wxzlibd.lib wxregexud.lib wxexpatd.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_amd64_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_x64_lib&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
@@ -211,7 +211,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Unicode Release|Win32"
+			Name="Release|Win32"
 			OutputDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -241,7 +241,7 @@
 				AdditionalOptions="/EHsc "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;__WXMSW__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -253,7 +253,7 @@
 				ProgramDataBaseFileName=".\$(OutDir)\tex2rtf.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4996"
+				DisableSpecificWarnings="4428;4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -262,18 +262,18 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="__WXMSW__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib\mswu;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib\mswu;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw29u_core.lib wxbase29u.lib wxzlib.lib wxregexu.lib wxexpat.lib wxpng.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
+				AdditionalDependencies="wxmsw30u_core.lib wxbase30u.lib wxzlib.lib wxregexu.lib wxexpat.lib wxpng.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib&quot;"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
@@ -305,7 +305,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Unicode Release|x64"
+			Name="Release|x64"
 			OutputDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="BuildDir\$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
@@ -336,7 +336,7 @@
 				AdditionalOptions="/EHsc "
 				Optimization="2"
 				InlineFunctionExpansion="1"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_amd64_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_x64_lib\mswu&quot;;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 				PreprocessorDefinitions="WIN32;__WXMSW__;_CONSOLE;wxUSE_GUI=0;NO_GUI"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -348,7 +348,7 @@
 				ProgramDataBaseFileName=".\$(OutDir)\tex2rtf.pdb"
 				WarningLevel="4"
 				SuppressStartupBanner="true"
-				DisableSpecificWarnings="4996"
+				DisableSpecificWarnings="4428;4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -357,18 +357,18 @@
 				Name="VCResourceCompilerTool"
 				PreprocessorDefinitions="__WXMSW__,_UNICODE,_CONSOLE,wxUSE_GUI=0,NO_GUI"
 				Culture="1033"
-				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib_x64\mswu;&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\include&quot;;."
+				AdditionalIncludeDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_lib_x64\mswu;&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\include&quot;;."
 			/>
 			<Tool
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wxmsw29u_core.lib wxbase29u.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
+				AdditionalDependencies="wxmsw30u_core.lib wxbase30u.lib wxpng.lib wxzlib.lib wxregexu.lib wxexpat.lib winmm.lib comctl32.lib rpcrt4.lib wsock32.lib odbc32.lib"
 				OutputFile=".\$(OutDir)\tex2rtf.exe"
 				LinkIncremental="1"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_amd64_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxWidgets-3.0.0-VC9\lib\vc_x64_lib&quot;"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf.pdb"
 				SubSystem="1"
 				RandomizedBaseAddress="1"
