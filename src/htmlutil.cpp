@@ -219,8 +219,9 @@ void ReopenFile(FILE **fd, wxString& FileName, const wxString& label)
   {
     gs_filenames.Add(wxEmptyString);
   }
-  wxChar buf[400];
-  wxSnprintf(buf, sizeof(buf), HTML_FILENAME_PATTERN, FileRoot, label);
+  const size_t bufSize = 400;
+  wxChar buf[bufSize];
+  wxSnprintf(buf, bufSize, HTML_FILENAME_PATTERN, FileRoot, label);
   gs_filenames.Add(buf);
   FileName = wxFileNameFromPath(buf);
   *fd = wxFopen(buf, _T("w"));
@@ -466,7 +467,8 @@ void AddBrowseButtons(
 
   TexOutput(_T("<CENTER>"));
 
-  wxChar buf[200];
+  const size_t bufSize = 200;
+  wxChar buf[bufSize];
 
   // Contents button
 
@@ -474,7 +476,7 @@ void AddBrowseButtons(
   wxStrcpy(buf1, ConvertCase(wxFileNameFromPath(FileRoot)));
   wxSnprintf(
     buf,
-    sizeof(buf),
+    bufSize,
     _T("\n<A HREF=\"%s%s\">%s</A> "),
     buf1,
     ConvertCase(_T("_contents.html")),
@@ -492,7 +494,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s#%s\">%s</A> "),
         ConvertCase(upFilename),
         upLabel,
@@ -502,7 +504,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s\">%s</A> "),
         ConvertCase(upFilename),
         upReference);
@@ -527,7 +529,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s\">%s</A> "),
         ConvertCase(previousFilename),
         backReference);
@@ -536,7 +538,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s#%s\">%s</A> "),
         ConvertCase(previousFilename),
         previousLabel,
@@ -556,7 +558,7 @@ void AddBrowseButtons(
   else
   {
     // A placeholder so the buttons don't keep moving position
-    wxSnprintf(buf, sizeof(buf), _T("%s "), backReference);
+    wxSnprintf(buf, bufSize, _T("%s "), backReference);
     TexOutput(buf);
   }
 
@@ -591,7 +593,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s\">%s</A> "),
         ConvertCase(nextFilename),
         forwardReference);
@@ -600,7 +602,7 @@ void AddBrowseButtons(
     {
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("<A HREF=\"%s#%s\">%s</A> "),
         ConvertCase(nextFilename),
         nextLabel,
@@ -611,7 +613,7 @@ void AddBrowseButtons(
   else
   {
     // A placeholder so the buttons don't keep moving position
-    wxSnprintf(buf, sizeof(buf), _T("%s "), forwardReference);
+    wxSnprintf(buf, bufSize, _T("%s "), forwardReference);
     TexOutput(buf);
   }
 
@@ -1230,25 +1232,26 @@ void HandleCaptionMacro(bool start)
     if (inTabular)
       TexOutput(_T("\n<CAPTION>"));
 
-    wxChar figBuf[40];
+    const size_t figBufSize = 40;
+    wxChar figBuf[figBufSize];
 
     if ( inFigure )
     {
         figureNo ++;
 
         if (DocumentStyle != LATEX_ARTICLE)
-          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), FigureNameString, chapterNo, figureNo);
+          wxSnprintf(figBuf, figBufSize, _T("%s %d.%d: "), FigureNameString, chapterNo, figureNo);
         else
-          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), FigureNameString, figureNo);
+          wxSnprintf(figBuf, figBufSize, _T("%s %d: "), FigureNameString, figureNo);
     }
     else
     {
         tableNo ++;
 
         if (DocumentStyle != LATEX_ARTICLE)
-          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d.%d: "), TableNameString, chapterNo, tableNo);
+          wxSnprintf(figBuf, figBufSize, _T("%s %d.%d: "), TableNameString, chapterNo, tableNo);
         else
-          wxSnprintf(figBuf, sizeof(figBuf), _T("%s %d: "), TableNameString, tableNo);
+          wxSnprintf(figBuf, figBufSize, _T("%s %d: "), TableNameString, tableNo);
     }
 
     TexOutput(figBuf);
@@ -1380,11 +1383,12 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
         if (currentColumn < noColumns)
           currentColumn ++;
 
-        wxChar buf[100];
+        const size_t bufSize = 100;
+        wxChar buf[bufSize];
         if (TableData[currentColumn].justification == 'c')
-          wxSnprintf(buf, sizeof(buf), _T("\n<TD ALIGN=CENTER>"));
+          wxSnprintf(buf, bufSize, _T("\n<TD ALIGN=CENTER>"));
         else if (TableData[currentColumn].justification == 'r')
-          wxSnprintf(buf, sizeof(buf), _T("\n<TD ALIGN=RIGHT>"));
+          wxSnprintf(buf, bufSize, _T("\n<TD ALIGN=RIGHT>"));
         else if (TableData[currentColumn].absWidth)
         {
           // Convert from points * 20 into pixels.
@@ -1393,10 +1397,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
           // Say the display is 100 DPI (dots/pixels per inch).
           // There are 72 pts to the inch. So 1pt = 1/72 inch, or 100 * 1/72 dots.
           int pixels = (int)(points * 100.0 / 72.0);
-          wxSnprintf(buf, sizeof(buf), _T("<TD ALIGN=CENTER WIDTH=%d>"), pixels);
+          wxSnprintf(buf, bufSize, _T("<TD ALIGN=CENTER WIDTH=%d>"), pixels);
         }
         else
-          wxSnprintf(buf, sizeof(buf), _T("\n<TD ALIGN=LEFT>"));
+          wxSnprintf(buf, bufSize, _T("\n<TD ALIGN=LEFT>"));
         TexOutput(buf);
         OutputFont();
       }
@@ -1429,11 +1433,12 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
       currentColumn = 0;
 
       // Start new row and cell, setting alignment for the first cell.
-      wxChar buf[100];
+      const size_t bufSize = 100;
+      wxChar buf[bufSize];
       if (TableData[currentColumn].justification == 'c')
-        wxSnprintf(buf, sizeof(buf), _T("<TR>\n<TD ALIGN=CENTER>"));
+        wxSnprintf(buf, bufSize, _T("<TR>\n<TD ALIGN=CENTER>"));
       else if (TableData[currentColumn].justification == 'r')
-        wxSnprintf(buf, sizeof(buf), _T("<TR>\n<TD ALIGN=RIGHT>"));
+        wxSnprintf(buf, bufSize, _T("<TR>\n<TD ALIGN=RIGHT>"));
       else if (TableData[currentColumn].absWidth)
       {
         // Convert from points * 20 into pixels.
@@ -1442,10 +1447,10 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
         // Say the display is 100 DPI (dots/pixels per inch).
         // There are 72 pts to the inch. So 1pt = 1/72 inch, or 100 * 1/72 dots.
         int pixels = (int)(points * 100.0 / 72.0);
-        wxSnprintf(buf, sizeof(buf), _T("<TR>\n<TD ALIGN=CENTER WIDTH=%d>"), pixels);
+        wxSnprintf(buf, bufSize, _T("<TR>\n<TD ALIGN=CENTER WIDTH=%d>"), pixels);
       }
       else
-        wxSnprintf(buf, sizeof(buf), _T("<TR>\n<TD ALIGN=LEFT>"));
+        wxSnprintf(buf, bufSize, _T("<TR>\n<TD ALIGN=LEFT>"));
       TexOutput(buf);
       OutputFont();
     }
@@ -1591,8 +1596,9 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   {
     if (start)
     {
-      wxChar buf[100];
-      wxSnprintf(buf, sizeof(buf), _T("<PRE>\n"));
+      const size_t bufSize = 100;
+      wxChar buf[bufSize];
+      wxSnprintf(buf, bufSize, _T("<PRE>\n"));
       TexOutput(buf);
     }
     else TexOutput(_T("</PRE>\n"));
@@ -2372,7 +2378,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
 
         // Try to find an XBM or GIF image first.
         wxString filename = GetArgData();
-        wxChar buf[500];
+        const size_t bufSize = 500;
+        wxChar buf[bufSize];
 
         wxStrcpy(buf, filename);
         StripExtension(buf);
@@ -2437,7 +2444,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
           TexOutput(_T("<A HREF=\""));
           TexOutput(ConvertCase(wxFileNameFromPath(filename)));
           TexOutput(_T("\">Picture</A>\n"));
-          wxSnprintf(buf, sizeof(buf), _T("Warning: could not find an inline XBM/GIF for %s."), filename);
+          wxSnprintf(buf, bufSize, _T("Warning: could not find an inline XBM/GIF for %s."), filename);
           OnInform(buf);
         }
       }
@@ -2546,8 +2553,9 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         // DHS
         if (TwoColWidthA > -1)
         {
-          wxChar buf[100];
-          wxSnprintf(buf, sizeof(buf), _T("\n<TR><TD VALIGN=TOP WIDTH=%d>\n"),TwoColWidthA);
+          const size_t bufSize = 100;
+          wxChar buf[bufSize];
+          wxSnprintf(buf, bufSize, _T("\n<TR><TD VALIGN=TOP WIDTH=%d>\n"),TwoColWidthA);
           TexOutput(buf);
         }
         else
@@ -2565,8 +2573,9 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       {
         if (TwoColWidthB > -1)
         {
-          wxChar buf[100];
-          wxSnprintf(buf, sizeof(buf), _T("\n<TD VALIGN=TOP WIDTH=%d>\n"),TwoColWidthB);
+          const size_t bufSize = 100;
+          wxChar buf[bufSize];
+          wxSnprintf(buf, bufSize, _T("\n<TD VALIGN=TOP WIDTH=%d>\n"),TwoColWidthB);
           TexOutput(buf);
         }
         else
@@ -2591,7 +2600,8 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
   }
   case ltBIBITEM:
   {
-    wxChar buf[100];
+    const size_t bufSize = 100;
+    wxChar buf[bufSize];
     if (arg_no == 1 && start)
     {
       wxString citeKey = GetArgData();
@@ -2601,12 +2611,12 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
         TexRef *ref = iTexRef->second;
         if (ref)
         {
-          wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
+          wxSnprintf(buf, bufSize, _T("[%d]"), citeCount);
           ref->sectionNumber = buf;
         }
       }
 
-      wxSnprintf(buf, sizeof(buf), _T("\n<DT> [%d] "), citeCount);
+      wxSnprintf(buf, bufSize, _T("\n<DT> [%d] "), citeCount);
       TexOutput(buf);
       citeCount ++;
       return false;
@@ -3532,11 +3542,12 @@ void GenerateHTMLIndexFile(const wxString& FileName)
 void GenerateHTMLWorkshopFiles(const wxString& FileName)
 {
   FILE* f;
-  wxChar buf[300];
+  const size_t bufSize = 300;
+  wxChar buf[bufSize];
 
   // Generate project file :
 
-  wxSnprintf(buf, sizeof(buf), _T("%s.hhp"), FileName);
+  wxSnprintf(buf, bufSize, _T("%s.hhp"), FileName);
   f = wxFopen(buf, _T("wt"));
   wxFprintf(
     f,
@@ -3585,7 +3596,7 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
 
   // Generate index file :
 
-  wxSnprintf(buf, sizeof(buf), _T("%s.hhk"), FileName);
+  wxSnprintf(buf, bufSize, _T("%s.hhk"), FileName);
   f = wxFopen(buf, _T("wt"));
 
   wxFprintf(
@@ -3677,8 +3688,9 @@ void HTMLWorkshopAddToContents(
 //*****************************************************************************
 void HTMLWorkshopStartContents()
 {
-  wxChar buf[300];
-  wxSnprintf(buf, sizeof(buf), _T("%s.hhc"), FileRoot);
+  const size_t bufSize = 300;
+  wxChar buf[bufSize];
+  wxSnprintf(buf, bufSize, _T("%s.hhc"), FileRoot);
   HTMLWorkshopContents = wxFopen(buf, _T("wt"));
   HTMLWorkshopLastLevel = 0;
 
