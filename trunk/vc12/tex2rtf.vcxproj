@@ -112,7 +112,7 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;__WXMSW__;__WXDEBUG__;_UNICODE;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxMSW-2.9.5-VC12\lib\vc_lib\mswud;$(EXT_PKGS)\wxMSW-2.9.5-VC12\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.0.0-VC12\lib\vc_lib\mswud;$(EXT_PKGS)\wxWidgets-3.0.0-VC12\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>wxmsw30ud_core.lib;wxbase30ud.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;wxpngd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -161,7 +161,7 @@
     <ResourceCompile>
       <PreprocessorDefinitions>_DEBUG;__WXMSW__;__WXDEBUG__;_UNICODE;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxMSW-2.9.5-VC12\lib\vc_lib_x64\mswud;$(EXT_PKGS)\wxMSW-2.9.5-VC12\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.0.0-VC12\lib\vc_lib_x64\mswud;$(EXT_PKGS)\wxWidgets-3.0.0-VC12\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>wxbase30ud.lib;wxmsw30ud_core.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -208,7 +208,7 @@
     <ResourceCompile>
       <PreprocessorDefinitions>__WXMSW__;_UNICODE;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxMSW-2.9.5-VC12\lib\vc_lib\mswu%3b$(EXT_PKGS)\wxMSW-2.9.5-VC12\include%3b.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.0.0-VC12\lib\vc_lib\mswu%3b$(EXT_PKGS)\wxWidgets-3.0.0-VC12\include%3b.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>wxmsw30u_core.lib;wxbase30u.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;wxpng.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -254,7 +254,7 @@
     <ResourceCompile>
       <PreprocessorDefinitions>__WXMSW__;_UNICODE;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <Culture>0x0409</Culture>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxMSW-2.9.5-VC12\lib\vc_lib_x64\mswu%3b$(EXT_PKGS)\wxMSW-2.9.5-VC12\include%3b.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.0.0-VC12\lib\vc_lib_x64\mswu%3b$(EXT_PKGS)\wxWidgets-3.0.0-VC12\include%3b.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
       <AdditionalDependencies>wxmsw30u_core.lib;wxbase30u.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
