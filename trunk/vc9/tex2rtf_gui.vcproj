@@ -281,7 +281,7 @@
 				OutputFile=".\$(OutDir)\tex2rtf_gui.exe"
 				LinkIncremental="2"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxmsw-2.9.2-VC9\lib\vc_lib&quot;"
+				AdditionalLibraryDirectories="&quot;$(EXT_PKGS)\wxMSW-2.9.4-VC9\lib\vc_lib&quot;"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=".\$(OutDir)\tex2rtf_gui.pdb"
 				SubSystem="2"
