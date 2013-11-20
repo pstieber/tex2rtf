@@ -128,14 +128,15 @@ bool OutputBitmapHeader(FILE *fd, bool isWinHelp = false)
   if (isWinHelp) TexOutput(_T("\\wbitmap0"));
   else TexOutput(_T("\\dibitmap)"));
 
-  wxChar buf[50];
-  TexOutput(_T("\\picw")); wxSnprintf(buf, sizeof(buf), _T("%d"), Width); TexOutput(buf);
-  TexOutput(_T("\\pich")); wxSnprintf(buf, sizeof(buf), _T("%d"), Height); TexOutput(buf);
-  TexOutput(_T("\\wbmbitspixel")); wxSnprintf(buf, sizeof(buf), _T("%d"), BitsPerPixel); TexOutput(buf);
-  TexOutput(_T("\\wbmplanes")); wxSnprintf(buf, sizeof(buf), _T("%d"), Planes); TexOutput(buf);
-  TexOutput(_T("\\wbmwidthbytes")); wxSnprintf(buf, sizeof(buf), _T("%d"), scanLineWidth); TexOutput(buf);
-  TexOutput(_T("\\picwgoal")); wxSnprintf(buf, sizeof(buf), _T("%d"), goalW); TexOutput(buf);
-  TexOutput(_T("\\pichgoal")); wxSnprintf(buf, sizeof(buf), _T("%d"), goalH); TexOutput(buf);
+  const size_t bufSize = 50;
+  wxChar buf[bufSize];
+  TexOutput(_T("\\picw")); wxSnprintf(buf, bufSize, _T("%d"), Width); TexOutput(buf);
+  TexOutput(_T("\\pich")); wxSnprintf(buf, bufSize, _T("%d"), Height); TexOutput(buf);
+  TexOutput(_T("\\wbmbitspixel")); wxSnprintf(buf, bufSize, _T("%d"), BitsPerPixel); TexOutput(buf);
+  TexOutput(_T("\\wbmplanes")); wxSnprintf(buf, bufSize, _T("%d"), Planes); TexOutput(buf);
+  TexOutput(_T("\\wbmwidthbytes")); wxSnprintf(buf, bufSize, _T("%d"), scanLineWidth); TexOutput(buf);
+  TexOutput(_T("\\picwgoal")); wxSnprintf(buf, bufSize, _T("%d"), goalW); TexOutput(buf);
+  TexOutput(_T("\\pichgoal")); wxSnprintf(buf, bufSize, _T("%d"), goalH); TexOutput(buf);
   TexOutput(_T("\n"));
   return true;
 }
@@ -223,11 +224,12 @@ bool OutputMetafileHeader(FILE *handle, bool WXUNUSED(isWinHelp), int userWidth,
   TexOutput(_T("{\\pict"));
   TexOutput(_T("\\wmetafile8"));
 
-  wxChar buf[50];
-  TexOutput(_T("\\picw")); wxSnprintf(buf, sizeof(buf), _T("%d"), Width); TexOutput(buf);
-  TexOutput(_T("\\pich")); wxSnprintf(buf, sizeof(buf), _T("%d"), Height); TexOutput(buf);
-  TexOutput(_T("\\picwgoal")); wxSnprintf(buf, sizeof(buf), _T("%d"), goalW); TexOutput(buf);
-  TexOutput(_T("\\pichgoal")); wxSnprintf(buf, sizeof(buf), _T("%d"), goalH); TexOutput(buf);
+  const size_t bufSize = 50;
+  wxChar buf[bufSize];
+  TexOutput(_T("\\picw")); wxSnprintf(buf, bufSize, _T("%d"), Width); TexOutput(buf);
+  TexOutput(_T("\\pich")); wxSnprintf(buf, bufSize, _T("%d"), Height); TexOutput(buf);
+  TexOutput(_T("\\picwgoal")); wxSnprintf(buf, bufSize, _T("%d"), goalW); TexOutput(buf);
+  TexOutput(_T("\\pichgoal")); wxSnprintf(buf, bufSize, _T("%d"), goalH); TexOutput(buf);
   TexOutput(_T("\n"));
   return true;
 }

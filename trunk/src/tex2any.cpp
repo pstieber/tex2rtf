@@ -867,8 +867,9 @@ bool read_a_line(wxChar* buf)
     wxString actualFile = TexPathList.FindValidPath(fileNameStr);
     if (actualFile.empty())
     {
-      wxChar buf2[400];
-      wxSnprintf(buf2, sizeof(buf2), _T("%s.tex"), fileNameStr.c_str());
+      const size_t buf2Size = 400;
+      wxChar buf2[buf2Size];
+      wxSnprintf(buf2, buf2Size, _T("%s.tex"), fileNameStr.c_str());
       actualFile = TexPathList.FindValidPath(buf2);
     }
     currentFileName = actualFile;

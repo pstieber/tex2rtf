@@ -121,8 +121,9 @@ bool ParseTableArgument(const wxString& value)
     }
     else
     {
-      wxChar *buf = new wxChar[wxStrlen(value) + 80];
-      wxSnprintf(buf, wxStrlen(value) + 80, _T("Tabular first argument \"%s\" too complex!"), value);
+      const size_t bufSize = wxStrlen(value) + 80;
+      wxChar* buf = new wxChar[bufSize];
+      wxSnprintf(buf, bufSize, _T("Tabular first argument \"%s\" too complex!"), value);
       OnError(buf);
       delete[] buf;
       return false;

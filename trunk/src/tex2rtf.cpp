@@ -520,7 +520,7 @@ void Tex2RtfApplication::CleanUp()
 
   if (BigBuffer)
   {
-    delete BigBuffer;
+    delete [] BigBuffer;
     BigBuffer = NULL;
   }
   if (TopLevel)
@@ -583,7 +583,7 @@ int Tex2RtfApplication::OnExit()
 #endif
     if (BigBuffer)
     {
-      delete BigBuffer;
+      delete [] BigBuffer;
       BigBuffer = NULL;
     }
     if (TopLevel)
@@ -745,8 +745,9 @@ void MyFrame::OnSaveFile(wxCommandEvent& WXUNUSED(event))
   if (!s.empty())
   {
     textWindow->SaveFile(s);
-    wxChar buf[350];
-    wxSnprintf(buf, sizeof(buf), _T("Saved text to %s"), (const wxChar*) s.c_str());
+    const size_t bufSize = 350;
+    wxChar buf[bufSize];
+    wxSnprintf(buf, bufSize, _T("Saved text to %s"), (const wxChar*) s.c_str());
     pFrame->SetStatusText(buf, 0);
   }
 #endif // wxUSE_FILEDLG
@@ -760,9 +761,10 @@ void MyFrame::OnViewOutput(wxCommandEvent& WXUNUSED(event))
   if (!OutputFile.empty() && wxFileExists(OutputFile))
   {
     textWindow->LoadFile(OutputFile);
-    wxChar buf[300];
+    const size_t bufSize = 300;
+    wxChar buf[bufSize];
     wxString str(wxFileNameFromPath(OutputFile));
-    wxSnprintf(buf, sizeof(buf), _T("Tex2RTF [%s]"), (const wxChar*) str.c_str());
+    wxSnprintf(buf, bufSize, _T("Tex2RTF [%s]"), (const wxChar*) str.c_str());
     pFrame->SetTitle(buf);
   }
 }
@@ -775,9 +777,10 @@ void MyFrame::OnViewLatex(wxCommandEvent& WXUNUSED(event))
   if (!InputFile.empty() && wxFileExists(InputFile))
   {
     textWindow->LoadFile(InputFile);
-    wxChar buf[300];
+    const size_t bufSize = 300;
+    wxChar buf[bufSize];
     wxString str(wxFileNameFromPath(OutputFile));
-    wxSnprintf(buf, sizeof(buf), _T("Tex2RTF [%s]"), (const wxChar*) str.c_str());
+    wxSnprintf(buf, bufSize, _T("Tex2RTF [%s]"), (const wxChar*) str.c_str());
     pFrame->SetTitle(buf);
   }
 }

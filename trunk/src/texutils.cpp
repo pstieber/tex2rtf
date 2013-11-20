@@ -377,7 +377,8 @@ void AddTexRef(
   int subsection,
   int subsubsection)
 {
-  wxChar buf[100];
+  const size_t bufSize = 100;
+  wxChar buf[bufSize];
   buf[0] = 0;
 //  if (sectionName)
 //  {
@@ -386,31 +387,35 @@ void AddTexRef(
 //  }
   if (chapter)
   {
-    wxChar buf2[10];
-    wxSnprintf(buf2, sizeof(buf2), _T("%d"), chapter);
+    const size_t buf2Size = 10;
+    wxChar buf2[buf2Size];
+    wxSnprintf(buf2, buf2Size, _T("%d"), chapter);
     wxStrcat(buf, buf2);
   }
   if (section)
   {
-    wxChar buf2[10];
+    const size_t buf2Size = 10;
+    wxChar buf2[buf2Size];
     if (chapter)
       wxStrcat(buf, _T("."));
 
-    wxSnprintf(buf2, sizeof(buf2), _T("%d"), section);
+    wxSnprintf(buf2, buf2Size, _T("%d"), section);
     wxStrcat(buf, buf2);
   }
   if (subsection)
   {
-    wxChar buf2[10];
+    const size_t buf2Size = 10;
+    wxChar buf2[buf2Size];
     wxStrcat(buf, _T("."));
-    wxSnprintf(buf2, sizeof(buf2), _T("%d"), subsection);
+    wxSnprintf(buf2, buf2Size, _T("%d"), subsection);
     wxStrcat(buf, buf2);
   }
   if (subsubsection)
   {
-    wxChar buf2[10];
+    const size_t buf2Size = 10;
+    wxChar buf2[buf2Size];
     wxStrcat(buf, _T("."));
-    wxSnprintf(buf2, sizeof(buf2), _T("%d"), subsubsection);
+    wxSnprintf(buf2, buf2Size, _T("%d"), subsubsection);
     wxStrcat(buf, buf2);
   }
   wxChar *tmp = ((wxStrlen(buf) > 0) ? buf : (wxChar *)NULL);
@@ -711,10 +716,11 @@ wxString BibReadValue(
 
   if (line.length() >= 4000)
   {
-    wxChar buf[100];
+    const size_t bufSize = 100;
+    wxChar buf[bufSize];
     wxSnprintf(
       buf,
-      sizeof(buf),
+      bufSize,
       _T("Sorry, value > 4000 chars in bib file at line %ld."),
       BibLine);
     wxLogError(buf, "Tex2RTF Fatal Error");
@@ -776,10 +782,11 @@ void BibReadValue(
 //    ++i;
     if (i >= 4000)
     {
-      wxChar buf[100];
+      const size_t bufSize = 100;
+      wxChar buf[bufSize];
       wxSnprintf(
         buf,
-        sizeof(buf),
+        bufSize,
         _T("Sorry, value > 4000 chars in bib file at line %ld."),
         BibLine);
       wxLogError(buf, "Tex2RTF Fatal Error");
@@ -1370,7 +1377,8 @@ void ResolveBibReferences(void)
     OnInform(_T("Resolving bibliographic references..."));
 
   citeCount = 1;
-  wxChar buf[200];
+  const size_t bufSize = 200;
+  wxChar buf[bufSize];
   for (
     StringSet::iterator it = CitationList.begin();
     it != CitationList.end();
@@ -1391,7 +1399,7 @@ void ResolveBibReferences(void)
         {
           ref->sectionNumber = wxEmptyString;
         }
-        wxSnprintf(buf, sizeof(buf), _T("[%d]"), citeCount);
+        wxSnprintf(buf, bufSize, _T("[%d]"), citeCount);
         ref->sectionNumber = buf;
         ++citeCount;
       }
@@ -1399,7 +1407,7 @@ void ResolveBibReferences(void)
       {
         wxSnprintf(
           buf,
-          sizeof(buf),
+          bufSize,
           _T("Warning: bib ref %s not resolved."),
           citeKey.c_str());
         OnInform(buf);
@@ -1759,8 +1767,9 @@ wxChar *RegisterSetting(
     }
     else
     {
-      wxChar buf[200];
-      wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: nonstandard document font size %d."), n);
+      const size_t bufSize = 200;
+      wxChar buf[bufSize];
+      wxSnprintf(buf, bufSize, _T("Initialisation file error: nonstandard document font size %d."), n);
       if (interactive)
       {
         OnInform(buf);
@@ -1770,8 +1779,9 @@ wxChar *RegisterSetting(
   }
   else
   {
-    wxChar buf[200];
-    wxSnprintf(buf, sizeof(buf), _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
+    const size_t bufSize = 200;
+    wxChar buf[bufSize];
+    wxSnprintf(buf, bufSize, _T("Initialisation file error: unrecognised setting %s."), settingName.c_str());
     if (interactive)
     {
       OnInform(buf);
@@ -1863,8 +1873,9 @@ bool ReadCustomMacros(const wxString& FileName)
 
   }
 
-  wxChar mbuf[200];
-  wxSnprintf(mbuf, sizeof(mbuf), _T("Read initialization file %s."), FileName);
+  const size_t mbufSize = 200;
+  wxChar mbuf[mbufSize];
+  wxSnprintf(mbuf, mbufSize, _T("Read initialization file %s."), FileName);
   OnInform(mbuf);
 
   return true;
@@ -1897,14 +1908,15 @@ void ShowCustomMacros(void)
     return;
   }
 
-  wxChar buf[400];
+  const size_t bufSize = 400;
+  wxChar buf[bufSize];
   while (it != CustomMacroMap.end())
   {
     CustomMacro* macro = it->second;
 
     wxSnprintf(
       buf,
-      sizeof(buf),
+      bufSize,
       _T("\\%s[%d]\n    {%s}"),
       macro->mName,
       macro->mArgumentCount,
