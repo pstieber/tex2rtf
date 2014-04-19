@@ -1873,10 +1873,9 @@ bool ReadCustomMacros(const wxString& FileName)
 
   }
 
-  const size_t mbufSize = 200;
-  wxChar mbuf[mbufSize];
-  wxSnprintf(mbuf, mbufSize, _T("Read initialization file %s."), FileName);
-  OnInform(mbuf);
+  wxString Buffer;
+  Buffer << "Read initialization file " << FileName << ".";
+  OnInform(Buffer);
 
   return true;
 }
