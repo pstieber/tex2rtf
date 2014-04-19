@@ -3299,6 +3299,7 @@ bool HTMLGo(void)
     // recursively.
     Text2HTML(GetTopLevelChunk());
 
+    TitlepageName.clear();
     TitlepageName << FileRoot << "_contents.html";
     Titlepage = wxFopen(TitlepageName, _T("w"));
 
