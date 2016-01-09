@@ -8,7 +8,7 @@ AC_CONFIG_AUX_DIR([config])
 
 AC_CONFIG_SRCDIR([src/tex2rtf.cpp])
 
-AM_INIT_AUTOMAKE
+AM_INIT_AUTOMAKE([foreign])
 
 AC_CONFIG_HEADERS(src/config.h)
 
@@ -105,7 +105,7 @@ esac
 
 dnl Check for wxWidgets
 WX_CONFIG_OPTIONS
-MIN_WX_VERSION="2.9.4"
+MIN_WX_VERSION="3.0.0"
 WX_CONFIG_CHECK(
   [$MIN_WX_VERSION],
   [],
@@ -157,12 +157,14 @@ fi
 
 EXTRA_CFLAGS="$TLDEBUG $PROFILE $OPTIMISE"
 
-# CPPFLAGS="$CPPFLAGS $WX_CPPFLAGS"
-CPPFLAGS=`echo -Wall -Wno-unknown-pragmas $BITMAPS_FLAGS $WX_CPPFLAGS | sed 's/ \+/ /g'`
+CPPFLAGS=`echo -Wall -Wno-unknown-pragmas $BITMAPS_FLAGS $WX_CPPFLAGS | \
+sed 's/ \+/ /g'`
 
-CFLAGS=`echo $EXTRA_CFLAGS $CFLAGS $WX_CFLAGS_ONLY | sed 's/ \\+/ /g'`
+CFLAGS=`echo $EXTRA_CFLAGS $CFLAGS $WX_CFLAGS_ONLY | \
+sed 's/ \\+/ /g'`
 
-CXXFLAGS=`echo $EXTRA_CFLAGS $CXXFLAGS $WX_CXXFLAGS_ONLY | sed 's/ \+/ /g'`
+CXXFLAGS=`echo -std=c++11 $EXTRA_CFLAGS $CXXFLAGS $WX_CXXFLAGS_ONLY | \
+sed 's/ \+/ /g'`
 
 LDFLAGS="$LDFLAGS $WX_LIBS"
 
