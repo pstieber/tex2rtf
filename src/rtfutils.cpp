@@ -24,6 +24,8 @@
 #include "bmputils.h"
 #include "table.h"
 
+#include <map>
+
 using namespace std;
 
 wxList itemizeStack;
@@ -33,7 +35,7 @@ int forbidResetPar = 0; // If > 0, don't reset memory of having output a new par
 
 static wxString contentsLineSection;
 static wxString contentsLineValue;
-static TexChunk *descriptionItemArg = NULL;
+static TexChunk *descriptionItemArg = nullptr;
 static wxArrayString environmentStack; // Stack of paragraph styles we need to remember
 static int footnoteCount = 0;
 static int citeCount = 1;
@@ -47,7 +49,7 @@ extern wxString RTFCharset;
 // This is defined in the Tex2Any library and isn't in use after parsing
 extern wxChar *BigBuffer;
 
-extern TexReferenceMap TexReferences;
+extern map<wxString, TexRef*> TexReferences;
 
 // Are we in verbatim mode? If so, format differently.
 static bool inVerbatim = false;
@@ -82,7 +84,7 @@ static int TwoColWidthB = 3000;
 const int PageWidth = 12242; // 8.25 inches wide for A4
 
 // Remember the anchor in a helpref
-static TexChunk *helpRefText = NULL;
+static TexChunk *helpRefText = nullptr;
 
 /*
  * Flag to say we've just issued a \par\pard command, so don't
@@ -171,11 +173,16 @@ void NotifyParentHasChildren(int parentLevel)
   }
   if (!parentTopic.empty())
   {
-    TexTopic *texTopic = (TexTopic *)TopicTable.Get(parentTopic);
-    if (!texTopic)
+    TexTopic* texTopic(nullptr);
+    auto TopicIter = TopicTable.find(parentTopic);
+    if (TopicIter == TopicTable.end())
     {
       texTopic = new TexTopic;
-      TopicTable.Put(parentTopic, texTopic);
+      TopicTable.insert(make_pair(parentTopic, texTopic));
+    }
+    else
+    {
+      texTopic = TopicIter->second;
     }
     texTopic->hasChildren = true;
   }
@@ -268,9 +275,11 @@ void WriteWinHelpContentsFileLine(
 
   if (winHelp && winHelpContents && WinHelpContentsFile)
   {
-    TexTopic *texTopic = (TexTopic *)TopicTable.Get(topicName);
-    if (texTopic)
+    auto TopicIter = TopicTable.find(topicName);
+    if (TopicIter != TopicTable.end())
     {
+      TexTopic* texTopic = TopicIter->second;
+
       // If a previous section at this level was a book, we *have* to have a
       // book not a page, because of a bug in WHC (or WinHelp 4).
       if (texTopic->hasChildren || level == 1 || ContentsLevels[level-1])
@@ -339,9 +348,12 @@ void SplitIndexEntry(const wxChar *entry, wxChar *buf1, wxChar *buf2)
  */
 void GenerateKeywordsForTopic(const wxString& topic)
 {
-  TexTopic *texTopic = (TexTopic *)TopicTable.Get(topic);
-  if (!texTopic)
+  auto TopicIter = TopicTable.find(topic);
+  if (TopicIter == TopicTable.end())
+  {
     return;
+  }
+  TexTopic* texTopic = TopicIter->second;
 
   StringSet *set = texTopic->keywords;
   if (set)
@@ -409,9 +421,9 @@ void GenerateIndexEntry(wxChar *entry)
 void WriteColourTable(FILE *fd)
 {
   wxFprintf(fd, _T("{\\colortbl"));
-  for (ColourTableMap::iterator it = ColourTable.begin(); it != ColourTable.end(); ++it)
+  for (const auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry *entry = it->second;
+    ColourTableEntry* entry = StringColourTableEntryPointerPair.second;
     wxFprintf(fd, _T("\\red%d\\green%d\\blue%d;\n"), entry->red, entry->green, entry->blue);
   }
   wxFprintf(fd, _T("}"));
@@ -1172,7 +1184,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
           {
             wxFprintf(Contents, _T("\\par\n\\pard{\\b "));
           }
-          else SetCurrentOutput(NULL); // No entry in table of contents
+          else SetCurrentOutput(nullptr); // No entry in table of contents
         }
       }
 
@@ -1325,7 +1337,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
               wxFprintf(Contents, _T("\\par\n\\pard{\\b ")); //, sectionNo);
           }
         }
-        else SetCurrentOutput(NULL);
+        else SetCurrentOutput(nullptr);
       }
 
       if (startedSections)
@@ -1488,7 +1500,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
             wxFprintf(Contents, _T("\n\\pard\\tab\\tab %d.%d.%d\\tab "), chapterNo, sectionNo, subsectionNo);
           else
             wxFprintf(Contents, _T("\n\\pard\\tab %d.%d\\tab "), sectionNo, subsectionNo);
-        } else SetCurrentOutput(NULL);
+        } else SetCurrentOutput(nullptr);
       }
       if (startedSections)
       {
@@ -1650,10 +1662,10 @@ void RTFOnMacro(int macroId, int no_args, bool start)
                                sectionNo, subsectionNo, subsubsectionNo);
           }
           else
-            SetCurrentOutput(NULL); // Don't write it into the contents, or anywhere else
+            SetCurrentOutput(nullptr); // Don't write it into the contents, or anywhere else
         }
         else
-          SetCurrentOutput(NULL); // Don't write it into the contents, or anywhere else
+          SetCurrentOutput(nullptr); // Don't write it into the contents, or anywhere else
       }
 
       if (startedSections)
@@ -2216,7 +2228,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
               TexOutput(_T("\\tab{ "));
               TraverseChildrenFromChunk(descriptionItemArg);
               TexOutput(_T("}\\tab"));
-              descriptionItemArg = NULL;
+              descriptionItemArg = nullptr;
             }
             else
             {
@@ -2232,7 +2244,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
               TexOutput(_T("\\tab{ "));
               TraverseChildrenFromChunk(descriptionItemArg);
               TexOutput(_T("}\\tab"));
-              descriptionItemArg = NULL;
+              descriptionItemArg = nullptr;
             }
           else
             {
@@ -2259,7 +2271,7 @@ void RTFOnMacro(int macroId, int no_args, bool start)
               TexOutput(_T("\\tab{\\b "));
               TraverseChildrenFromChunk(descriptionItemArg);
               TexOutput(_T("}  "));
-              descriptionItemArg = NULL;
+              descriptionItemArg = nullptr;
             }
             break;
           }
@@ -2833,8 +2845,11 @@ void RTFOnMacro(int macroId, int no_args, bool start)
       OnMacro(ltPAR, 0, true);
       OnMacro(ltPAR, 0, false);
       wxChar buf[200];
-      wxSnprintf(buf, bufSize, _T("{\\field\\fldedit{\\*\\fldinst  TOC \\\\c \"%s\" }{\\fldrslt PRESS F9 TO REFORMAT LIST OF FIGURES}}\n"),
-               FigureNameString);
+      wxSnprintf(
+        buf,
+        bufSize,
+        _T("{\\field\\fldedit{\\*\\fldinst  TOC \\\\c \"%s\" }{\\fldrslt PRESS F9 TO REFORMAT LIST OF FIGURES}}\n"),
+        FigureNameString);
       TexOutput(buf);
     }
     break;
@@ -3450,7 +3465,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         if (macroId != ltHELPREFN)
         {
           wxString refName = GetArgData();
-          TexRef *texRef = NULL;
+          TexRef *texRef = nullptr;
           if (!refName.empty())
             texRef = FindReference(refName);
           if (start)
@@ -4247,7 +4262,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   case ltFOOTNOTE:
   {
     static wxString helpTopic;
-    static FILE *savedOutput = NULL;
+    static FILE *savedOutput = nullptr;
     if (winHelp)
     {
       if (arg_no == 1)
@@ -4263,7 +4278,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
           TexOutput(_T(" {\\ul "));
           TexOutput(footBuf);
           TexOutput(_T("}"));
-          helpTopic = FindTopicName(NULL);
+          helpTopic = FindTopicName(nullptr);
           TexOutput(_T("{\\v "));
 
           // Remove green colour/underlining if specified
@@ -4306,7 +4321,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
   case ltFOOTNOTEPOPUP:
   {
     static wxString helpTopic;
-    static FILE *savedOutput = NULL;
+    static FILE *savedOutput = nullptr;
     if (winHelp)
     {
       if (arg_no == 1)
@@ -4325,7 +4340,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         if (start)
         {
-          helpTopic = FindTopicName(NULL);
+          helpTopic = FindTopicName(nullptr);
           TexOutput(_T("{\\v "));
 
           // Remove green colour/underlining if specified
@@ -4389,32 +4404,32 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         case 1:
           LeftHeaderEven = GetArgChunk();
           if (GetArgData(LeftHeaderEven).empty())
-            LeftHeaderEven = NULL;
+            LeftHeaderEven = nullptr;
           break;
         case 2:
           CentreHeaderEven = GetArgChunk();
           if (wxStrlen(GetArgData(CentreHeaderEven)) == 0)
-            CentreHeaderEven = NULL;
+            CentreHeaderEven = nullptr;
           break;
         case 3:
           RightHeaderEven = GetArgChunk();
           if (wxStrlen(GetArgData(RightHeaderEven)) == 0)
-            RightHeaderEven = NULL;
+            RightHeaderEven = nullptr;
           break;
         case 4:
           LeftHeaderOdd = GetArgChunk();
           if (wxStrlen(GetArgData(LeftHeaderOdd)) == 0)
-            LeftHeaderOdd = NULL;
+            LeftHeaderOdd = nullptr;
           break;
         case 5:
           CentreHeaderOdd = GetArgChunk();
           if (wxStrlen(GetArgData(CentreHeaderOdd)) == 0)
-            CentreHeaderOdd = NULL;
+            CentreHeaderOdd = nullptr;
           break;
         case 6:
           RightHeaderOdd = GetArgChunk();
           if (wxStrlen(GetArgData(RightHeaderOdd)) == 0)
-            RightHeaderOdd = NULL;
+            RightHeaderOdd = nullptr;
           OutputRTFHeaderCommands();
           break;
         default:
@@ -4438,32 +4453,32 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
         case 1:
           LeftFooterEven = GetArgChunk();
           if (wxStrlen(GetArgData(LeftFooterEven)) == 0)
-            LeftFooterEven = NULL;
+            LeftFooterEven = nullptr;
           break;
         case 2:
           CentreFooterEven = GetArgChunk();
           if (wxStrlen(GetArgData(CentreFooterEven)) == 0)
-            CentreFooterEven = NULL;
+            CentreFooterEven = nullptr;
           break;
         case 3:
           RightFooterEven = GetArgChunk();
           if (wxStrlen(GetArgData(RightFooterEven)) == 0)
-            RightFooterEven = NULL;
+            RightFooterEven = nullptr;
           break;
         case 4:
           LeftFooterOdd = GetArgChunk();
           if (wxStrlen(GetArgData(LeftFooterOdd)) == 0)
-            LeftFooterOdd = NULL;
+            LeftFooterOdd = nullptr;
           break;
         case 5:
           CentreFooterOdd = GetArgChunk();
           if (wxStrlen(GetArgData(CentreFooterOdd)) == 0)
-            CentreFooterOdd = NULL;
+            CentreFooterOdd = nullptr;
           break;
         case 6:
           RightFooterOdd = GetArgChunk();
           if (wxStrlen(GetArgData(RightFooterOdd)) == 0)
-            RightFooterOdd = NULL;
+            RightFooterOdd = nullptr;
           OutputRTFFooterCommands();
           break;
         default:
@@ -4478,12 +4493,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     // Fake a SetHeader command
     if (start)
     {
-      LeftHeaderOdd = NULL;
-      CentreHeaderOdd = NULL;
-      RightHeaderOdd = NULL;
-      LeftHeaderEven = NULL;
-      CentreHeaderEven = NULL;
-      RightHeaderEven = NULL;
+      LeftHeaderOdd = nullptr;
+      CentreHeaderOdd = nullptr;
+      RightHeaderOdd = nullptr;
+      LeftHeaderEven = nullptr;
+      CentreHeaderEven = nullptr;
+      RightHeaderEven = nullptr;
       OnInform(_T("Consider using setheader/setfooter rather than markright."));
     }
     RTFOnArgument(ltSETHEADER, 4, start);
@@ -4501,12 +4516,12 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
       {
         if (start)
         {
-          LeftHeaderOdd = NULL;
-          CentreHeaderOdd = NULL;
-          RightHeaderOdd = NULL;
-          LeftHeaderEven = NULL;
-          CentreHeaderEven = NULL;
-          RightHeaderEven = NULL;
+          LeftHeaderOdd = nullptr;
+          CentreHeaderOdd = nullptr;
+          RightHeaderOdd = nullptr;
+          LeftHeaderEven = nullptr;
+          CentreHeaderEven = nullptr;
+          RightHeaderEven = nullptr;
           OnInform(_T("Consider using setheader/setfooter rather than markboth."));
         }
         return RTFOnArgument(ltSETHEADER, 1, start);
@@ -4947,7 +4962,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
     if (arg_no == 1 && start)
     {
       wxString citeKey = GetArgData();
-      TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
+      auto iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
         TexRef* ref = iTexRef->second;
@@ -5189,7 +5204,7 @@ bool RTFOnArgument(int macroId, int arg_no, bool start)
             }
             default:
             {
-                outputFile = NULL;
+                outputFile = nullptr;
                 break;
             }
           }
@@ -5231,7 +5246,7 @@ bool RTFGo(void)
     forbidParindent = 0;
     contentsLineSection.clear();
     contentsLineValue.clear();
-    descriptionItemArg = NULL;
+    descriptionItemArg = nullptr;
     inTabular = false;
     inTable = false;
     inFigure = false;
@@ -5334,17 +5349,17 @@ bool RTFGo(void)
 //      TexOutput(_T("\n\\info{\\doccomm Document created by Julian Smart's Tex2RTF.}\n"));
         if (!winHelp)
             TexOutput(_T("}\n"));
-        fclose(Contents); Contents = NULL;
-        fclose(Chapters); Chapters = NULL;
+        fclose(Contents); Contents = nullptr;
+        fclose(Chapters); Chapters = nullptr;
         if (winHelp)
         {
-            fclose(Sections); Sections = NULL;
-            fclose(Subsections); Subsections = NULL;
-            fclose(Subsubsections); Subsubsections = NULL;
-            fclose(Popups); Popups = NULL;
+            fclose(Sections); Sections = nullptr;
+            fclose(Subsections); Subsections = nullptr;
+            fclose(Subsubsections); Subsubsections = nullptr;
+            fclose(Popups); Popups = nullptr;
             if (winHelpContents)
             {
-                fclose(WinHelpContentsFile); WinHelpContentsFile = NULL;
+                fclose(WinHelpContentsFile); WinHelpContentsFile = nullptr;
             }
         }
 

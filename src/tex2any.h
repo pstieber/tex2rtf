@@ -8,7 +8,6 @@
 //*****************************************************************************
 
 #include <wx/utils.h>
-#include <wx/hash.h>
 #include <wx/hashset.h>
 #include <wx/tokenzr.h>
 #include <wx/wfstream.h>
@@ -16,6 +15,7 @@
 
 #include <cstdio>
 #include <list>
+#include <map>
 
 // Conversion modes
 #define TEX_RTF  1
@@ -110,7 +110,7 @@ class TexChunk
   bool optional;      // Is an optional argument
 
   std::list<TexChunk*> mChildren;
-  TexChunk(int the_type, TexMacroDef* the_def = NULL);
+  TexChunk(int the_type, TexMacroDef* the_def = nullptr);
   TexChunk(TexChunk& toCopy);
   virtual ~TexChunk(void);
 };
@@ -137,7 +137,7 @@ class TexTopic : public wxObject
     virtual ~TexTopic();
 };
 
-extern wxHashTable TopicTable;
+extern std::map<wxString, TexTopic*> TopicTable;
 
 void AddKeyWordForTopic(
   const wxString& topic,
@@ -148,7 +148,7 @@ void ClearKeyWordTable(void);
 
 extern wxChar wxTex2RTFBuffer[];
 extern TexChunk* TopLevel;
-extern wxHashTable MacroDefs;
+extern std::map<wxString, TexMacroDef*> MacroDefs;
 extern wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
 
 bool read_a_line(wxChar* buf);
@@ -160,7 +160,7 @@ size_t ParseArg(
   size_t pos,
   const wxString& environment,
   bool parseArgToBrace = true,
-  TexChunk* customMacroArgs = NULL);
+  TexChunk* customMacroArgs = nullptr);
 size_t ParseMacroBody(
   TexChunk* parent,
   int no_args,
@@ -168,7 +168,7 @@ size_t ParseMacroBody(
   size_t pos,
   const wxString& environment,
   bool parseArgToBrace,
-  TexChunk* customMacroArgs = NULL);
+  TexChunk* customMacroArgs = nullptr);
 void TraverseDocument(void);
 
 void TraverseFromChunk(
@@ -442,12 +442,10 @@ class TexRef : public wxObject
       const wxString& sectionN = wxEmptyString);
 
     wxString refLabel;      // Reference label
-    wxString refFile;       // Reference filename (can be NULL)
+    wxString refFile;       // Reference filename (can be nullptr)
     wxString sectionNumber; // Section or figure number (as a string)
     wxString sectionName;   // name e.g. 'section'
 };
-
-WX_DECLARE_STRING_HASH_MAP(TexRef*, TexReferenceMap);
 
 //*****************************************************************************
 // Add a reference
@@ -527,11 +525,9 @@ class CustomMacro: public wxObject
     CustomMacro(const wxString& Name, int ArgumentCount, const wxString Body);
 };
 
-WX_DECLARE_STRING_HASH_MAP(CustomMacro*, MacroMap);
-extern MacroMap CustomMacroMap;
+extern std::map<wxString, CustomMacro*> CustomMacroMap;
 
-WX_DECLARE_STRING_HASH_MAP(BibEntry*, BibMap);
-extern BibMap BibList;
+extern std::map<wxString, BibEntry*> BibList;
 
 bool ReadCustomMacros(const wxString& filename);
 void ShowCustomMacros(void);
@@ -557,8 +553,7 @@ class ColourTableEntry : public wxObject
     virtual ~ColourTableEntry(void);
 };
 
-WX_DECLARE_STRING_HASH_MAP(ColourTableEntry*, ColourTableMap);
-extern ColourTableMap ColourTable;
+extern std::map<wxString, ColourTableEntry*> ColourTable;
 extern void AddColour(
   const wxString& theName,
   unsigned int r,

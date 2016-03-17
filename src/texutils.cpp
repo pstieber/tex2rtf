@@ -25,13 +25,13 @@ using namespace std;
 #include <ctype.h>
 #include "tex2any.h"
 
-TexReferenceMap TexReferences;
-BibMap BibList;
+map<wxString, TexRef*> TexReferences;
+map<wxString, BibEntry*> BibList;
 StringSet CitationList;
-ColourTableMap ColourTable;
+map<wxString, ColourTableEntry*> ColourTable;
 map<wxString, wxString> BibStringMap;
-MacroMap CustomMacroMap;
-TexChunk *currentSection = NULL;
+map<wxString, CustomMacro*> CustomMacroMap;
+TexChunk *currentSection = nullptr;
 wxString fakeCurrentSection;
 
 static long BibLine = 1;
@@ -78,7 +78,7 @@ void OutputChunkToString(TexChunk *chunk, wxChar *buf)
   FILE *old2 = CurrentOutput2;
 
   CurrentOutput1 = tempfd;
-  CurrentOutput2 = NULL;
+  CurrentOutput2 = nullptr;
 
   TraverseChildrenFromChunk(chunk);
 
@@ -117,7 +117,7 @@ void OutputChunkToString(TexChunk *chunk, wxChar *buf)
 //*****************************************************************************
 void FakeCurrentSection(const wxString& fakeSection, bool addToContents)
 {
-  currentSection = NULL;
+  currentSection = nullptr;
   fakeCurrentSection = fakeSection;
 
   if (DocumentStyle == LATEX_ARTICLE)
@@ -418,10 +418,10 @@ void AddTexRef(
     wxSnprintf(buf2, buf2Size, _T("%d"), subsubsection);
     wxStrcat(buf, buf2);
   }
-  wxChar *tmp = ((wxStrlen(buf) > 0) ? buf : (wxChar *)NULL);
+  wxChar *tmp = ((wxStrlen(buf) > 0) ? buf : (wxChar *)nullptr);
 
   // Delete ant previously existing entry.
-  TexReferenceMap::iterator iTexRef = TexReferences.find(name);
+  auto iTexRef = TexReferences.find(name);
   if (iTexRef != TexReferences.end())
   {
     delete iTexRef->second;
@@ -443,13 +443,10 @@ void WriteTexReferences(const wxString& FileName)
 
   file.Clear();
 
-  for (
-    TexReferenceMap::iterator iTexRef = TexReferences.begin();
-    iTexRef != TexReferences.end();
-    ++iTexRef)
+  for (const auto& StringTexRefPoiterPair : TexReferences)
   {
     Tex2RTFYield();
-    TexRef* pTexRef = iTexRef->second;
+    const TexRef* pTexRef = StringTexRefPoiterPair.second;
     wxString converter = pTexRef->refLabel;
     converter << wxT(" ");
     converter << (!pTexRef->refFile.empty() ? pTexRef->refFile : _T("??"));
@@ -503,7 +500,7 @@ void ReadTexReferences(const wxString& FileName)
     // strings it creates in the Put() function, but not the item that is
     // created here, as that is destroyed elsewhere.  Without doing this, there
     // were massive memory leaks
-    TexReferenceMap::iterator iTexRef = TexReferences.find(labelStr);
+    auto iTexRef = TexReferences.find(labelStr);
     if (iTexRef != TexReferences.end())
     {
       delete iTexRef->second;
@@ -1353,11 +1350,11 @@ void OutputBib(void)
     ++it)
   {
     const wxString& citeKey = *it;
-    TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
+    auto iTexRef = TexReferences.find(citeKey);
     if (iTexRef != TexReferences.end())
     {
-      TexRef *ref = iTexRef->second;
-      BibMap::iterator bibNode = BibList.find(citeKey);
+      TexRef* ref = iTexRef->second;
+      auto bibNode = BibList.find(citeKey);
       if (bibNode != BibList.end() && ref)
       {
         BibEntry *entry = bibNode->second;
@@ -1386,11 +1383,11 @@ void ResolveBibReferences(void)
   {
     Tex2RTFYield();
     const wxString& citeKey = *it;
-    TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
+    auto iTexRef = TexReferences.find(citeKey);
     if (iTexRef != TexReferences.end())
     {
       TexRef *ref = iTexRef->second;
-      BibMap::iterator iBibNode = BibList.find(citeKey);
+      auto iBibNode = BibList.find(citeKey);
       if (iBibNode != BibList.end() && ref)
       {
         // Unused Variable
@@ -1427,7 +1424,7 @@ void AddCitation(const wxString& citeKey)
     CitationList.insert(citeKey);
   }
 
-  TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
+  auto iTexRef = TexReferences.find(citeKey);
   if (iTexRef == TexReferences.end())
   {
     TexReferences[citeKey] = new TexRef(citeKey, _T("??"), wxEmptyString);
@@ -1438,7 +1435,7 @@ void AddCitation(const wxString& citeKey)
 //*****************************************************************************
 TexRef* FindReference(const wxString& key)
 {
-  TexReferenceMap::iterator iTexRef = TexReferences.find(key);
+  auto iTexRef = TexReferences.find(key);
   if (iTexRef != TexReferences.end())
   {
     return iTexRef->second;
@@ -1884,7 +1881,7 @@ bool ReadCustomMacros(const wxString& FileName)
 //*****************************************************************************
 CustomMacro* FindCustomMacro(const wxString& Name)
 {
-  MacroMap::iterator it = CustomMacroMap.find(Name);
+  auto it = CustomMacroMap.find(Name);
   if (it != CustomMacroMap.end())
   {
     CustomMacro* macro = it->second;
@@ -1899,7 +1896,7 @@ CustomMacro* FindCustomMacro(const wxString& Name)
 //*****************************************************************************
 void ShowCustomMacros(void)
 {
-  MacroMap::iterator it = CustomMacroMap.begin();
+  auto it = CustomMacroMap.begin();
   if (it == CustomMacroMap.end())
 
   {
@@ -1969,7 +1966,7 @@ wxChar* ParseMultifieldString(const wxString& allFields, size_t *pos)
 
   if (i == 0)
   {
-    return NULL;
+    return nullptr;
   }
   return buffer;
 }
@@ -2005,7 +2002,7 @@ void AddColour(
   unsigned int g,
   unsigned int b)
 {
-  ColourTableMap::iterator it = ColourTable.find(theName);
+  auto it = ColourTable.find(theName);
   if (it != ColourTable.end())
   {
     ColourTableEntry *entry = it->second;
@@ -2028,12 +2025,9 @@ void AddColour(
 int FindColourPosition(const wxString& theName)
 {
   int i = 0;
-  for (
-    ColourTableMap::iterator it = ColourTable.begin();
-    it != ColourTable.end();
-    ++it)
+  for (const auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry *entry = it->second;
+    const ColourTableEntry *entry = StringColourTableEntryPointerPair.second;
     if (theName == entry->mName)
     {
       return i;
@@ -2050,12 +2044,9 @@ extern void DecToHex(int, wxChar *);
 //*****************************************************************************
 bool FindColourHTMLString(const wxString& theName, wxString& buf)
 {
-  for (
-    ColourTableMap::iterator it = ColourTable.begin();
-    it != ColourTable.end();
-    ++it)
+  for (const auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry *entry = it->second;
+    const ColourTableEntry *entry = StringColourTableEntryPointerPair.second;
     if (wxStrcmp(theName, entry->mName) == 0)
     {
       buf = _T("#");
@@ -2132,18 +2123,23 @@ void Tex2RTFYield(bool force)
 //*****************************************************************************
 // Hash table for lists of keywords for topics (WinHelp).
 //*****************************************************************************
-wxHashTable TopicTable(wxKEY_STRING);
+map<wxString, TexTopic*> TopicTable;
 void AddKeyWordForTopic(
   const wxString& topic,
   wxChar* entry,
   const wxString& FileName)
 {
-  TexTopic* texTopic = (TexTopic *)TopicTable.Get(topic);
-  if (!texTopic)
+  TexTopic* texTopic(nullptr);
+  auto TopicIter = TopicTable.find(topic);
+  if (TopicIter == TopicTable.end())
   {
     texTopic = new TexTopic(FileName);
     texTopic->keywords = new StringSet;
-    TopicTable.Put(topic, texTopic);
+    TopicTable.insert(make_pair(topic, texTopic));
+  }
+  else
+  {
+    texTopic = TopicIter->second;
   }
 
   StringSet::iterator iString = texTopic->keywords->find(entry);
@@ -2157,15 +2153,11 @@ void AddKeyWordForTopic(
 //*****************************************************************************
 void ClearKeyWordTable(void)
 {
-  TopicTable.BeginFind();
-  wxHashTable::Node *node = TopicTable.Next();
-  while (node)
+  for (auto& StringTexTopicPointer : TopicTable)
   {
-    TexTopic *texTopic = (TexTopic *)node->GetData();
-    delete texTopic;
-    node = TopicTable.Next();
+    delete StringTexTopicPointer.second;
   }
-  TopicTable.Clear();
+  TopicTable.clear();
 }
 
 
@@ -2176,7 +2168,7 @@ TexTopic::TexTopic(const wxString& f)
   : filename(f)
 {
   hasChildren = false;
-  keywords = NULL;
+  keywords = nullptr;
 }
 
 TexTopic::~TexTopic(void)

@@ -18,12 +18,13 @@
 #include <wx/filename.h>
 
 #include <cstdio>
+#include <map>
 
 using namespace std;
 
 #define HTML_FILENAME_PATTERN _T("%s_%s.html")
 
-extern TexReferenceMap TexReferences;
+extern map<wxString, TexRef*> TexReferences;
 
 extern int passNumber;
 
@@ -54,15 +55,15 @@ wxString lastTopic;
 wxString currentFileName;
 wxString contentsFrameName;
 
-static TexChunk *descriptionItemArg = NULL;
-static TexChunk *helpRefFilename = NULL;
-static TexChunk *helpRefText = NULL;
+static TexChunk *descriptionItemArg = nullptr;
+static TexChunk *helpRefFilename = nullptr;
+static TexChunk *helpRefText = nullptr;
 static int indentLevel = 0;
 static int citeCount = 1;
 extern FILE *Contents;
-FILE *FrameContents = NULL;
-FILE *Titlepage = NULL;
-// FILE *FrameTitlepage = NULL;
+FILE *FrameContents = nullptr;
+FILE *Titlepage = nullptr;
+// FILE *FrameTitlepage = nullptr;
 int fileId = 0;
 bool subsectionStarted = false;
 
@@ -116,22 +117,17 @@ class TexNextPage : public wxObject
     }
 };
 
-wxHashTable TexNextPages(wxKEY_STRING);
+map<wxString, TexNextPage*> TexNextPages;
 
 //*****************************************************************************
 //*****************************************************************************
 void CleanupHtmlProcessing()
 {
-  TexNextPages.BeginFind();
-  for (
-    wxHashTable::Node* pNode = TexNextPages.Next();
-    pNode;
-    pNode = TexNextPages.Next())
+  for (auto& StringTexNextPagePointerPair : TexNextPages)
   {
-    TexNextPage* pTexNextPage = (TexNextPage *)pNode->GetData();
-    delete pTexNextPage;
+    delete StringTexNextPagePointerPair.second;
   }
-  TexNextPages.Clear();
+  TexNextPages.clear();
 }
 
 static wxString CurrentChapterName;
@@ -229,7 +225,7 @@ void ReopenFile(FILE **fd, wxString& FileName, const wxString& label)
 }
 
 static wxFileName SectionContentsFilename;
-static FILE *SectionContentsFD = NULL;
+static FILE *SectionContentsFD = nullptr;
 
 //*****************************************************************************
 //   Reopen section contents file, i.e.the index appended to each section in
@@ -241,7 +237,7 @@ void ReopenSectionContentsFile(void)
   {
     fclose(SectionContentsFD);
   }
-  SectionContentsFD = NULL;
+  SectionContentsFD = nullptr;
 
   // Create the name from the current section filename
   if (!CurrentSectionFile.empty())
@@ -567,22 +563,24 @@ void AddBrowseButtons(
 
   // Get the next page, and record the previous page's 'next' page
   // (i.e. this page)
-  TexNextPage *nextPage = (TexNextPage *)TexNextPages.Get(thisLabel);
-  if (nextPage)
+  auto TexNextPageIter = TexNextPages.find(thisLabel);
+  if (TexNextPageIter != TexNextPages.end())
   {
+    TexNextPage *nextPage = TexNextPageIter->second;
     nextLabel = nextPage->mLabel;
     nextFilename = nextPage->mFileName;
   }
   if (!previousLabel.empty() && !previousFilename.empty())
   {
-    TexNextPage *oldNextPage = (TexNextPage *)TexNextPages.Get(previousLabel);
-    if (oldNextPage)
+    TexNextPageIter = TexNextPages.find(previousLabel);
+    if (TexNextPageIter != TexNextPages.end())
     {
+      TexNextPage* oldNextPage = TexNextPageIter->second;
       delete oldNextPage;
-      TexNextPages.Delete(previousLabel);
+      TexNextPages.erase(TexNextPageIter);
     }
-    TexNextPage *newNextPage = new TexNextPage(thisLabel, thisFilename);
-    TexNextPages.Put(previousLabel, newNextPage);
+    TexNextPage* newNextPage = new TexNextPage(thisLabel, thisFilename);
+    TexNextPages.insert(make_pair(previousLabel, newNextPage));
   }
 
   // >> button
@@ -805,7 +803,7 @@ void HandleChapterMacro(int macroId, bool start)
     if (macroId != ltCHAPTERSTAR)
       chapterNo ++;
 
-    SetCurrentOutput(NULL);
+    SetCurrentOutput(nullptr);
     startedSections = true;
 
     wxString topicName = FindTopicName(GetNextChunk());
@@ -910,7 +908,7 @@ void HandleSectionMacro(int macroId, bool start)
     if (macroId != ltSECTIONSTAR)
       sectionNo ++;
 
-    SetCurrentOutput(NULL);
+    SetCurrentOutput(nullptr);
     startedSections = true;
 
     wxString topicName = FindTopicName(GetNextChunk());
@@ -1039,7 +1037,7 @@ void HandleFunctionMacro(int macroId, bool start)
 
         if ( !combineSubSections )
         {
-          SetCurrentOutput(NULL);
+          SetCurrentOutput(nullptr);
           ReopenFile(&Subsections, SubsectionsName, topicName);
           AddTexRef(topicName, SubsectionsName, SubsectionNameString);
           SetCurrentSubsectionName(topicName, SubsectionsName);
@@ -1145,7 +1143,7 @@ void HandleSubsectionMacro(int macroId, bool start)
 
       if ( !combineSubSections )
       {
-          SetCurrentOutput(NULL);
+          SetCurrentOutput(nullptr);
           ReopenFile(&Subsubsections, SubsubsectionsName, topicName);
           AddTexRef(topicName, SubsubsectionsName, SubsubsectionNameString);
           SetCurrentSubsubsectionName(topicName, SubsubsectionsName);
@@ -1829,7 +1827,7 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
             TexOutput(_T("<DT> "));
             TraverseChildrenFromChunk(descriptionItemArg);
             TexOutput(_T("\n"));
-            descriptionItemArg = NULL;
+            descriptionItemArg = nullptr;
           }
           TexOutput(_T("<DD>"));
         }
@@ -1901,8 +1899,8 @@ void HTMLOnMacro(int macroId, int no_args, bool start)
   {
     if (start)
     {
-      helpRefFilename = NULL;
-      helpRefText = NULL;
+      helpRefFilename = nullptr;
+      helpRefText = nullptr;
     }
     break;
   }
@@ -2475,11 +2473,11 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
       }
       if (f == _T(""))
       {
-        wxString buf;
-        buf
+        wxString Buffer;
+        Buffer
           << "Warning: could not find an inline XBM/GIF for " << filename
           << '.';
-        OnInform(buf);
+        OnInform(Buffer);
       }
       imageFile = wxEmptyString;
       if (!f.empty())
@@ -2605,7 +2603,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
     if (arg_no == 1 && start)
     {
       wxString citeKey = GetArgData();
-      TexReferenceMap::iterator iTexRef = TexReferences.find(citeKey);
+      auto iTexRef = TexReferences.find(citeKey);
       if (iTexRef != TexReferences.end())
       {
         TexRef *ref = iTexRef->second;
@@ -3248,7 +3246,7 @@ bool HTMLOnArgument(int macroId, int arg_no, bool start)
             }
             default:
             {
-                outputFile = NULL;
+                outputFile = nullptr;
                 break;
             }
           }
@@ -3342,7 +3340,7 @@ bool HTMLGo(void)
     {
 //      wxFprintf(Titlepage, _T("\n</BODY></HTML>\n"));
       fclose(Contents);
-      Contents = NULL;
+      Contents = nullptr;
     }
 
     if (FrameContents)
@@ -3350,37 +3348,37 @@ bool HTMLGo(void)
       wxFprintf(FrameContents, _T("\n</UL>\n"));
       wxFprintf(FrameContents, _T("</HTML>\n"));
       fclose(FrameContents);
-      FrameContents = NULL;
+      FrameContents = nullptr;
     }
 
     if (Chapters)
     {
       wxFprintf(Chapters, _T("\n</FONT></BODY></HTML>\n"));
       fclose(Chapters);
-      Chapters = NULL;
+      Chapters = nullptr;
     }
     if (Sections)
     {
       wxFprintf(Sections, _T("\n</FONT></BODY></HTML>\n"));
       fclose(Sections);
-      Sections = NULL;
+      Sections = nullptr;
     }
     if (Subsections && !combineSubSections)
     {
       wxFprintf(Subsections, _T("\n</FONT></BODY></HTML>\n"));
       fclose(Subsections);
-      Subsections = NULL;
+      Subsections = nullptr;
     }
     if (Subsubsections && !combineSubSections)
     {
       wxFprintf(Subsubsections, _T("\n</FONT></BODY></HTML>\n"));
       fclose(Subsubsections);
-      Subsubsections = NULL;
+      Subsubsections = nullptr;
     }
     if (SectionContentsFD)
     {
       fclose(SectionContentsFD);
-      SectionContentsFD = NULL;
+      SectionContentsFD = nullptr;
     }
 
     // Create a temporary file for the title page header, add some info,
@@ -3511,12 +3509,10 @@ void GenerateHTMLIndexFile(const wxString& FileName)
     return;
   }
 
-  TopicTable.BeginFind();
-  wxHashTable::Node *node = TopicTable.Next();
-  while (node)
+  for (auto& StringTexTopicPointer : TopicTable)
   {
-    TexTopic *texTopic = (TexTopic *)node->GetData();
-    const wxString& topicName = node->GetKeyString();
+    TexTopic* texTopic = StringTexTopicPointer.second;
+    const wxString& topicName = StringTexTopicPointer.first;
     if (!texTopic->filename.empty() && texTopic->keywords)
     {
       StringSet *set = texTopic->keywords;
@@ -3532,7 +3528,6 @@ void GenerateHTMLIndexFile(const wxString& FileName)
         }
       }
     }
-    node = TopicTable.Next();
   }
   fclose(fd);
 }
@@ -3616,12 +3611,10 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
     _T("</OBJECT>\n")
     _T("<UL>\n"));
 
-  TopicTable.BeginFind();
-  wxHashTable::Node *node = TopicTable.Next();
-  while (node)
+  for (auto& StringTexTopicPointer : TopicTable)
   {
-    TexTopic *texTopic = (TexTopic *)node->GetData();
-    const wxString& topicName = node->GetKeyString();
+    TexTopic* texTopic = StringTexTopicPointer.second;
+    const wxString& topicName = StringTexTopicPointer.first;
     if (!texTopic->filename.empty() && texTopic->keywords)
     {
       StringSet *set = texTopic->keywords;
@@ -3642,7 +3635,6 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
         }
       }
     }
-    node = TopicTable.Next();
   }
 
   wxFprintf(f, _T("</UL>\n"));
@@ -3650,7 +3642,7 @@ void GenerateHTMLWorkshopFiles(const wxString& FileName)
 }
 
 
-static FILE *HTMLWorkshopContents = NULL;
+static FILE *HTMLWorkshopContents = nullptr;
 static int HTMLWorkshopLastLevel = 0;
 
 //*****************************************************************************

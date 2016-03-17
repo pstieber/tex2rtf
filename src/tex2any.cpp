@@ -16,6 +16,7 @@
 #include <ctype.h>
 #include <cstdlib>
 #include <ctime>
+#include <map>
 
 using namespace std;
 
@@ -23,23 +24,23 @@ using namespace std;
 // Variables accessible from clients.
 //*****************************************************************************
 
-TexChunk* DocumentTitle = NULL;
-TexChunk* DocumentAuthor = NULL;
-TexChunk* DocumentDate = NULL;
+TexChunk* DocumentTitle = nullptr;
+TexChunk* DocumentAuthor = nullptr;
+TexChunk* DocumentDate = nullptr;
 
 // Header/footers/pagestyle
-TexChunk* LeftHeaderEven = NULL;
-TexChunk* LeftFooterEven = NULL;
-TexChunk* CentreHeaderEven = NULL;
-TexChunk* CentreFooterEven = NULL;
-TexChunk* RightHeaderEven = NULL;
-TexChunk* RightFooterEven = NULL;
-TexChunk* LeftHeaderOdd = NULL;
-TexChunk* LeftFooterOdd = NULL;
-TexChunk* CentreHeaderOdd = NULL;
-TexChunk* CentreFooterOdd = NULL;
-TexChunk* RightHeaderOdd = NULL;
-TexChunk* RightFooterOdd = NULL;
+TexChunk* LeftHeaderEven = nullptr;
+TexChunk* LeftFooterEven = nullptr;
+TexChunk* CentreHeaderEven = nullptr;
+TexChunk* CentreFooterEven = nullptr;
+TexChunk* RightHeaderEven = nullptr;
+TexChunk* RightFooterEven = nullptr;
+TexChunk* LeftHeaderOdd = nullptr;
+TexChunk* LeftFooterOdd = nullptr;
+TexChunk* CentreHeaderOdd = nullptr;
+TexChunk* CentreFooterOdd = nullptr;
+TexChunk* RightHeaderOdd = nullptr;
+TexChunk* RightFooterOdd = nullptr;
 wxString PageStyle("plain");
 
 int        DocumentStyle = LATEX_REPORT;
@@ -137,7 +138,7 @@ wxString htmlFaceName;
 
 extern int passNumber;
 
-extern TexReferenceMap TexReferences;
+extern map<wxString, TexRef*> TexReferences;
 
 //*****************************************************************************
 // International support
@@ -174,8 +175,8 @@ int tableNo = 0;
 // Other variables
 //*****************************************************************************
 
-FILE* CurrentOutput1 = NULL;
-FILE* CurrentOutput2 = NULL;
+FILE* CurrentOutput1 = nullptr;
+FILE* CurrentOutput2 = nullptr;
 const int NestingLimit = 15;
 FILE* Inputs[NestingLimit];
 unsigned long LineNumbers[NestingLimit];
@@ -191,17 +192,17 @@ bool stopRunning = false;        // If true, should abort.
 static int currentColumn = 0;
 wxString currentArgData;
 bool haveArgData = false; // If true, we're simulating the data.
-TexChunk* currentArgument = NULL;
-TexChunk* pNextChunk = NULL;
+TexChunk* currentArgument = nullptr;
+TexChunk* pNextChunk = nullptr;
 bool isArgOptional = false;
 int noArgs = 0;
 
-TexChunk* TopLevel = NULL;
-wxHashTable MacroDefs(wxKEY_STRING);
+TexChunk* TopLevel = nullptr;
+map<wxString, TexMacroDef*> MacroDefs;
 wxArrayString IgnorableInputFiles; // Ignorable \input files, e.g. psbox.tex
-wxChar* BigBuffer = NULL;  // For reading in large chunks of text
+wxChar* BigBuffer = nullptr;  // For reading in large chunks of text
 TexMacroDef SoloBlockDef(ltSOLO_BLOCK, _T("solo block"), 1, false);
-TexMacroDef* VerbatimMacroDef = NULL;
+TexMacroDef* VerbatimMacroDef = nullptr;
 
 //*****************************************************************************
 //*****************************************************************************
@@ -309,7 +310,7 @@ TexMacroDef* MatchMacro(
 {
   *parseToBrace = true;
   size_t i = *pos;
-  TexMacroDef* def = NULL;
+  TexMacroDef* def = nullptr;
   wxChar macroBuf[40];
 
   // First, try to find begin{thing}
@@ -324,10 +325,11 @@ TexMacroDef* MatchMacro(
       ++j;
     }
     macroBuf[j-i] = 0;
-    def = (TexMacroDef *)MacroDefs.Get(macroBuf);
 
-    if (def)
+    auto TexMacroDefIter = MacroDefs.find(macroBuf);
+    if (TexMacroDefIter != MacroDefs.end())
     {
+      def = TexMacroDefIter->second;
       *pos = j + 1;  // BUGBUG Should this be + 1???
       env = def->mName;
       ForbidWarning(def);
@@ -335,7 +337,7 @@ TexMacroDef* MatchMacro(
     }
     else
     {
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -350,8 +352,8 @@ TexMacroDef* MatchMacro(
     macroBuf[0] = buffer[i];
     macroBuf[1] = 0;
 
-    def = (TexMacroDef *)MacroDefs.Get(macroBuf);
-    if (def)
+    auto TexMacroDefIter = MacroDefs.find(macroBuf);
+    if (TexMacroDefIter != MacroDefs.end())
     {
       ++j;
     }
@@ -364,8 +366,17 @@ TexMacroDef* MatchMacro(
       macroBuf[j-i] = buffer[j];
       ++j;
     }
-    macroBuf[j-i] = 0;
-    def = (TexMacroDef *)MacroDefs.Get(macroBuf);
+    macroBuf[j - i] = 0;
+
+    auto TexMacroDefIter = MacroDefs.find(macroBuf);
+    if (TexMacroDefIter != MacroDefs.end())
+    {
+      def = TexMacroDefIter->second;
+    }
+    else
+    {
+      def = nullptr;
+    }
   }
 
   if (def)
@@ -391,7 +402,7 @@ TexMacroDef* MatchMacro(
     ForbidWarning(def);
     return def;
   }
-  return NULL;
+  return nullptr;
 }
 
 //*****************************************************************************
@@ -698,7 +709,7 @@ bool read_a_line(wxChar* buf)
     {
       buf[BufferIndex] = 0;
       fclose(Inputs[CurrentInputIndex]);
-      Inputs[CurrentInputIndex] = NULL;
+      Inputs[CurrentInputIndex] = nullptr;
       if (CurrentInputIndex > 0)
       {
          ch = ' '; // No real end of file
@@ -1054,7 +1065,7 @@ bool ParseNewCommand(wxChar* buffer, size_t* pos)
     {
       macro->mBody = commandValue;
     }
-    MacroMap::iterator it = CustomMacroMap.find(commandName);
+    auto it = CustomMacroMap.find(commandName);
     if (it != CustomMacroMap.end())
     {
       CustomMacroMap[commandName] = macro;
@@ -1100,7 +1111,7 @@ void MacroError(wxChar* buffer)
 //*****************************************************************************
 // Parse an argument.
 // 'environment' specifies the name of the macro IFF if we're looking for the
-// end of an environment, e.g. \end{itemize}.  Otherwise it's NULL.
+// end of an environment, e.g. \end{itemize}.  Otherwise it's nullptr.
 // 'parseToBrace' is true if the argument should extend to the next right
 // brace, e.g. in {\bf an argument} as opposed to \vskip 30pt
 //*****************************************************************************
@@ -1226,7 +1237,12 @@ size_t ParseArg(
         // after a verbatim): EXCEPT in HTML
         if (convertMode != TEX_HTML)
         {
-          TexMacroDef* parDef = (TexMacroDef *)MacroDefs.Get(_T("\\"));
+          TexMacroDef* parDef(nullptr);
+          auto TexMacroDefIter = MacroDefs.find(_T("\\"));
+          if (TexMacroDefIter != MacroDefs.end())
+          {
+            parDef = TexMacroDefIter->second;
+          }
           TexChunk* parChunk = new TexChunk(CHUNK_TYPE_MACRO, parDef);
           parChunk->no_args = 0;
           parChunk->macroId = ltBACKSLASHCHAR;
@@ -1351,7 +1367,12 @@ size_t ParseArg(
           TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 1;
           chunk->macroId = ltSPECIAL;
-          TexMacroDef* specialDef = (TexMacroDef *)MacroDefs.Get(_T("special"));
+          TexMacroDef* specialDef(nullptr);
+          auto TexMacroDefIter = MacroDefs.find(_T("special"));
+          if (TexMacroDefIter != MacroDefs.end())
+          {
+            specialDef = TexMacroDefIter->second;
+          }
           chunk->def = specialDef;
           TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, specialDef);
           chunk->mChildren.push_back(arg);
@@ -1397,7 +1418,12 @@ size_t ParseArg(
           TexChunk* chunk = new TexChunk(CHUNK_TYPE_MACRO);
           chunk->no_args = 1;
           chunk->macroId = ltVERB;
-          TexMacroDef* verbDef = (TexMacroDef *)MacroDefs.Get(_T("verb"));
+          TexMacroDef* verbDef(nullptr);
+          auto TexMacroDefIter = MacroDefs.find(_T("verb"));
+          if (TexMacroDefIter != MacroDefs.end())
+          {
+            verbDef = TexMacroDefIter->second;
+          }
           chunk->def = verbDef;
           TexChunk* arg = new TexChunk(CHUNK_TYPE_ARG, verbDef);
           chunk->mChildren.push_back(arg);
@@ -1945,7 +1971,7 @@ TexChunk::TexChunk(int the_type, TexMacroDef* the_def)
   type = the_type;
   no_args = 0;
   argn = 0;
-//  name = NULL;
+//  name = nullptr;
   def = the_def;
   macroId = 0;
   mValue.clear();
@@ -2157,7 +2183,7 @@ void TraverseFromChunk(
         }
         else
         {
-          pNextChunk = NULL;
+          pNextChunk = nullptr;
         }
       }
 
@@ -2199,7 +2225,7 @@ void TraverseFromChunk(
         }
         else
         {
-          pNextChunk = NULL;
+          pNextChunk = nullptr;
         }
       }
 
@@ -2247,7 +2273,7 @@ void TraverseDocument()
 void SetCurrentOutput(FILE* fd)
 {
   CurrentOutput1 = fd;
-  CurrentOutput2 = NULL;
+  CurrentOutput2 = nullptr;
 }
 
 //*****************************************************************************
@@ -2264,10 +2290,11 @@ void AddMacroDef(
   int the_id,
   const wxChar* name,
   int n,
-  bool ignore,
+  bool Ignore,
   bool forbid)
 {
-  MacroDefs.Put(name, new TexMacroDef(the_id, name, n, ignore, forbid));
+  MacroDefs.insert(
+    make_pair(name, new TexMacroDef(the_id, name, n, Ignore, forbid)));
 }
 
 //*****************************************************************************
@@ -2284,7 +2311,7 @@ void TexInitialize(int bufSize)
 
   for (int i = 0; i < NestingLimit; ++i)
   {
-    Inputs[i] = NULL;
+    Inputs[i] = nullptr;
     LineNumbers[i] = 1;
     FileNames[i] = wxEmptyString;
   }
@@ -2295,7 +2322,15 @@ void TexInitialize(int bufSize)
   TopLevel = new TexChunk(CHUNK_TYPE_MACRO);
   TopLevel->macroId = ltTOPLEVEL;
   TopLevel->no_args = 1;
-  VerbatimMacroDef = (TexMacroDef *)MacroDefs.Get(_T("verbatim"));
+  auto TexMacroDefIter = MacroDefs.find(_T("verbatim"));
+  if (TexMacroDefIter != MacroDefs.end())
+  {
+    VerbatimMacroDef = TexMacroDefIter->second;
+  }
+  else
+  {
+    VerbatimMacroDef = nullptr;
+  }
 }
 
 //*****************************************************************************
@@ -2304,7 +2339,7 @@ void TexCleanUp()
 {
   for (int i = 0; i < NestingLimit; ++i)
   {
-    Inputs[i] = NULL;
+    Inputs[i] = nullptr;
   }
 
   chapterNo = 0;
@@ -2313,8 +2348,8 @@ void TexCleanUp()
   subsubsectionNo = 0;
   figureNo = 0;
 
-  CurrentOutput1 = NULL;
-  CurrentOutput2 = NULL;
+  CurrentOutput1 = nullptr;
+  CurrentOutput2 = nullptr;
   CurrentInputIndex = 0;
   haveArgData = false;
   noArgs = 0;
@@ -2325,9 +2360,9 @@ void TexCleanUp()
   TopLevel->macroId = ltTOPLEVEL;
   TopLevel->no_args = 1;
 
-  DocumentTitle = NULL;
-  DocumentAuthor = NULL;
-  DocumentDate = NULL;
+  DocumentTitle = nullptr;
+  DocumentAuthor = nullptr;
+  DocumentDate = nullptr;
   DocumentStyle = LATEX_REPORT;
   MinorDocumentStyle = 0;
   BibliographyStyleString = "plain";
@@ -2345,31 +2380,22 @@ void TexCleanUp()
   {
     // Don't want to remove custom macros after each pass.
     SetFontSizes(10);
-    for (
-      MacroMap::iterator it = CustomMacroMap.begin();
-      it != CustomMacroMap.end();
-      ++it)
+    for (auto& StringCustomMacroPointerPair : CustomMacroMap)
     {
-      CustomMacro* pMacro = it->second;
-      delete pMacro;
+      delete StringCustomMacroPointerPair.second;
     }
     CustomMacroMap.clear();
   }
 
-  for (
-    TexReferenceMap::iterator iTexRef = TexReferences.begin();
-    iTexRef != TexReferences.end();
-    ++iTexRef)
+  for (auto& StringTexRefPtrPair : TexReferences)
   {
-    TexRef* ref = iTexRef->second;
-    delete ref;
+    delete StringTexRefPtrPair.second;
   }
   TexReferences.clear();
 
-  for (BibMap::iterator it = BibList.begin(); it != BibList.end(); ++it)
+  for (auto& StringBibEntryPointer : BibList)
   {
-    BibEntry* entry = it->second;
-    delete entry;
+    delete StringBibEntryPointer.second;
   }
   BibList.clear();
   CitationList.clear();
