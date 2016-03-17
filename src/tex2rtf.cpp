@@ -56,9 +56,9 @@
 
 using namespace std;
 
-TexChunk* pCurrentMember = NULL;
+TexChunk* pCurrentMember = nullptr;
 bool startedSections = false;
-wxChar* contentsString = NULL;
+wxChar* contentsString = nullptr;
 bool suppressNameDecoration = false;
 bool OkToClose = true;
 int passNumber = 1;
@@ -69,29 +69,29 @@ extern TexChunk* TopLevel;
 
 #ifndef NO_GUI
 
-extern ColourTableMap ColourTable;
+extern std::map<wxString, ColourTableEntry*> ColourTable;
 
 #if wxUSE_HELP
-wxHelpControllerBase* pHelpInstance = NULL;
+wxHelpControllerBase* pHelpInstance = nullptr;
 #endif // wxUSE_HELP
 
 #ifdef __WXMSW__
-static wxChar* pIpcBuffer = NULL;
+static wxChar* pIpcBuffer = nullptr;
 static wxChar Tex2RTFLastStatus[100];
-Tex2RTFServer *TheTex2RTFServer = NULL;
+Tex2RTFServer *TheTex2RTFServer = nullptr;
 #endif // __WXMSW__
 
 #endif // !NO_GUI
 
 wxString bulletFile;
 
-FILE* Contents = NULL;   // Contents page
-FILE* Chapters = NULL;   // Chapters (WinHelp RTF) or rest of file (linear RTF)
-FILE* Sections = NULL;
-FILE* Subsections = NULL;
-FILE* Subsubsections = NULL;
-FILE* Popups = NULL;
-FILE* WinHelpContentsFile = NULL;
+FILE* Contents = nullptr;   // Contents page
+FILE* Chapters = nullptr;   // Chapters (WinHelp RTF) or rest of file (linear RTF)
+FILE* Sections = nullptr;
+FILE* Subsections = nullptr;
+FILE* Subsubsections = nullptr;
+FILE* Popups = nullptr;
+FILE* WinHelpContentsFile = nullptr;
 
 wxString InputFile;
 wxString OutputFile;
@@ -122,8 +122,8 @@ wxChar wxTex2RTFBuffer[1500];
 #ifdef NO_GUI
 IMPLEMENT_APP_CONSOLE(Tex2RtfApplication)
 #else
-wxMenuBar* pMenuBar = NULL;
-MyFrame* pFrame = NULL;
+wxMenuBar* pMenuBar = nullptr;
+MyFrame* pFrame = nullptr;
 // DECLARE_APP(Tex2RtfApplication)
 IMPLEMENT_APP(Tex2RtfApplication)
 #endif
@@ -164,13 +164,9 @@ bool Tex2RtfApplication::OnInit()
   DefineDefaultMacros();
   AddMacroDef(ltHARDY, _T("hardy"), 0);
 
-  for (
-    ColourTableMap::iterator it = ColourTable.begin();
-    it != ColourTable.end();
-    ++it)
+  for (auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry* entry = it->second;
-    delete entry;
+    delete StringColourTableEntryPointerPair.second;
   }
   ColourTable.clear();
 
@@ -344,7 +340,7 @@ bool Tex2RtfApplication::OnInit()
   {
     // Create the main frame window
     pFrame = new MyFrame(
-      NULL,
+      nullptr,
       wxID_ANY,
       _T("Tex2RTF"),
       wxDefaultPosition,
@@ -489,44 +485,33 @@ bool Tex2RtfApplication::OnInit()
 //-----------------------------------------------------------------------------
 void Tex2RtfApplication::CleanUp()
 {
-  for (
-    ColourTableMap::iterator it = ColourTable.begin();
-    it != ColourTable.end();
-    ++it)
+  for (auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry *entry = it->second;
-    delete entry;
+    delete StringColourTableEntryPointerPair.second;
   }
   ColourTable.clear();
 
-  for (
-    MacroMap::iterator it = CustomMacroMap.begin();
-    it != CustomMacroMap.end();
-    ++it)
+  for (auto& StringCustomMacroPointerPair : CustomMacroMap)
   {
-    CustomMacro *macro = it->second;
-    delete macro;
+    delete StringCustomMacroPointerPair.second;
   }
   CustomMacroMap.clear();
-  MacroDefs.BeginFind();
-  wxHashTable::Node* mNode = MacroDefs.Next();
-  while (mNode)
+
+  for (auto& StringTexMacroDefPointerPair : MacroDefs)
   {
-    TexMacroDef* def = (TexMacroDef*) mNode->GetData();
-    delete def;
-    mNode = MacroDefs.Next();
+    delete StringTexMacroDefPointerPair.second;
   }
-  MacroDefs.Clear();
+  MacroDefs.clear();
 
   if (BigBuffer)
   {
     delete [] BigBuffer;
-    BigBuffer = NULL;
+    BigBuffer = nullptr;
   }
   if (TopLevel)
   {
     delete TopLevel;
-    TopLevel = NULL;
+    TopLevel = nullptr;
   }
 
   CleanupHtmlProcessing();
@@ -537,34 +522,22 @@ void Tex2RtfApplication::CleanUp()
 //-----------------------------------------------------------------------------
 int Tex2RtfApplication::OnExit()
 {
-  for (
-    ColourTableMap::iterator it = ColourTable.begin();
-    it != ColourTable.end();
-    ++it)
+  for (auto& StringColourTableEntryPointerPair : ColourTable)
   {
-    ColourTableEntry *entry = it->second;
-    delete entry;
+    delete StringColourTableEntryPointerPair.second;
   }
   ColourTable.clear();
 
-  for (
-    MacroMap::iterator it = CustomMacroMap.begin();
-    it != CustomMacroMap.end();
-    ++it)
+  for (auto& StringCustomMacroPointerPair : CustomMacroMap)
   {
-    CustomMacro *macro = it->second;
-    delete macro;
+    delete StringCustomMacroPointerPair.second;
   }
   CustomMacroMap.clear();
-  MacroDefs.BeginFind();
-  wxHashTable::Node* mNode = MacroDefs.Next();
-  while (mNode)
+  for (auto& StringTexMacroDefPointerPair : MacroDefs)
   {
-    TexMacroDef* def = (TexMacroDef*) mNode->GetData();
-    delete def;
-    mNode = MacroDefs.Next();
+    delete StringTexMacroDefPointerPair.second;
   }
-  MacroDefs.Clear();
+  MacroDefs.clear();
 #ifdef __WXMSW__
   delete TheTex2RTFServer;
   wxDDECleanUp();
@@ -584,12 +557,12 @@ int Tex2RtfApplication::OnExit()
     if (BigBuffer)
     {
       delete [] BigBuffer;
-      BigBuffer = NULL;
+      BigBuffer = nullptr;
     }
     if (TopLevel)
     {
       delete TopLevel;
-      TopLevel = NULL;
+      TopLevel = nullptr;
     }
 
   return 0;
@@ -1239,7 +1212,7 @@ wxConnectionBase *Tex2RTFServer::OnAcceptConnection(const wxString& topic)
 
     return new Tex2RTFConnection(pIpcBuffer, 4000);
   }
-  return NULL;
+  return nullptr;
 }
 
 //*****************************************************************************
