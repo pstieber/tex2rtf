@@ -355,7 +355,12 @@ TexMacroDef* MatchMacro(
     auto TexMacroDefIter = MacroDefs.find(macroBuf);
     if (TexMacroDefIter != MacroDefs.end())
     {
+      def = TexMacroDefIter->second;
       ++j;
+    }
+    else
+    {
+      def = nullptr;
     }
   }
 
@@ -1567,7 +1572,7 @@ size_t ParseArg(
               }
 
 //            delete chunk; // Might delete children
-        }
+            }
           }
           else
           {
