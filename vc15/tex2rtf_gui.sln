@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2012
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "tex2rtf_gui", "tex2rtf_gui.vcxproj", "{69874968-6318-41BE-8BD2-252117980138}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug GUI|Win32 = Debug GUI|Win32
+		Debug GUI|x64 = Debug GUI|x64
+		Release GUI|Win32 = Release GUI|Win32
+		Release GUI|x64 = Release GUI|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{69874968-6318-41BE-8BD2-252117980138}.Debug GUI|Win32.ActiveCfg = Debug GUI|Win32
+		{69874968-6318-41BE-8BD2-252117980138}.Debug GUI|Win32.Build.0 = Debug GUI|Win32
+		{69874968-6318-41BE-8BD2-252117980138}.Debug GUI|x64.ActiveCfg = Debug GUI|x64
+		{69874968-6318-41BE-8BD2-252117980138}.Debug GUI|x64.Build.0 = Debug GUI|x64
+		{69874968-6318-41BE-8BD2-252117980138}.Release GUI|Win32.ActiveCfg = Release GUI|Win32
+		{69874968-6318-41BE-8BD2-252117980138}.Release GUI|Win32.Build.0 = Release GUI|Win32
+		{69874968-6318-41BE-8BD2-252117980138}.Release GUI|x64.ActiveCfg = Release GUI|x64
+		{69874968-6318-41BE-8BD2-252117980138}.Release GUI|x64.Build.0 = Release GUI|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
