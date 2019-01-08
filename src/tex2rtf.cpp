@@ -872,7 +872,7 @@ void MyFrame::OnAbout(wxCommandEvent& WXUNUSED(event))
     << "Tex2RTF Version " << TEX2RTF_VERSION_NUMBER_STRING
     << ' ' << Platform << '\n'
     << "LaTeX to RTF, WinHelp, and HTML Conversion" << "\n\n"
-    << "(c) Pete Stieber, Julian Smart, George Tasker and others, 1999-2017";
+    << "(c) Pete Stieber, Julian Smart, George Tasker and others, 1999-2019";
   wxMessageBox(Message, _T("About Tex2RTF"));
 }
 
