@@ -95,7 +95,7 @@
     <ClCompile>
       <AdditionalOptions>/EHsc  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_lib\mswud;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_lib\mswud;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;__WXMSW__;__WXDEBUG__;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -119,7 +119,7 @@
       <AdditionalDependencies>wxmsw31ud_core.lib;wxbase31ud.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;wxpngd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\$(OutDir)tex2rtf.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\$(OutDir)tex2rtf.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -144,7 +144,7 @@
     <ClCompile>
       <AdditionalOptions>/EHsc  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_x64_lib\mswud;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_x64_lib\mswud;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;__WXMSW__;__WXDEBUG__;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>false</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -168,7 +168,7 @@
       <AdditionalDependencies>wxbase31ud.lib;wxmsw31ud_core.lib;wxpngd.lib;wxzlibd.lib;wxregexud.lib;wxexpatd.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\$(OutDir)tex2rtf.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>.\$(OutDir)tex2rtf.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
@@ -190,7 +190,7 @@
       <AdditionalOptions>/EHsc  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_lib\mswu;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_lib\mswu;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;__WXMSW__;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -215,7 +215,7 @@
       <AdditionalDependencies>wxmsw31u_core.lib;wxbase31u.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;wxpng.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\$(OutDir)tex2rtf.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\$(OutDir)tex2rtf.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
@@ -238,7 +238,7 @@
       <AdditionalOptions>/EHsc  %(AdditionalOptions)</AdditionalOptions>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_x64_lib\mswu;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_x64_lib\mswu;$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\include;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;__WXMSW__;_CONSOLE;wxUSE_GUI=0;NO_GUI;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -261,7 +261,7 @@
       <AdditionalDependencies>wxmsw31u_core.lib;wxbase31u.lib;wxpng.lib;wxzlib.lib;wxregexu.lib;wxexpat.lib;winmm.lib;comctl32.lib;rpcrt4.lib;wsock32.lib;odbc32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\$(OutDir)tex2rtf.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.4\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(EXT_PKGS)\wxWidgets-3.1.2-VC15.9.9\lib\vc_x64_lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\$(OutDir)tex2rtf.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
