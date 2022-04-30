@@ -43,8 +43,6 @@ AC_PROG_CXX
 
 AC_LANG_RESTORE
 
-AC_PROG_LIBTOOL
-
 dnl Make autoconf use C++ for its tests.
 AC_LANG(C++)
 
@@ -89,6 +87,8 @@ AC_ARG_ENABLE(
   ac_arg_profile="$enableval",
   ac_arg_profile="no")
 AC_MSG_RESULT(${enable_profile-no})
+
+AC_CANONICAL_HOST
 
 dnl To support a new system, you need to add its canonical name (as determined
 dnl by config.sub or specified by the configure command line) to this "case"
