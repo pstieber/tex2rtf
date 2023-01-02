@@ -1,5 +1,5 @@
 dnl Process this file with autoconf to produce a configure script.
-AC_INIT([tex2rtf], [5.0.0], pstieber@verizon.net, [tex2rtf])
+AC_INIT([tex2rtf], [5.0.0], [pstieber@verizon.net], [tex2rtf])
 
 AC_CONFIG_MACRO_DIR([m4])
 
@@ -29,7 +29,7 @@ CFLAGS=${CFLAGS:=}
 AC_PROG_CC
 
 AC_LANG_SAVE
-AC_LANG_CPLUSPLUS
+AC_LANG([C++])
 
 dnl C++-compiler checks
 dnl   defines CXX with the compiler to use
@@ -49,19 +49,15 @@ AC_LANG(C++)
 dnl Checks for libraries.
      
 dnl Checks for header files.
-AC_STDC_HEADERS
-AC_HAVE_HEADERS(string.h fcntl.h sys/file.h sys/param.h)
+AC_CHECK_HEADERS([string.h fcntl.h sys/file.h sys/param.h])
 
 dnl Checks for library functions.
 AC_FUNC_ALLOCA
 
-dnl Check for st_blksize in struct stat
-AC_ST_BLKSIZE
-
 AC_MSG_CHECKING([whether to enable debugging])
 AC_ARG_ENABLE(
   debug,
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-debug],
     [enable debugging code (off by default)]),
   ac_arg_debug="$enableval",
@@ -71,7 +67,7 @@ AC_MSG_RESULT(${enable_debug-no})
 AC_MSG_CHECKING([whether to enable optimization])
 AC_ARG_ENABLE(
   optimize,
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-optimize@<:@=ARG@:>@],
     [enable optimized code with ARG = 0, 1, 2, or 3 (off by default ARG = 0)]),
   [opt_level="$enableval" ac_arg_optimize="yes"],
@@ -81,7 +77,7 @@ AC_MSG_RESULT(${enable_optimize-no})
 AC_MSG_CHECKING([whether to enable profiling])
 AC_ARG_ENABLE(
   profile,
-  AC_HELP_STRING(
+  AS_HELP_STRING(
     [--enable-profile],
     [enable gprof profiling code (off by default)]),
   ac_arg_profile="$enableval",
