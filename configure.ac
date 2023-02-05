@@ -162,8 +162,6 @@ sed 's/ \\+/ /g'`
 CXXFLAGS=`echo -std=c++11 $EXTRA_CFLAGS $CXXFLAGS $WX_CXXFLAGS_ONLY | \
 sed 's/ \+/ /g'`
 
-LDFLAGS="$LDFLAGS $WX_LIBS"
-
 AC_CONFIG_FILES([Makefile src/Makefile])
 
 AC_OUTPUT

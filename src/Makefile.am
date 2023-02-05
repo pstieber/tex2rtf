@@ -12,6 +12,8 @@ tex2any.cpp \
 tex2rtf.cpp \
 texutils.cpp
 
+tex2rtf_gui_LDADD = @WX_LIBS@
+
 tex2rtf_SOURCES = \
 htmlutil.cpp \
 maths.cpp \
@@ -32,3 +34,5 @@ symbols.h \
 table.h \
 tex2any.h \
 tex2rtf.h
+
+tex2rtf_LDADD = @WX_LIBS@
